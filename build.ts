@@ -16,7 +16,7 @@ async function build() {
     entrypoints: ['./src/index.html'],
     outdir: DIST_DIR,
     minify: true,
-    sourcemap: 'linked',
+    sourcemap: process.env.SOURCEMAP === '1' ? 'linked' : 'none',
     external: ['./manifest.webmanifest', './icon.svg', '/manifest.webmanifest', '/icon.svg'],
     plugins: [tailwind],
   });
