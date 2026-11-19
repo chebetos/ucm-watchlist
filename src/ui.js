@@ -28,7 +28,7 @@ export function renderPosterArt(item, orderNumber, mediaApi) {
   const safeIcon = escapeHtml(item.icon || 'fa-film');
 
   return `
-    <div class="w-24 sm:w-28 h-36 sm:h-40 rounded-xl shrink-0 relative overflow-hidden border border-white/15 shadow-lg flex flex-col justify-between p-2.5 select-none"
+    <div class="w-20 sm:w-28 h-32 sm:h-40 rounded-xl shrink-0 relative overflow-hidden border border-white/15 shadow-lg flex flex-col justify-between p-2 sm:p-2.5 select-none"
          style="background: linear-gradient(155deg, ${escapeHtml(c1)} 0%, #0B0E14 68%, ${escapeHtml(c2)} 100%);">
       <div class="poster-shine absolute inset-0 pointer-events-none z-10"></div>
       <img data-poster-id="${safeId}"
@@ -183,7 +183,7 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
         </div>
       </div>
 
-      <div class="flex items-center justify-between pt-2.5 border-t border-marvel-border/70 gap-2">
+      <div class="flex flex-wrap items-center justify-between pt-2.5 border-t border-marvel-border/70 gap-2">
         <div class="flex items-center gap-1.5">
           <button type="button"
               data-action="open-detail"
@@ -324,11 +324,11 @@ export function renderCatalogGrid({ catalog, list, filterState, userProgress, co
                data-group-id="${safeGroupId}"
                class="cursor-pointer p-4 sm:px-5 bg-gradient-to-r ${group.accent} border-b ${isCollapsed ? 'border-transparent' : 'border-marvel-border'} flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 select-none transition hover:brightness-110">
 
-            <div class="flex items-start sm:items-center gap-3.5">
-              <div class="w-11 h-11 rounded-xl bg-[#0B0E14]/90 border border-white/15 flex items-center justify-center shrink-0 shadow-md">
-                <i class="fa-solid ${escapeHtml(group.icon || 'fa-layer-group')} text-lg text-white" aria-hidden="true"></i>
+            <div class="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0">
+              <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-[#0B0E14]/90 border border-white/15 flex items-center justify-center shrink-0 shadow-md">
+                <i class="fa-solid ${escapeHtml(group.icon || 'fa-layer-group')} text-base sm:text-lg text-white" aria-hidden="true"></i>
               </div>
-              <div>
+              <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-2 mb-0.5">
                   <span class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${group.badgeColor}">
                     ${escapeHtml(group.saga)}
@@ -346,8 +346,8 @@ export function renderCatalogGrid({ catalog, list, filterState, userProgress, co
               </div>
             </div>
 
-            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between lg:justify-end gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/10">
-              <div class="w-40 sm:w-44 bg-[#0B0E14]/85 border border-marvel-border rounded-xl px-3 py-1.5">
+            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between lg:justify-end gap-2.5 sm:gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/10">
+              <div class="flex-1 min-w-[130px] sm:flex-initial sm:w-44 bg-[#0B0E14]/85 border border-marvel-border rounded-xl px-3 py-1.5">
                 <div class="flex justify-between text-[11px] mb-1">
                   <span class="text-gray-300 font-semibold">${completedInGroup}/${totalInGroup} vistos</span>
                   <span class="font-bold ${allGroupCompleted ? 'text-emerald-400' : 'text-amber-400'}">${pct}%</span>
@@ -633,10 +633,10 @@ export function updateSyncBadge(text, color) {
   if (!badge) return;
   const safeText = escapeHtml(text);
   if (color === 'emerald') {
-    badge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-    badge.innerHTML = `<i class="fa-solid fa-cloud-check mr-1" aria-hidden="true"></i>${safeText}`;
+    badge.className = 'inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25';
+    badge.innerHTML = `<i class="fa-solid fa-circle-check text-[10px]" aria-hidden="true"></i><span>${safeText}</span>`;
   } else {
-    badge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20';
-    badge.innerHTML = `<i class="fa-solid fa-floppy-disk mr-1" aria-hidden="true"></i>${safeText}`;
+    badge.className = 'inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/25';
+    badge.innerHTML = `<i class="fa-solid fa-floppy-disk text-[10px]" aria-hidden="true"></i><span>${safeText}</span>`;
   }
 }
