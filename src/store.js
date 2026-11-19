@@ -232,7 +232,7 @@ export async function initCloudPersistence({ onRemoteProgress, onStatusChange })
   try {
     const rawConfig = typeof globalThis.__firebase_config !== 'undefined' ? globalThis.__firebase_config : null;
     if (!rawConfig) {
-      onStatusChange?.('Guardado en LocalStorage', 'emerald');
+      onStatusChange?.('Guardado local', 'emerald');
       return;
     }
 
@@ -291,13 +291,13 @@ export async function initCloudPersistence({ onRemoteProgress, onStatusChange })
         },
         (err) => {
           console.error('Snapshot error:', err);
-          onStatusChange?.('Guardado en LocalStorage', 'emerald');
+          onStatusChange?.('Guardado local', 'emerald');
         }
       );
     });
   } catch (err) {
     console.error('Init persistence warning:', err);
-    onStatusChange?.('Guardado en LocalStorage', 'emerald');
+    onStatusChange?.('Guardado local', 'emerald');
   }
 }
 

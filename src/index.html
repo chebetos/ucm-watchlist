@@ -20,47 +20,49 @@
 
     <!-- Top Header & Global Progress -->
     <header class="sticky top-0 z-40 backdrop-blur-xl bg-[#0B0E14]/90 border-b border-marvel-border">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2.5 sm:gap-3">
                 <!-- Brand -->
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-[#182234] border border-emerald-500/40 text-white font-black tracking-wider px-2.5 py-1 rounded-lg text-base sm:text-lg shadow-lg shadow-emerald-500/10 select-none flex items-center gap-1.5">
-                            <i class="fa-solid fa-list-check text-emerald-400 text-sm" aria-hidden="true"></i>
+                <div class="flex items-center justify-between gap-2 min-w-0">
+                    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                        <div class="shrink-0 bg-[#182234] border border-emerald-500/40 text-white font-black tracking-wider px-2 sm:px-2.5 py-1 rounded-lg text-sm sm:text-lg shadow-lg shadow-emerald-500/10 select-none flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-check text-emerald-400 text-xs sm:text-sm" aria-hidden="true"></i>
                             <span>UCM</span>
                         </div>
-                        <div>
-                            <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white flex items-center gap-2">
+                        <div class="min-w-0">
+                            <h1 class="font-extrabold text-sm sm:text-lg tracking-tight text-white leading-tight truncate">
                                 Checklist Maestro UCM &amp; Multiverso
-                                <span id="syncBadge" class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                    <i class="fa-solid fa-cloud-check mr-1" aria-hidden="true"></i>Guardado automático
-                                </span>
                             </h1>
-                            <p class="text-xs text-gray-400">Guía fan no oficial: películas, series y cómics</p>
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+                                <p class="text-[11px] sm:text-xs text-gray-400 truncate hidden sm:block">Guía fan no oficial: películas, series y cómics</p>
+                                <span id="syncBadge" title="Tu progreso se guarda automáticamente en este navegador" class="inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                                    <i class="fa-solid fa-circle-check text-[10px]" aria-hidden="true"></i><span>Guardado local</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <!-- Mobile Quick Actions -->
-                    <div class="flex lg:hidden items-center gap-2">
-                        <button type="button" data-open-modal="pwaModal" aria-label="Instalar App (PWA)" class="p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300" title="Instalar App (PWA)">
-                            <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
+                    <div class="flex lg:hidden items-center gap-1.5 shrink-0">
+                        <button type="button" data-open-modal="pwaModal" aria-label="Instalar App (PWA)" class="p-1.5 sm:p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300" title="Instalar App (PWA)">
+                            <i class="fa-solid fa-mobile-screen-button text-sm" aria-hidden="true"></i>
                         </button>
-                        <button type="button" data-action="toggle-planner" aria-label="Planificador Maratón" class="p-2 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300" title="Planificador Maratón">
-                            <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+                        <button type="button" data-action="toggle-planner" aria-label="Planificador Maratón" class="p-1.5 sm:p-2 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300" title="Planificador Maratón">
+                            <i class="fa-solid fa-calendar-check text-sm" aria-hidden="true"></i>
                         </button>
-                        <button type="button" data-open-modal="syncModal" aria-label="Exportar o importar progreso" class="p-2 rounded-lg bg-marvel-card border border-marvel-border text-gray-200 hover:text-white" title="Exportar / Importar">
-                            <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+                        <button type="button" data-open-modal="syncModal" aria-label="Exportar o importar progreso" class="p-1.5 sm:p-2 rounded-lg bg-marvel-card border border-marvel-border text-gray-200 hover:text-white" title="Exportar / Importar">
+                            <i class="fa-solid fa-share-nodes text-sm" aria-hidden="true"></i>
                         </button>
-                        <button type="button" data-open-modal="imageApiModal" aria-label="Configurar portadas IMDb y TV" class="p-2 rounded-lg bg-blue-600/20 border border-blue-500/40 text-blue-300" title="Portadas IMDb / TV">
-                            <i class="fa-solid fa-image" aria-hidden="true"></i>
+                        <button type="button" data-open-modal="imageApiModal" aria-label="Configurar portadas IMDb y TV" class="p-1.5 sm:p-2 rounded-lg bg-blue-600/20 border border-blue-500/40 text-blue-300" title="Portadas IMDb / TV">
+                            <i class="fa-solid fa-image text-sm" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
 
                 <!-- Stats & Sync Buttons -->
-                <div class="flex flex-wrap items-center justify-between lg:justify-end gap-3">
+                <div class="flex flex-wrap items-center justify-between lg:justify-end gap-2.5 sm:gap-3 min-w-0">
                     <!-- Main Progress Pill -->
-                    <div class="flex items-center gap-3 bg-marvel-card border border-marvel-border px-3.5 py-2 rounded-xl flex-1 sm:flex-initial">
-                        <div class="flex-1 min-w-[140px] sm:w-48">
+                    <div class="flex items-center gap-3 bg-marvel-card border border-marvel-border px-3 sm:px-3.5 py-2 rounded-xl w-full sm:w-auto sm:flex-initial min-w-0">
+                        <div class="flex-1 min-w-0 sm:w-48">
                             <div class="flex justify-between text-xs mb-1">
                                 <span class="text-gray-300 font-semibold" id="progressLabel">0 / 0 completados</span>
                                 <span class="text-marvel-red font-bold" id="progressPercent">0%</span>
@@ -100,13 +102,13 @@
     </header>
 
     <!-- Target Date Marathon Planner Panel -->
-    <section id="plannerSection" class="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-4">
-        <div class="bg-gradient-to-r from-[#131822] via-[#171F2E] to-[#131822] border border-amber-500/30 rounded-2xl p-4 shadow-xl">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div class="space-y-1">
-                    <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold uppercase tracking-wider">
-                            <i class="fa-solid fa-stopwatch mr-1" aria-hidden="true"></i>Planificador por Fecha Objetivo
+    <section id="plannerSection" class="max-w-7xl mx-auto w-full px-3 sm:px-6 pt-4">
+        <div class="bg-gradient-to-r from-[#131822] via-[#171F2E] to-[#131822] border border-amber-500/30 rounded-2xl p-3.5 sm:p-4 shadow-xl">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5 sm:gap-4">
+                <div class="space-y-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold uppercase tracking-wider">
+                            <i class="fa-solid fa-stopwatch" aria-hidden="true"></i>Planificador por Fecha Objetivo
                         </span>
                         <span id="plannerDaysLeftBadge" class="text-xs font-bold text-emerald-400"></span>
                     </div>
@@ -119,16 +121,16 @@
                 </div>
 
                 <!-- Controls -->
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <div class="bg-[#0B0E14] border border-marvel-border rounded-xl px-3 py-1.5">
+                <div class="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2.5 w-full lg:w-auto shrink-0">
+                    <div class="bg-[#0B0E14] border border-marvel-border rounded-xl px-3 py-1.5 min-w-0">
                         <label for="targetDateInput" class="block text-[10px] text-gray-400 font-semibold uppercase">Fecha Objetivo</label>
                         <input type="date" id="targetDateInput" value="2026-12-18"
-                            class="bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer">
+                            class="w-full sm:w-auto bg-transparent text-xs font-bold text-white focus:outline-none cursor-pointer">
                     </div>
 
-                    <div class="bg-[#0B0E14] border border-marvel-border rounded-xl px-3 py-1.5">
+                    <div class="bg-[#0B0E14] border border-marvel-border rounded-xl px-3 py-1.5 min-w-0">
                         <label for="plannerScopeSelect" class="block text-[10px] text-gray-400 font-semibold uppercase">Alcance del Plan</label>
-                        <select id="plannerScopeSelect" class="bg-[#0B0E14] text-xs font-bold text-amber-300 focus:outline-none cursor-pointer">
+                        <select id="plannerScopeSelect" class="w-full sm:w-auto bg-[#0B0E14] text-xs font-bold text-amber-300 focus:outline-none cursor-pointer">
                             <option value="filtered">Según filtros activos</option>
                             <option value="doomsday">Solo Ruta Esencial Doomsday</option>
                             <option value="all">Todo el catálogo completo</option>
@@ -138,36 +140,36 @@
             </div>
 
             <!-- Calculated Pace Cards -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3.5 pt-3 border-t border-marvel-border/70">
-                <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 mt-3.5 pt-3 border-t border-marvel-border/70">
+                <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5 min-w-0">
                     <span class="text-[10px] text-gray-400 uppercase font-semibold block">Pendiente en tu plan</span>
                     <span id="planPendingHours" class="text-sm sm:text-base font-black text-white">0 h</span>
-                    <span id="planPendingItems" class="text-[11px] text-gray-400 block">0 títulos</span>
+                    <span id="planPendingItems" class="text-[11px] text-gray-400 block truncate">0 títulos</span>
                 </div>
-                <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5">
+                <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5 min-w-0">
                     <span class="text-[10px] text-gray-400 uppercase font-semibold block">Ritmo Diario Necesario</span>
                     <span id="planDailyPace" class="text-sm sm:text-base font-black text-amber-400">0 min / día</span>
-                    <span id="planDailyEps" class="text-[11px] text-gray-400 block">~0 cap. al día</span>
+                    <span id="planDailyEps" class="text-[11px] text-gray-400 block truncate">~0 cap. al día</span>
                 </div>
-                <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5">
+                <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5 min-w-0">
                     <span class="text-[10px] text-gray-400 uppercase font-semibold block">Ritmo Semanal</span>
                     <span id="planWeeklyPace" class="text-sm sm:text-base font-black text-emerald-400">0 h / semana</span>
-                    <span id="planWeeklyMovies" class="text-[11px] text-gray-400 block">~0 pelis o temp./sem</span>
+                    <span id="planWeeklyMovies" class="text-[11px] text-gray-400 block truncate">~0 pelis o temp./sem</span>
                 </div>
-                <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5">
+                <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5 min-w-0">
                     <span class="text-[10px] text-gray-400 uppercase font-semibold block">Próximo Recomendado</span>
                     <span id="planNextItem" class="text-xs font-bold text-white line-clamp-1">—</span>
-                    <span id="planNextMeta" class="text-[11px] text-marvel-red font-semibold block">Lista al día</span>
+                    <span id="planNextMeta" class="text-[11px] text-marvel-red font-semibold block truncate">Lista al día</span>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Controls & Filter Bar -->
-    <section class="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-4 pb-2">
-        <div class="bg-marvel-card border border-marvel-border rounded-2xl p-4 shadow-xl space-y-4">
+    <section class="max-w-7xl mx-auto w-full px-3 sm:px-6 pt-4 pb-2">
+        <div class="bg-marvel-card border border-marvel-border rounded-2xl p-3.5 sm:p-4 shadow-xl space-y-3.5 sm:space-y-4">
             <!-- Row 1: Search, Order Selector & Doomsday Essential Switch -->
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3">
                 <!-- Search Input -->
                 <div class="md:col-span-4 relative">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" aria-hidden="true"></i>
@@ -179,16 +181,16 @@
                 </div>
 
                 <!-- Order Mode Selector -->
-                <div class="md:col-span-5 flex bg-[#0B0E14] p-1 rounded-xl border border-marvel-border">
+                <div class="md:col-span-5 grid grid-cols-2 bg-[#0B0E14] p-1 rounded-xl border border-marvel-border gap-1">
                     <button type="button" id="btnOrderRelease"
-                        class="flex-1 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 bg-marvel-red text-white shadow">
-                        <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
-                        1. Orden Publicación
+                        class="py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-center leading-tight bg-marvel-red text-white shadow">
+                        <i class="fa-solid fa-calendar-days shrink-0" aria-hidden="true"></i>
+                        <span>1. Publicación</span>
                     </button>
                     <button type="button" id="btnOrderChrono"
-                        class="flex-1 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-gray-400 hover:text-white">
-                        <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-                        2. Cronológico (Por Año)
+                        class="py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-center leading-tight text-gray-400 hover:text-white">
+                        <i class="fa-solid fa-clock-rotate-left shrink-0" aria-hidden="true"></i>
+                        <span>2. Cronológico</span>
                     </button>
                 </div>
 
@@ -203,43 +205,43 @@
             </div>
 
             <!-- Row 2: Collection / Platform Pills -->
-            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-marvel-border/60">
-                <div class="flex flex-wrap items-center gap-1.5" id="categoryFilterContainer">
-                    <button type="button" data-cat="all" class="cat-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-900">
+            <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2.5 pt-2 border-t border-marvel-border/60">
+                <div class="flex flex-nowrap overflow-x-auto pb-1.5 sm:pb-0 sm:flex-wrap sm:overflow-visible items-center gap-1.5 -mx-1 px-1 sm:mx-0 sm:px-0" id="categoryFilterContainer">
+                    <button type="button" data-cat="all" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-900">
                         Todo (<span id="count-all">0</span>)
                     </button>
-                    <button type="button" data-cat="Película UCM" class="cat-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                    <button type="button" data-cat="Película UCM" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
                         <i class="fa-solid fa-film text-red-400 mr-1" aria-hidden="true"></i>Películas UCM
                     </button>
-                    <button type="button" data-cat="Serie Disney+" class="cat-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                    <button type="button" data-cat="Serie Disney+" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
                         <i class="fa-solid fa-tv text-blue-400 mr-1" aria-hidden="true"></i>Series Disney+
                     </button>
-                    <button type="button" data-cat="Serie Netflix" class="cat-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                    <button type="button" data-cat="Serie Netflix" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
                         <i class="fa-solid fa-mask text-rose-500 mr-1" aria-hidden="true"></i>Netflix (Defenders)
                     </button>
-                    <button type="button" data-cat="Serie ABC" class="cat-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                    <button type="button" data-cat="Serie ABC" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
                         <i class="fa-solid fa-shield-halved text-sky-400 mr-1" aria-hidden="true"></i>ABC (S.H.I.E.L.D. / Carter)
                     </button>
-                    <button type="button" data-cat="Marvel TV Juvenil / Hulu" class="cat-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                    <button type="button" data-cat="Marvel TV Juvenil / Hulu" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
                         <i class="fa-solid fa-bolt-lightning text-pink-400 mr-1" aria-hidden="true"></i>Juvenil / Hulu (Runaways / C&amp;D)
                     </button>
-                    <button type="button" data-cat="Legado Fox / Multiverso" class="cat-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                    <button type="button" data-cat="Legado Fox / Multiverso" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
                         <i class="fa-solid fa-dna text-amber-400 mr-1" aria-hidden="true"></i>Fox (X-Men / 4F / Deadpool)
                     </button>
-                    <button type="button" data-cat="Universo Sony / Spider-Verse" class="cat-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                    <button type="button" data-cat="Universo Sony / Spider-Verse" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
                         <i class="fa-solid fa-spider text-indigo-400 mr-1" aria-hidden="true"></i>Sony &amp; Spider-Verse
                     </button>
-                    <button type="button" data-cat="Cómic Canon" class="cat-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                    <button type="button" data-cat="Cómic Canon" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
                         <i class="fa-solid fa-book-open text-purple-400 mr-1" aria-hidden="true"></i>Cómics Canon
                     </button>
-                    <button type="button" data-cat="Especial / Corto" class="cat-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                    <button type="button" data-cat="Especial / Corto" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
                         <i class="fa-solid fa-star text-teal-400 mr-1" aria-hidden="true"></i>Especiales
                     </button>
                 </div>
 
                 <!-- Status & Phase Filters -->
-                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                    <select id="phaseSelect" aria-label="Filtrar por fase o era" class="bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-marvel-red">
+                <div class="grid grid-cols-1 sm:flex sm:items-center gap-2 w-full sm:w-auto sm:justify-end">
+                    <select id="phaseSelect" aria-label="Filtrar por fase o era" class="w-full sm:w-auto min-w-0 bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-marvel-red">
                         <option value="all">Todas las Fases / Eras</option>
                         <option value="Fase 1">Fase 1 (2008-2012)</option>
                         <option value="Fase 2">Fase 2 (2013-2015)</option>
@@ -251,7 +253,7 @@
                         <option value="Era Marvel Television">Era ABC, Netflix &amp; Hulu</option>
                     </select>
 
-                    <select id="statusSelect" aria-label="Filtrar por estado" class="bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-marvel-red">
+                    <select id="statusSelect" aria-label="Filtrar por estado" class="w-full sm:w-auto min-w-0 bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-marvel-red">
                         <option value="all">Todos los estados</option>
                         <option value="pending">Pendientes por ver</option>
                         <option value="in_progress">En progreso (Temporadas)</option>
@@ -263,29 +265,29 @@
     </section>
 
     <!-- Main Catalog Grid Section -->
-    <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-4 flex-1">
+    <main class="max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 flex-1">
         <!-- Results Toolbar -->
-        <div class="flex flex-wrap items-center justify-between gap-2.5 mb-4 bg-marvel-card/60 border border-marvel-border rounded-xl px-3.5 py-2.5">
-            <div class="flex flex-wrap items-center gap-3">
-                <p id="resultsCountText" class="text-xs sm:text-sm text-gray-300 font-semibold">
+        <div class="flex flex-wrap items-center justify-between gap-2.5 mb-4 bg-marvel-card/60 border border-marvel-border rounded-xl px-3 sm:px-3.5 py-2.5">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto min-w-0">
+                <p id="resultsCountText" class="text-xs sm:text-sm text-gray-300 font-semibold w-full sm:w-auto">
                     Cargando catálogo...
                 </p>
                 <!-- Selector de Agrupación por Sagas, Fases y Eras -->
-                <div class="flex items-center gap-1.5 bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1">
-                    <i class="fa-solid fa-layer-group text-marvel-red text-xs" aria-hidden="true"></i>
-                    <label for="groupModeSelect" class="text-[11px] text-gray-400 font-semibold">Agrupar:</label>
-                    <select id="groupModeSelect" class="bg-[#0B0E14] text-xs font-bold text-white focus:outline-none cursor-pointer">
+                <div class="flex items-center gap-1.5 bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1 w-full sm:w-auto min-w-0">
+                    <i class="fa-solid fa-layer-group text-marvel-red text-xs shrink-0" aria-hidden="true"></i>
+                    <label for="groupModeSelect" class="text-[11px] text-gray-400 font-semibold shrink-0">Agrupar:</label>
+                    <select id="groupModeSelect" class="flex-1 min-w-0 bg-[#0B0E14] text-xs font-bold text-white focus:outline-none cursor-pointer">
                         <option value="interleaved_sagas">Sagas, Fases y Eras (Intercalado)</option>
                         <option value="strict_phases">Por Fase / Era Oficial Separada</option>
                         <option value="none">Sin agrupar (Lista continua)</option>
                     </select>
                 </div>
-                <button type="button" id="btnToggleAllGroups" class="px-2.5 py-1 rounded-lg bg-[#0B0E14] hover:bg-gray-800 border border-marvel-border text-[11px] font-semibold text-gray-300 transition flex items-center gap-1">
+                <button type="button" id="btnToggleAllGroups" class="px-2.5 py-1 rounded-lg bg-[#0B0E14] hover:bg-gray-800 border border-marvel-border text-[11px] font-semibold text-gray-300 transition flex items-center gap-1 shrink-0">
                     <i class="fa-solid fa-angles-up" aria-hidden="true"></i>
                     <span>Plegar bloques</span>
                 </button>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full sm:w-auto">
                 <button type="button" id="btnMarkVisibleWatched" class="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-check-double" aria-hidden="true"></i>
                     Marcar visibles como vistos
