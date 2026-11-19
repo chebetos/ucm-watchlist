@@ -32,6 +32,7 @@ import {
 } from './ui.js';
 import { initPWA, triggerNativePwaInstall } from './pwa.js';
 import { debounce, copyToClipboard } from './utils.js';
+import { loadEpisodeSynopsesForItem } from './data/episodes/index.js';
 
 const itemsById = new Map(MCU_CATALOG.map((item) => [item.id, item]));
 
@@ -244,6 +245,14 @@ async function openDetailModal(itemId) {
     phaseBadge.textContent = `${item.phase} • ${item.timelineYear}`;
   }
 
+  if (Array.isArray(item.seasons) && item.seasons.length > 0) {
+    try {
+      await loadEpisodeSynopsesForItem(item.id);
+    } catch (err) {
+      console.error('Error loading episode synopses:', err);
+    }
+  }
+
   renderDetailModalBody(item, { filterState, userProgress, mediaApi });
   openModal('detailModal');
 
@@ -285,9 +294,9 @@ function setCategoryFilter(cat) {
   filterState.category = cat;
   document.querySelectorAll('.cat-pill').forEach((btn) => {
     if (btn.getAttribute('data-cat') === cat) {
-      btn.className = 'cat-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-900 shadow';
+      btn.className = 'cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-900 shadow';
     } else {
-      btn.className = 'cat-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border';
+      btn.className = 'cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border';
     }
   });
   renderApp();
@@ -707,6 +716,40 @@ function bindEvents() {
         toggleEpBtn.getAttribute('data-item-id'),
         toggleEpBtn.getAttribute('data-ep-code')
       );
+      return;
+    }
+
+    const toggleEpSynopsisBtn = e.target.closest('[data-action="toggle-episode-synopsis"]');
+    if (toggleEpSynopsisBtn) {
+      const card = toggleEpSynopsisBtn.closest('[data-episode-card]');
+      const panel = card?.querySelector('[data-episode-synopsis]');
+      if (panel) {
+        const isOpen = !panel.classList.contains('hidden');
+        panel.classList.toggle('hidden', isOpen);
+        toggleEpSynopsisBtn.setAttribute('aria-expanded', String(!isOpen));
+        const chevron = toggleEpSynopsisBtn.querySelector('[data-ep-chevron]');
+        chevron?.classList.toggle('rotate-180', !isOpen);
+      }
+      return;
+    }
+
+    const toggleSeasonSynopsesBtn = e.target.closest('[data-action="toggle-season-synopses"]');
+    if (toggleSeasonSynopsesBtn) {
+      const seasonBlock = toggleSeasonSynopsesBtn.closest('[data-season-block]');
+      if (seasonBlock) {
+        const shouldOpen = toggleSeasonSynopsesBtn.getAttribute('aria-expanded') !== 'true';
+        toggleSeasonSynopsesBtn.setAttribute('aria-expanded', String(shouldOpen));
+        const label = toggleSeasonSynopsesBtn.querySelector('[data-season-synopses-label]');
+        if (label) label.textContent = shouldOpen ? 'Ocultar reseñas' : 'Ver reseñas';
+        seasonBlock.querySelectorAll('[data-episode-card]').forEach((card) => {
+          const panel = card.querySelector('[data-episode-synopsis]');
+          const btn = card.querySelector('[data-action="toggle-episode-synopsis"]');
+          const chevron = card.querySelector('[data-ep-chevron]');
+          if (panel) panel.classList.toggle('hidden', !shouldOpen);
+          if (btn) btn.setAttribute('aria-expanded', String(shouldOpen));
+          if (chevron) chevron.classList.toggle('rotate-180', shouldOpen);
+        });
+      }
       return;
     }
 
