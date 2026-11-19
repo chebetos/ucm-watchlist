@@ -458,10 +458,10 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
                       <button type="button"
                           data-action="toggle-season-synopses"
                           data-season-num="${season.seasonNumber}"
-                          aria-expanded="false"
+                          aria-expanded="true"
                           class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-marvel-border bg-marvel-card text-sky-300 hover:text-white hover:border-sky-500/40 transition inline-flex items-center gap-1">
                         <i class="fa-solid fa-book-open text-[10px]" aria-hidden="true"></i>
-                        <span data-season-synopses-label>Ver reseñas</span>
+                        <span data-season-synopses-label>Ocultar reseñas</span>
                       </button>
                       <button type="button"
                           data-action="toggle-season"
@@ -501,7 +501,7 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
                               <button type="button"
                                    data-action="toggle-episode-synopsis"
                                    data-ep-code="${safeEpCode}"
-                                   aria-expanded="false"
+                                   aria-expanded="true"
                                    aria-controls="${panelId}"
                                    title="Mostrar u ocultar reseña de ${safeEpCode}"
                                    class="text-left flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
@@ -516,7 +516,7 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
                                   <div class="flex items-center gap-1.5">
                                     <span class="text-[10px] font-mono font-bold text-amber-400">${safeEpCode}</span>
                                     ${safeAirdate ? `<span class="text-[10px] text-gray-500">• ${safeAirdate}</span>` : ''}
-                                    ${safeSynopsis ? `<i data-ep-chevron class="fa-solid fa-chevron-down text-[9px] text-gray-500 ml-auto transition-transform duration-200" aria-hidden="true"></i>` : ''}
+                                    ${safeSynopsis ? `<i data-ep-chevron class="fa-solid fa-chevron-down rotate-180 text-[9px] text-gray-500 ml-auto transition-transform duration-200" aria-hidden="true"></i>` : ''}
                                   </div>
                                   <div class="text-xs font-semibold truncate ${isEpWatched ? 'line-through decoration-emerald-500/60' : ''}" title="${displayTitle}">
                                     ${displayTitle}
@@ -542,7 +542,7 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
                               </button>
                             </div>
                             ${safeSynopsis ? `
-                              <div id="${panelId}" data-episode-synopsis class="hidden px-3 py-2 text-[11px] sm:text-xs text-gray-300 leading-relaxed bg-[#0B0E14]/80 border-t border-marvel-border/60 select-text">
+                              <div id="${panelId}" data-episode-synopsis class="px-3 py-2 text-[11px] sm:text-xs text-gray-300 leading-relaxed bg-[#0B0E14]/80 border-t border-marvel-border/60 select-text">
                                 ${safeSynopsis}
                               </div>
                             ` : ''}

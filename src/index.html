@@ -166,108 +166,123 @@
     </section>
 
     <!-- Controls & Filter Bar -->
-    <section class="max-w-7xl mx-auto w-full px-3 sm:px-6 pt-4 pb-2">
-        <div class="bg-marvel-card border border-marvel-border rounded-2xl p-3.5 sm:p-4 shadow-xl space-y-3.5 sm:space-y-4">
-            <!-- Row 1: Search, Order Selector & Doomsday Essential Switch -->
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3">
+    <section id="filtersSection" class="max-w-7xl mx-auto w-full px-3 sm:px-6 pt-3 pb-1.5">
+        <div class="bg-marvel-card border border-marvel-border rounded-2xl p-2.5 sm:p-4 shadow-xl space-y-2.5 sm:space-y-3.5">
+            <!-- Always-visible compact bar: Search + Filters/Planner Toggles -->
+            <div class="flex items-center gap-2">
                 <!-- Search Input -->
-                <div class="md:col-span-4 relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm" aria-hidden="true"></i>
-                    <input id="searchInput" type="text" aria-label="Buscar en el catálogo" placeholder="Buscar película, temporada, personaje, año..."
-                        class="w-full pl-10 pr-8 py-2.5 bg-[#0B0E14] border border-marvel-border rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-marvel-red">
-                    <button type="button" id="clearSearchBtn" aria-label="Limpiar búsqueda" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                <div class="relative flex-1 min-w-0">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs sm:text-sm" aria-hidden="true"></i>
+                    <input id="searchInput" type="text" aria-label="Buscar en el catálogo" placeholder="Buscar película, serie, personaje, año..."
+                        class="w-full pl-9 pr-8 py-2 sm:py-2.5 bg-[#0B0E14] border border-marvel-border rounded-xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-marvel-red">
+                    <button type="button" id="clearSearchBtn" aria-label="Limpiar búsqueda" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
                         <i class="fa-solid fa-circle-xmark" aria-hidden="true"></i>
                     </button>
                 </div>
 
-                <!-- Order Mode Selector -->
-                <div class="md:col-span-5 grid grid-cols-2 bg-[#0B0E14] p-1 rounded-xl border border-marvel-border gap-1">
-                    <button type="button" id="btnOrderRelease"
-                        class="py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-center leading-tight bg-marvel-red text-white shadow">
-                        <i class="fa-solid fa-calendar-days shrink-0" aria-hidden="true"></i>
-                        <span>1. Publicación</span>
-                    </button>
-                    <button type="button" id="btnOrderChrono"
-                        class="py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-center leading-tight text-gray-400 hover:text-white">
-                        <i class="fa-solid fa-clock-rotate-left shrink-0" aria-hidden="true"></i>
-                        <span>2. Cronológico</span>
-                    </button>
-                </div>
-
-                <!-- Doomsday Essential Route Toggle -->
-                <div class="md:col-span-3 flex items-center">
-                    <button type="button" id="btnDoomsdayFilter" aria-pressed="false"
-                        class="w-full h-full py-2.5 px-3 rounded-xl border border-marvel-border bg-[#0B0E14] hover:border-emerald-500/50 text-xs sm:text-sm font-semibold text-gray-300 flex items-center justify-center gap-2 transition">
-                        <i class="fa-solid fa-bolt text-emerald-400" aria-hidden="true"></i>
-                        <span>Ruta Esencial Doomsday</span>
-                    </button>
-                </div>
+                <!-- Filters Collapse Toggle -->
+                <button type="button" id="btnToggleFilters" aria-expanded="true" aria-controls="filtersCollapsibleBody"
+                    class="shrink-0 inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl bg-[#0B0E14] hover:bg-gray-900 border border-marvel-border text-xs font-semibold text-gray-200 transition">
+                    <i class="fa-solid fa-sliders text-marvel-red" aria-hidden="true"></i>
+                    <span>Filtros</span>
+                    <span id="activeFiltersCountBadge" class="hidden px-1.5 py-0.2 rounded-full bg-marvel-red text-white text-[10px] font-bold leading-tight">0</span>
+                    <i id="filtersChevron" class="fa-solid fa-chevron-down rotate-180 text-[10px] text-gray-400 transition-transform duration-200" aria-hidden="true"></i>
+                </button>
             </div>
 
-            <!-- Row 2: Collection / Platform Pills -->
-            <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2.5 pt-2 border-t border-marvel-border/60">
-                <div class="flex flex-nowrap overflow-x-auto pb-1.5 sm:pb-0 sm:flex-wrap sm:overflow-visible items-center gap-1.5 -mx-1 px-1 sm:mx-0 sm:px-0" id="categoryFilterContainer">
-                    <button type="button" data-cat="all" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-900">
-                        Todo (<span id="count-all">0</span>)
-                    </button>
-                    <button type="button" data-cat="Película UCM" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
-                        <i class="fa-solid fa-film text-red-400 mr-1" aria-hidden="true"></i>Películas UCM
-                    </button>
-                    <button type="button" data-cat="Serie Disney+" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
-                        <i class="fa-solid fa-tv text-blue-400 mr-1" aria-hidden="true"></i>Series Disney+
-                    </button>
-                    <button type="button" data-cat="Serie Netflix" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
-                        <i class="fa-solid fa-mask text-rose-500 mr-1" aria-hidden="true"></i>Netflix (Defenders)
-                    </button>
-                    <button type="button" data-cat="Serie ABC" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
-                        <i class="fa-solid fa-shield-halved text-sky-400 mr-1" aria-hidden="true"></i>ABC (S.H.I.E.L.D. / Carter)
-                    </button>
-                    <button type="button" data-cat="Marvel TV Juvenil / Hulu" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
-                        <i class="fa-solid fa-bolt-lightning text-pink-400 mr-1" aria-hidden="true"></i>Juvenil / Hulu (Runaways / C&amp;D)
-                    </button>
-                    <button type="button" data-cat="Legado Fox / Multiverso" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
-                        <i class="fa-solid fa-dna text-amber-400 mr-1" aria-hidden="true"></i>Fox (X-Men / 4F / Deadpool)
-                    </button>
-                    <button type="button" data-cat="Universo Sony / Spider-Verse" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
-                        <i class="fa-solid fa-spider text-indigo-400 mr-1" aria-hidden="true"></i>Sony &amp; Spider-Verse
-                    </button>
-                    <button type="button" data-cat="Cómic Canon" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
-                        <i class="fa-solid fa-book-open text-purple-400 mr-1" aria-hidden="true"></i>Cómics Canon
-                    </button>
-                    <button type="button" data-cat="Especial / Corto" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
-                        <i class="fa-solid fa-star text-teal-400 mr-1" aria-hidden="true"></i>Especiales
-                    </button>
+            <!-- Collapsible Advanced Filters & Sorting -->
+            <div id="filtersCollapsibleBody" class="space-y-3 sm:space-y-3.5 pt-2 border-t border-marvel-border/60">
+                <!-- Row 1: Order Selector & Doomsday Essential Switch -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3">
+                    <!-- Order Mode Selector -->
+                    <div class="md:col-span-8 grid grid-cols-2 bg-[#0B0E14] p-1 rounded-xl border border-marvel-border gap-1">
+                        <button type="button" id="btnOrderRelease"
+                            class="py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-center leading-tight bg-marvel-red text-white shadow">
+                            <i class="fa-solid fa-calendar-days shrink-0" aria-hidden="true"></i>
+                            <span>1. Publicación</span>
+                        </button>
+                        <button type="button" id="btnOrderChrono"
+                            class="py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-center leading-tight text-gray-400 hover:text-white">
+                            <i class="fa-solid fa-clock-rotate-left shrink-0" aria-hidden="true"></i>
+                            <span>2. Cronológico</span>
+                        </button>
+                    </div>
+
+                    <!-- Doomsday Essential Route Toggle -->
+                    <div class="md:col-span-4 flex items-center">
+                        <button type="button" id="btnDoomsdayFilter" aria-pressed="false"
+                            class="w-full h-full py-2.5 px-3 rounded-xl border border-marvel-border bg-[#0B0E14] hover:border-emerald-500/50 text-xs sm:text-sm font-semibold text-gray-300 flex items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-bolt text-emerald-400" aria-hidden="true"></i>
+                            <span>Ruta Esencial Doomsday</span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Status & Phase Filters -->
-                <div class="grid grid-cols-1 sm:flex sm:items-center gap-2 w-full sm:w-auto sm:justify-end">
-                    <select id="phaseSelect" aria-label="Filtrar por fase o era" class="w-full sm:w-auto min-w-0 bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-marvel-red">
-                        <option value="all">Todas las Fases / Eras</option>
-                        <option value="Fase 1">Fase 1 (2008-2012)</option>
-                        <option value="Fase 2">Fase 2 (2013-2015)</option>
-                        <option value="Fase 3">Fase 3 (2016-2019)</option>
-                        <option value="Fase 4">Fase 4 (2021-2022)</option>
-                        <option value="Fase 5">Fase 5 (2023-2025)</option>
-                        <option value="Fase 6">Fase 6 (2025-2027)</option>
-                        <option value="Era Multiversal Fox/Sony">Era Fox &amp; Sony Multiverso</option>
-                        <option value="Era Marvel Television">Era ABC, Netflix &amp; Hulu</option>
-                    </select>
+                <!-- Row 2: Collection / Platform Pills -->
+                <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2.5 pt-2 border-t border-marvel-border/60">
+                    <div class="flex flex-nowrap overflow-x-auto pb-1.5 sm:pb-0 sm:flex-wrap sm:overflow-visible items-center gap-1.5 -mx-1 px-1 sm:mx-0 sm:px-0" id="categoryFilterContainer">
+                        <button type="button" data-cat="all" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-900">
+                            Todo (<span id="count-all">0</span>)
+                        </button>
+                        <button type="button" data-cat="Película UCM" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                            <i class="fa-solid fa-film text-red-400 mr-1" aria-hidden="true"></i>Películas UCM
+                        </button>
+                        <button type="button" data-cat="Serie Disney+" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                            <i class="fa-solid fa-tv text-blue-400 mr-1" aria-hidden="true"></i>Series Disney+
+                        </button>
+                        <button type="button" data-cat="Serie Netflix" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                            <i class="fa-solid fa-mask text-rose-500 mr-1" aria-hidden="true"></i>Netflix (Defenders)
+                        </button>
+                        <button type="button" data-cat="Serie ABC" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                            <i class="fa-solid fa-shield-halved text-sky-400 mr-1" aria-hidden="true"></i>ABC (S.H.I.E.L.D. / Carter)
+                        </button>
+                        <button type="button" data-cat="Marvel TV Juvenil / Hulu" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                            <i class="fa-solid fa-bolt-lightning text-pink-400 mr-1" aria-hidden="true"></i>Juvenil / Hulu (Runaways / C&amp;D)
+                        </button>
+                        <button type="button" data-cat="Legado Fox / Multiverso" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                            <i class="fa-solid fa-dna text-amber-400 mr-1" aria-hidden="true"></i>Fox (X-Men / 4F / Deadpool)
+                        </button>
+                        <button type="button" data-cat="Universo Sony / Spider-Verse" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                            <i class="fa-solid fa-spider text-indigo-400 mr-1" aria-hidden="true"></i>Sony &amp; Spider-Verse
+                        </button>
+                        <button type="button" data-cat="Cómic Canon" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                            <i class="fa-solid fa-book-open text-purple-400 mr-1" aria-hidden="true"></i>Cómics Canon
+                        </button>
+                        <button type="button" data-cat="Especial / Corto" class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border">
+                            <i class="fa-solid fa-star text-teal-400 mr-1" aria-hidden="true"></i>Especiales
+                        </button>
+                    </div>
 
-                    <select id="statusSelect" aria-label="Filtrar por estado" class="w-full sm:w-auto min-w-0 bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-marvel-red">
-                        <option value="all">Todos los estados</option>
-                        <option value="pending">Pendientes por ver</option>
-                        <option value="in_progress">En progreso (Temporadas)</option>
-                        <option value="completed">Completados</option>
-                    </select>
+                    <!-- Status & Phase Filters -->
+                    <div class="grid grid-cols-1 sm:flex sm:items-center gap-2 w-full sm:w-auto sm:justify-end">
+                        <select id="phaseSelect" aria-label="Filtrar por fase o era" class="w-full sm:w-auto min-w-0 bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-marvel-red">
+                            <option value="all">Todas las Fases / Eras</option>
+                            <option value="Fase 1">Fase 1 (2008-2012)</option>
+                            <option value="Fase 2">Fase 2 (2013-2015)</option>
+                            <option value="Fase 3">Fase 3 (2016-2019)</option>
+                            <option value="Fase 4">Fase 4 (2021-2022)</option>
+                            <option value="Fase 5">Fase 5 (2023-2025)</option>
+                            <option value="Fase 6">Fase 6 (2025-2027)</option>
+                            <option value="Era Multiversal Fox/Sony">Era Fox &amp; Sony Multiverso</option>
+                            <option value="Era Marvel Television">Era ABC, Netflix &amp; Hulu</option>
+                        </select>
+
+                        <select id="statusSelect" aria-label="Filtrar por estado" class="w-full sm:w-auto min-w-0 bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-marvel-red">
+                            <option value="all">Todos los estados</option>
+                            <option value="pending">Pendientes por ver</option>
+                            <option value="in_progress">En progreso (Temporadas)</option>
+                            <option value="completed">Completados</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Main Catalog Grid Section -->
-    <main class="max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 flex-1">
+    <main class="max-w-7xl mx-auto w-full px-3 sm:px-6 py-2.5 sm:py-4 flex-1">
         <!-- Results Toolbar -->
-        <div class="flex flex-wrap items-center justify-between gap-2.5 mb-4 bg-marvel-card/60 border border-marvel-border rounded-xl px-3 sm:px-3.5 py-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 bg-marvel-card/60 border border-marvel-border rounded-xl px-3 sm:px-3.5 py-2">
             <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto min-w-0">
                 <p id="resultsCountText" class="text-xs sm:text-sm text-gray-300 font-semibold w-full sm:w-auto">
                     Cargando catálogo...
