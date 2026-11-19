@@ -7,6 +7,7 @@ import {
   computeMarathonPlan,
 } from './logic.js';
 import { escapeHtml, sanitizeImageUrl } from './utils.js';
+import { getEpisodeSynopsis } from './data/episodes/index.js';
 
 export function applyPosterToDom(itemId, url) {
   const safeUrl = sanitizeImageUrl(url);
@@ -446,27 +447,37 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
               const watchedInSeason = season.episodes.filter((ep) => Boolean(epMap[ep.code])).length;
               const allSeasonDone = watchedInSeason === season.episodes.length;
               return `
-                <div class="bg-[#0B0E14] border border-marvel-border rounded-xl overflow-hidden">
+                <div data-season-block="${season.seasonNumber}" class="bg-[#0B0E14] border border-marvel-border rounded-xl overflow-hidden">
                   <div class="px-4 py-3 bg-gray-900/70 border-b border-marvel-border flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <span class="font-bold text-sm text-white">Temporada ${season.seasonNumber} (${escapeHtml(season.year)})</span>
                       <span class="text-xs text-gray-400 ml-2">${watchedInSeason}/${season.episodes.length} episodios</span>
                       ${season.note ? `<p class="text-[11px] text-gray-400 mt-0.5">${escapeHtml(season.note)}</p>` : ''}
                     </div>
-                    <button type="button"
-                        data-action="toggle-season"
-                        data-item-id="${safeItemId}"
-                        data-season-num="${season.seasonNumber}"
-                        class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
-                          allSeasonDone
-                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                            : 'bg-marvel-card border-marvel-border text-gray-300 hover:text-white'
-                        }">
-                      <i class="fa-solid ${allSeasonDone ? 'fa-check-double' : 'fa-check'} mr-1" aria-hidden="true"></i>
-                      ${allSeasonDone ? 'Temporada completada' : 'Marcar todos'}
-                    </button>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <button type="button"
+                          data-action="toggle-season-synopses"
+                          data-season-num="${season.seasonNumber}"
+                          aria-expanded="false"
+                          class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-marvel-border bg-marvel-card text-sky-300 hover:text-white hover:border-sky-500/40 transition inline-flex items-center gap-1">
+                        <i class="fa-solid fa-book-open text-[10px]" aria-hidden="true"></i>
+                        <span data-season-synopses-label>Ver reseñas</span>
+                      </button>
+                      <button type="button"
+                          data-action="toggle-season"
+                          data-item-id="${safeItemId}"
+                          data-season-num="${season.seasonNumber}"
+                          class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                            allSeasonDone
+                              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                              : 'bg-marvel-card border-marvel-border text-gray-300 hover:text-white'
+                          }">
+                        <i class="fa-solid ${allSeasonDone ? 'fa-check-double' : 'fa-check'} mr-1" aria-hidden="true"></i>
+                        ${allSeasonDone ? 'Temporada completada' : 'Marcar todos'}
+                      </button>
+                    </div>
                   </div>
-                  <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
                     ${season.episodes
                       .map((ep) => {
                         const isEpWatched = Boolean(epMap[ep.code]);
@@ -475,46 +486,67 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
                         const safeAirdate = meta.airdate ? escapeHtml(meta.airdate) : '';
                         const safeEpCode = escapeHtml(ep.code);
                         const safeThumb = sanitizeImageUrl(meta.image);
+                        const synopsisText = getEpisodeSynopsis(item.id, ep.code);
+                        const safeSynopsis = escapeHtml(synopsisText);
+                        const panelId = `ep-synopsis-${season.seasonNumber}-${safeEpCode}`;
 
                         return `
-                          <button type="button"
-                               data-action="toggle-episode"
-                               data-item-id="${safeItemId}"
-                               data-ep-code="${safeEpCode}"
-                               role="switch"
-                               aria-checked="${isEpWatched}"
-                               aria-label="${safeEpCode}: ${displayTitle}"
-                               class="text-left flex items-center justify-between gap-2.5 p-2 rounded-xl border cursor-pointer transition select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red ${
+                          <div data-episode-card="${safeEpCode}"
+                               class="rounded-xl border transition select-none overflow-hidden ${
                                  isEpWatched
                                    ? 'bg-emerald-950/25 border-emerald-500/40 text-emerald-200'
                                    : 'bg-marvel-card/60 border-marvel-border/70 text-gray-300 hover:border-gray-600'
                                }">
-                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
-                              ${safeThumb ? `
-                                <img src="${escapeHtml(safeThumb)}" alt="${safeEpCode}" loading="lazy" class="w-16 h-10 object-cover rounded-lg border border-white/10 shrink-0">
-                              ` : `
-                                <div class="w-12 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shrink-0 text-[10px] font-mono font-bold text-gray-400">
-                                  ${safeEpCode}
+                            <div class="flex items-center justify-between gap-2 p-2">
+                              <button type="button"
+                                   data-action="toggle-episode-synopsis"
+                                   data-ep-code="${safeEpCode}"
+                                   aria-expanded="false"
+                                   aria-controls="${panelId}"
+                                   title="Mostrar u ocultar reseña de ${safeEpCode}"
+                                   class="text-left flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
+                                ${safeThumb ? `
+                                  <img src="${escapeHtml(safeThumb)}" alt="${safeEpCode}" loading="lazy" class="w-16 h-10 object-cover rounded-lg border border-white/10 shrink-0">
+                                ` : `
+                                  <div class="w-12 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shrink-0 text-[10px] font-mono font-bold text-gray-400">
+                                    ${safeEpCode}
+                                  </div>
+                                `}
+                                <div class="min-w-0 flex-1">
+                                  <div class="flex items-center gap-1.5">
+                                    <span class="text-[10px] font-mono font-bold text-amber-400">${safeEpCode}</span>
+                                    ${safeAirdate ? `<span class="text-[10px] text-gray-500">• ${safeAirdate}</span>` : ''}
+                                    ${safeSynopsis ? `<i data-ep-chevron class="fa-solid fa-chevron-down text-[9px] text-gray-500 ml-auto transition-transform duration-200" aria-hidden="true"></i>` : ''}
+                                  </div>
+                                  <div class="text-xs font-semibold truncate ${isEpWatched ? 'line-through decoration-emerald-500/60' : ''}" title="${displayTitle}">
+                                    ${displayTitle}
+                                  </div>
                                 </div>
-                              `}
-                              <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-1.5">
-                                  <span class="text-[10px] font-mono font-bold text-amber-400">${safeEpCode}</span>
-                                  ${safeAirdate ? `<span class="text-[10px] text-gray-500">• ${safeAirdate}</span>` : ''}
-                                </div>
-                                <div class="text-xs font-semibold truncate ${isEpWatched ? 'line-through decoration-emerald-500/60' : ''}" title="${displayTitle}">
-                                  ${displayTitle}
-                                </div>
-                              </div>
+                              </button>
+                              <button type="button"
+                                   data-action="toggle-episode"
+                                   data-item-id="${safeItemId}"
+                                   data-ep-code="${safeEpCode}"
+                                   role="switch"
+                                   aria-checked="${isEpWatched}"
+                                   aria-label="${isEpWatched ? 'Desmarcar' : 'Marcar'} ${safeEpCode}: ${displayTitle}"
+                                   title="${isEpWatched ? 'Marcar como no visto' : 'Marcar como visto'}"
+                                   class="shrink-0 p-1 rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
+                                <span class="watch-switch-track relative inline-flex items-center w-9 h-5 rounded-full border ${
+                                  isEpWatched ? 'bg-emerald-500 border-emerald-400' : 'bg-gray-800 border-gray-600'
+                                }" aria-hidden="true">
+                                  <span class="watch-switch-knob inline-block w-3.5 h-3.5 rounded-full bg-white shadow transform ${
+                                    isEpWatched ? 'translate-x-4' : 'translate-x-0.5'
+                                  }"></span>
+                                </span>
+                              </button>
                             </div>
-                            <span class="watch-switch-track relative inline-flex items-center w-9 h-5 rounded-full border shrink-0 ${
-                              isEpWatched ? 'bg-emerald-500 border-emerald-400' : 'bg-gray-800 border-gray-600'
-                            }" aria-hidden="true">
-                              <span class="watch-switch-knob inline-block w-3.5 h-3.5 rounded-full bg-white shadow transform ${
-                                isEpWatched ? 'translate-x-4' : 'translate-x-0.5'
-                              }"></span>
-                            </span>
-                          </button>
+                            ${safeSynopsis ? `
+                              <div id="${panelId}" data-episode-synopsis class="hidden px-3 py-2 text-[11px] sm:text-xs text-gray-300 leading-relaxed bg-[#0B0E14]/80 border-t border-marvel-border/60 select-text">
+                                ${safeSynopsis}
+                              </div>
+                            ` : ''}
+                          </div>
                         `;
                       })
                       .join('')}
