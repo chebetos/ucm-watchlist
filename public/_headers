@@ -1,4 +1,6 @@
 /*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https://m.media-amazon.com https://static.tvmaze.com https://upload.wikimedia.org https://covers.openlibrary.org; connect-src 'self' https://www.omdbapi.com https://api.tvmaze.com https://covers.openlibrary.org https://en.wikipedia.org; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin

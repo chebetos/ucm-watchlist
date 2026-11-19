@@ -2,6 +2,10 @@ export const LOCAL_STORAGE_KEY = 'mcu_multiverse_master_progress_v2';
 export const OMDB_STORAGE_KEY = 'mcu_multiverse_omdb_key_v1';
 export const EXTERNAL_MEDIA_STORAGE_KEY = 'mcu_multiverse_external_media_v1';
 export const DEFAULT_TARGET_DATE = '2026-12-18';
+export const MAX_NOTE_LENGTH = 2000;
+export const MAX_MAP_ENTRIES = 1000;
+export const MAX_SYNC_CODE_LENGTH = 512 * 1024;
+export const MAX_IMPORT_FILE_BYTES = 512 * 1024;
 
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -13,9 +17,9 @@ function isPlainObject(value) {
 }
 
 function safeKeys(obj) {
-  return Object.keys(obj).filter(
-    (k) => Object.prototype.hasOwnProperty.call(obj, k) && !FORBIDDEN_KEYS.has(k)
-  );
+  return Object.keys(obj)
+    .filter((k) => Object.prototype.hasOwnProperty.call(obj, k) && !FORBIDDEN_KEYS.has(k))
+    .slice(0, MAX_MAP_ENTRIES);
 }
 
 export function isValidIsoDate(str) {
@@ -95,7 +99,7 @@ export function normalizeUserProgress(raw, current = null) {
     for (const id of safeKeys(raw.userNotes)) {
       const note = raw.userNotes[id];
       if (typeof note === 'string') {
-        const trimmed = note.trim();
+        const trimmed = note.trim().slice(0, MAX_NOTE_LENGTH);
         if (trimmed) {
           base.userNotes[id] = trimmed;
         }
@@ -134,6 +138,9 @@ export function decodeSyncCode(code, current = null) {
   const trimmed = String(code ?? '').trim();
   if (!trimmed) {
     throw new Error('Código vacío');
+  }
+  if (trimmed.length > MAX_SYNC_CODE_LENGTH) {
+    throw new Error('Código demasiado grande');
   }
   const decoded = decodeURIComponent(atob(trimmed));
   const parsed = JSON.parse(decoded);
@@ -210,114 +217,10 @@ export function loadProgressFromStorage(storage = globalThis.localStorage) {
 
 export function saveProgressToStorage(progress, storage = globalThis.localStorage) {
   try {
-    storage?.setItem(LOCAL_STORAGE_KEY, JSON.stringify(getExportableProgress(progress)));
+    if (!storage) return false;
+    storage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(getExportableProgress(progress)));
+    return true;
   } catch {
-    // Ignorar errores de almacenamiento
-  }
-}
-
-// Estado de sincronización en la nube (Firebase cargado dinámicamente solo si existe configuración)
-let db = null;
-let auth = null;
-let currentUser = null;
-let firestoreDocFn = null;
-let firestoreSetDocFn = null;
-let unsubscribeSnapshot = null;
-
-function getAppId() {
-  return typeof globalThis.__app_id !== 'undefined' ? globalThis.__app_id : 'mcu-master-checklist';
-}
-
-export async function initCloudPersistence({ onRemoteProgress, onStatusChange }) {
-  try {
-    const rawConfig = typeof globalThis.__firebase_config !== 'undefined' ? globalThis.__firebase_config : null;
-    if (!rawConfig) {
-      onStatusChange?.('Guardado local', 'emerald');
-      return;
-    }
-
-    const firebaseConfig = typeof rawConfig === 'string' ? JSON.parse(rawConfig) : rawConfig;
-
-    // Import dinámico: no se descargan módulos de Firebase en despliegues estándar
-    const firebaseAppUrl = 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-    const firebaseAuthUrl = 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-    const firebaseFirestoreUrl = 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-
-    const [{ initializeApp }, { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged }, { getFirestore, doc, setDoc, onSnapshot }] =
-      await Promise.all([
-        import(/* @vite-ignore */ firebaseAppUrl),
-        import(/* @vite-ignore */ firebaseAuthUrl),
-        import(/* @vite-ignore */ firebaseFirestoreUrl),
-      ]);
-
-    const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
-    auth = getAuth(app);
-    firestoreDocFn = doc;
-    firestoreSetDocFn = setDoc;
-
-    if (typeof globalThis.__initial_auth_token !== 'undefined' && globalThis.__initial_auth_token) {
-      await signInWithCustomToken(auth, globalThis.__initial_auth_token);
-    } else {
-      await signInAnonymously(auth);
-    }
-
-    onAuthStateChanged(auth, (user) => {
-      // Cancelar cualquier suscripción previa antes de crear una nueva
-      if (typeof unsubscribeSnapshot === 'function') {
-        unsubscribeSnapshot();
-        unsubscribeSnapshot = null;
-      }
-
-      currentUser = user;
-      if (!currentUser) return;
-
-      const stateDocRef = doc(db, 'artifacts', getAppId(), 'users', currentUser.uid, 'mcu_checklist_data', 'user_state');
-      unsubscribeSnapshot = onSnapshot(
-        stateDocRef,
-        (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.data();
-            if (data && data.payload) {
-              try {
-                const parsed = JSON.parse(data.payload);
-                onRemoteProgress?.(parsed);
-              } catch (e) {
-                console.error('Error parsing stored state:', e);
-              }
-            }
-          }
-          onStatusChange?.('Guardado automático activo', 'emerald');
-        },
-        (err) => {
-          console.error('Snapshot error:', err);
-          onStatusChange?.('Guardado local', 'emerald');
-        }
-      );
-    });
-  } catch (err) {
-    console.error('Init persistence warning:', err);
-    onStatusChange?.('Guardado local', 'emerald');
-  }
-}
-
-export async function saveProgressToCloud(progress) {
-  if (!db || !currentUser || !firestoreDocFn || !firestoreSetDocFn) return;
-  try {
-    const stateDocRef = firestoreDocFn(
-      db,
-      'artifacts',
-      getAppId(),
-      'users',
-      currentUser.uid,
-      'mcu_checklist_data',
-      'user_state'
-    );
-    await firestoreSetDocFn(stateDocRef, {
-      payload: JSON.stringify(getExportableProgress(progress)),
-      updatedAt: Date.now(),
-    });
-  } catch (e) {
-    console.error('Save error:', e);
+    return false;
   }
 }
