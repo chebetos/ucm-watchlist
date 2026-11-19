@@ -75,6 +75,7 @@ function saveProgress() {
 function renderApp() {
   renderGlobalStats(MCU_CATALOG, userProgress);
   renderMarathonPlanner(MCU_CATALOG, filterState, userProgress);
+  updateActiveFiltersBadge();
   const list = getFilteredAndSortedCatalog(MCU_CATALOG, filterState, userProgress);
   renderCatalogGrid({
     catalog: MCU_CATALOG,
@@ -432,9 +433,52 @@ function resetAllProgress() {
   showToast('Progreso reiniciado');
 }
 
+function isCompactViewport() {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(max-width: 1023px), (max-height: 780px)').matches;
+}
+
+function setPlannerExpanded(expanded) {
+  const panel = document.getElementById('plannerSection');
+  if (panel) panel.classList.toggle('hidden', !expanded);
+  document.querySelectorAll('[data-action="toggle-planner"]').forEach((btn) => {
+    btn.setAttribute('aria-expanded', String(expanded));
+  });
+}
+
 function togglePlannerPanel() {
   const panel = document.getElementById('plannerSection');
-  if (panel) panel.classList.toggle('hidden');
+  if (!panel) return;
+  setPlannerExpanded(panel.classList.contains('hidden'));
+}
+
+function setFiltersExpanded(expanded) {
+  const body = document.getElementById('filtersCollapsibleBody');
+  const btn = document.getElementById('btnToggleFilters');
+  const chevron = document.getElementById('filtersChevron');
+  if (body) body.classList.toggle('hidden', !expanded);
+  if (btn) btn.setAttribute('aria-expanded', String(expanded));
+  if (chevron) chevron.classList.toggle('rotate-180', expanded);
+}
+
+function toggleFiltersPanel() {
+  const body = document.getElementById('filtersCollapsibleBody');
+  if (!body) return;
+  setFiltersExpanded(body.classList.contains('hidden'));
+}
+
+function updateActiveFiltersBadge() {
+  const badge = document.getElementById('activeFiltersCountBadge');
+  if (!badge) return;
+  let activeCount = 0;
+  if (filterState.category !== 'all') activeCount += 1;
+  if (filterState.phase !== 'all') activeCount += 1;
+  if (filterState.status !== 'all') activeCount += 1;
+  if (filterState.doomsdayOnly) activeCount += 1;
+  if (filterState.orderMode !== 'release') activeCount += 1;
+
+  badge.textContent = String(activeCount);
+  badge.classList.toggle('hidden', activeCount === 0);
 }
 
 function handleTargetDateChange() {
@@ -606,6 +650,7 @@ function bindEvents() {
   document.querySelectorAll('[data-action="toggle-planner"]').forEach((btn) => {
     btn.addEventListener('click', togglePlannerPanel);
   });
+  document.getElementById('btnToggleFilters')?.addEventListener('click', toggleFiltersPanel);
 
   // Categorías
   document.getElementById('categoryFilterContainer')?.addEventListener('click', (e) => {
@@ -810,6 +855,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   bindEvents();
+  if (isCompactViewport()) {
+    setPlannerExpanded(false);
+    setFiltersExpanded(false);
+  } else {
+    setPlannerExpanded(true);
+    setFiltersExpanded(true);
+  }
   renderApp();
 
   initCloudPersistence({
