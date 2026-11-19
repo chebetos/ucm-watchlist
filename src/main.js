@@ -7,6 +7,8 @@ import {
   decodeSyncCode,
   loadOmdbApiKey,
   saveOmdbApiKeyToStorage,
+  loadExternalMediaPref,
+  saveExternalMediaPref,
   loadProgressFromStorage,
   saveProgressToStorage,
   initCloudPersistence,
@@ -87,7 +89,7 @@ function renderApp() {
 // ============================================================================
 // MODALES (CON SOPORTE ESCAPE Y CLIC EN BACKDROP)
 // ============================================================================
-const MODAL_IDS = ['pwaModal', 'detailModal', 'syncModal', 'imageApiModal', 'confirmResetModal'];
+const MODAL_IDS = ['pwaModal', 'detailModal', 'syncModal', 'imageApiModal', 'confirmResetModal', 'legalModal'];
 
 function openModal(id) {
   if (id === 'syncModal') {
@@ -334,6 +336,7 @@ function resetFilters() {
   const phaseSelect = document.getElementById('phaseSelect');
   const statusSelect = document.getElementById('statusSelect');
   if (searchInput) searchInput.value = '';
+  document.getElementById('clearSearchBtn')?.classList.add('hidden');
   if (phaseSelect) phaseSelect.value = 'all';
   if (statusSelect) statusSelect.value = 'all';
   filterState.search = '';
@@ -512,6 +515,43 @@ function handleUploadJsonBackup(event) {
   reader.readAsText(file);
 }
 
+function syncExternalMediaToggleUi() {
+  const enabled = mediaApi.isExternalMediaEnabled();
+  const btn = document.getElementById('btnToggleExternalMedia');
+  const label = document.getElementById('externalMediaStatusLabel');
+  const track = document.getElementById('externalMediaTrack');
+  const knob = document.getElementById('externalMediaKnob');
+
+  if (btn) btn.setAttribute('aria-checked', String(enabled));
+  if (label) {
+    label.textContent = enabled ? 'Activado' : 'Desactivado';
+    label.className = `text-xs font-bold ${enabled ? 'text-emerald-400' : 'text-gray-400'}`;
+  }
+  if (track) {
+    track.className = `watch-switch-track relative inline-flex items-center w-11 h-6 rounded-full border ${
+      enabled ? 'bg-emerald-500 border-emerald-400 shadow-md shadow-emerald-500/25' : 'bg-gray-800 border-gray-600/80'
+    }`;
+  }
+  if (knob) {
+    knob.className = `watch-switch-knob inline-block w-4 h-4 rounded-full shadow-md transform ${
+      enabled ? 'translate-x-5 bg-white' : 'translate-x-0.5 bg-gray-300'
+    }`;
+  }
+}
+
+function handleToggleExternalMedia() {
+  const next = !mediaApi.isExternalMediaEnabled();
+  saveExternalMediaPref(next);
+  mediaApi.setExternalMediaEnabled(next);
+  syncExternalMediaToggleUi();
+  renderApp();
+  showToast(
+    next
+      ? 'Portadas externas activadas (TVMaze / Wikipedia / Open Library)'
+      : 'Portadas externas desactivadas (solo pósters locales)'
+  );
+}
+
 function handleSaveOmdbApiKey() {
   const input = document.getElementById('omdbApiKeyInput');
   const val = input ? input.value.trim() : '';
@@ -519,7 +559,11 @@ function handleSaveOmdbApiKey() {
   mediaApi.setOmdbApiKey(val);
   renderApp();
   closeModal('imageApiModal');
-  showToast(val ? 'Clave OMDb (IMDb) activada y recargando portadas' : 'Usando motor automático TVMaze + Wikipedia');
+  if (!mediaApi.isExternalMediaEnabled() && val) {
+    showToast('Clave OMDb guardada. Activa las portadas externas para usarla.');
+  } else {
+    showToast(val ? 'Clave OMDb (IMDb) activada y recargando portadas' : 'Clave OMDb eliminada');
+  }
 }
 
 // ============================================================================
@@ -599,6 +643,7 @@ function bindEvents() {
   document.getElementById('btnDownloadJson')?.addEventListener('click', handleDownloadJsonBackup);
   document.getElementById('uploadJsonInput')?.addEventListener('change', handleUploadJsonBackup);
   document.getElementById('btnSaveOmdbKey')?.addEventListener('click', handleSaveOmdbApiKey);
+  document.getElementById('btnToggleExternalMedia')?.addEventListener('click', handleToggleExternalMedia);
   document.getElementById('btnNativePwaInstall')?.addEventListener('click', () =>
     triggerNativePwaInstall({ showToast, closeModal })
   );
@@ -648,7 +693,8 @@ function bindEvents() {
   });
 
   // Delegación de clics en el modal de detalle
-  document.getElementById('modalBodyContent')?.addEventListener('click', (e) => {
+  const modalBody = document.getElementById('modalBodyContent');
+  modalBody?.addEventListener('click', (e) => {
     const toggleItemBtn = e.target.closest('[data-action="toggle-item"]');
     if (toggleItemBtn) {
       toggleItemWatched(toggleItemBtn.getAttribute('data-item-id'));
@@ -685,6 +731,16 @@ function bindEvents() {
       saveUserNote(saveNoteBtn.getAttribute('data-item-id'), noteInput ? noteInput.value : '');
     }
   });
+
+  // Manejo de errores de carga de pósters en fase de captura (compatible con CSP estricta sin inline onerror)
+  const handlePosterError = (e) => {
+    const target = e.target;
+    if (target instanceof HTMLImageElement && target.hasAttribute('data-poster-id')) {
+      target.classList.add('opacity-0');
+    }
+  };
+  catalogGrid?.addEventListener('error', handlePosterError, true);
+  modalBody?.addEventListener('error', handlePosterError, true);
 }
 
 // ============================================================================
@@ -698,6 +754,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (targetInput && userProgress.targetDate) {
     targetInput.value = userProgress.targetDate;
   }
+
+  const externalMediaPref = loadExternalMediaPref();
+  mediaApi.setExternalMediaEnabled(externalMediaPref);
+  syncExternalMediaToggleUi();
 
   const savedOmdbKey = loadOmdbApiKey();
   if (savedOmdbKey) {

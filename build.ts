@@ -1,5 +1,6 @@
-import { rm, cp, mkdir } from 'node:fs/promises';
+import { rm, cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import tailwind from 'bun-plugin-tailwind';
 
 const DIST_DIR = './dist';
@@ -30,6 +31,16 @@ async function build() {
 
   if (existsSync(PUBLIC_DIR)) {
     await cp(PUBLIC_DIR, DIST_DIR, { recursive: true });
+  }
+
+  // Reescribir rutas PWA a relativas para soportar despliegues en subrutas (ej. GitHub Pages)
+  const distHtmlPath = join(DIST_DIR, 'index.html');
+  if (existsSync(distHtmlPath)) {
+    const html = await readFile(distHtmlPath, 'utf8');
+    const updatedHtml = html
+      .replaceAll('href="/manifest.webmanifest"', 'href="./manifest.webmanifest"')
+      .replaceAll('href="/icon.svg"', 'href="./icon.svg"');
+    await writeFile(distHtmlPath, updatedHtml, 'utf8');
   }
 
   console.log(`Build completado (${result.outputs.length} artefactos en ${DIST_DIR})`);

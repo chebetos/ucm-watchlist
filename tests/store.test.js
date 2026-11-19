@@ -3,6 +3,8 @@ import {
   DEFAULT_TARGET_DATE,
   LOCAL_STORAGE_KEY,
   OMDB_STORAGE_KEY,
+  EXTERNAL_MEDIA_STORAGE_KEY,
+  isValidIsoDate,
   createDefaultProgress,
   normalizeUserProgress,
   getExportableProgress,
@@ -10,6 +12,8 @@ import {
   decodeSyncCode,
   loadOmdbApiKey,
   saveOmdbApiKeyToStorage,
+  loadExternalMediaPref,
+  saveExternalMediaPref,
 } from '../src/store.js';
 
 function createMemoryStorage() {
@@ -95,7 +99,25 @@ describe('Aislamiento de omdbApiKey y sincronización', () => {
     expect(storage.getItem(OMDB_STORAGE_KEY)).toBeNull();
   });
 
-  test('createDefaultProgress usa fecha por defecto si la fecha proporcionada no es ISO', () => {
+  test('createDefaultProgress e isValidIsoDate rechazan fechas calendario imposibles', () => {
+    expect(isValidIsoDate('2026-12-18')).toBe(true);
+    expect(isValidIsoDate('2026-99-99')).toBe(false);
+    expect(isValidIsoDate('2026-02-31')).toBe(false);
     expect(createDefaultProgress('not-a-date').targetDate).toBe(DEFAULT_TARGET_DATE);
+    expect(createDefaultProgress('2026-99-99').targetDate).toBe(DEFAULT_TARGET_DATE);
+    expect(normalizeUserProgress({ targetDate: '2026-02-31' }).targetDate).toBe(DEFAULT_TARGET_DATE);
+  });
+
+  test('guarda y carga la preferencia opt-in de portadas externas (false por defecto)', () => {
+    const storage = createMemoryStorage();
+    expect(loadExternalMediaPref(storage)).toBe(false);
+
+    saveExternalMediaPref(true, storage);
+    expect(storage.getItem(EXTERNAL_MEDIA_STORAGE_KEY)).toBe('true');
+    expect(loadExternalMediaPref(storage)).toBe(true);
+
+    saveExternalMediaPref(false, storage);
+    expect(storage.getItem(EXTERNAL_MEDIA_STORAGE_KEY)).toBeNull();
+    expect(loadExternalMediaPref(storage)).toBe(false);
   });
 });

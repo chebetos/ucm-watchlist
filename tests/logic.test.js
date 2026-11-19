@@ -141,6 +141,23 @@ describe('computeMarathonPlan y getItemSagaMeta', () => {
     expect(plan.daysLeft).toBeGreaterThanOrEqual(10);
   });
 
+  test('no produce NaN si targetDate es una fecha imposible', () => {
+    const progress = { ...createDefaultProgress(), targetDate: '2026-99-99' };
+    const filterState = {
+      orderMode: 'release',
+      groupMode: 'interleaved_sagas',
+      category: 'all',
+      phase: 'all',
+      status: 'all',
+      doomsdayOnly: false,
+      search: '',
+    };
+    const plan = computeMarathonPlan(MOCK_CATALOG, filterState, progress, 'all', new Date('2026-12-08T12:00:00Z'));
+    expect(Number.isNaN(plan.daysLeft)).toBe(false);
+    expect(Number.isNaN(plan.minsPerDay)).toBe(false);
+    expect(plan.targetDate).toBe('2026-12-18');
+  });
+
   test('usa fa-a en minúsculas para Fase 1 en todos los modos', () => {
     expect(getItemSagaMeta(MOCK_CATALOG[0], 'release', 'strict_phases').icon).toBe('fa-a');
     expect(getItemSagaMeta(MOCK_CATALOG[0], 'release', 'interleaved_sagas').icon).toBe('fa-a');
