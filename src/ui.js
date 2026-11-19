@@ -1,0 +1,643 @@
+import {
+  getItemCompletionStatus,
+  getCategoryColors,
+  getShortSagaName,
+  getItemSagaMeta,
+  computeGlobalStats,
+  computeMarathonPlan,
+} from './logic.js';
+import { escapeHtml, sanitizeImageUrl } from './utils.js';
+
+export function applyPosterToDom(itemId, url) {
+  const safeUrl = sanitizeImageUrl(url);
+  if (!safeUrl || typeof document === 'undefined') return;
+  const selector = `img[data-poster-id="${CSS.escape(itemId)}"]`;
+  document.querySelectorAll(selector).forEach((img) => {
+    img.src = safeUrl;
+    img.classList.remove('opacity-0');
+  });
+}
+
+export function renderPosterArt(item, orderNumber, mediaApi) {
+  const [c1, c2] = item.palette || ['#1F2937', '#E62429'];
+  const cachedUrl = sanitizeImageUrl(mediaApi.getCachedPoster(item.id)) || '';
+  const safeId = escapeHtml(item.id);
+  const safeTitle = escapeHtml(item.title);
+  const safeYear = escapeHtml(item.year);
+  const safePhase = escapeHtml(item.phase);
+  const safeIcon = escapeHtml(item.icon || 'fa-film');
+
+  return `
+    <div class="w-24 sm:w-28 h-36 sm:h-40 rounded-xl shrink-0 relative overflow-hidden border border-white/15 shadow-lg flex flex-col justify-between p-2.5 select-none"
+         style="background: linear-gradient(155deg, ${escapeHtml(c1)} 0%, #0B0E14 68%, ${escapeHtml(c2)} 100%);">
+      <div class="poster-shine absolute inset-0 pointer-events-none z-10"></div>
+      <img data-poster-id="${safeId}"
+           src="${escapeHtml(cachedUrl)}"
+           alt="${safeTitle}"
+           loading="lazy"
+           onerror="this.classList.add('opacity-0')"
+           class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${cachedUrl ? '' : 'opacity-0'} z-0">
+      <div class="relative z-20 flex items-center justify-between">
+        <span class="text-[10px] font-black bg-black/75 backdrop-blur-sm text-white px-1.5 py-0.5 rounded border border-white/15">
+          #${orderNumber}
+        </span>
+        <span class="text-[9px] font-bold bg-black/65 text-gray-200 px-1.5 py-0.5 rounded">
+          ${safeYear}
+        </span>
+      </div>
+      <div class="relative z-20 flex-1 flex items-center justify-center my-1">
+        <div class="w-10 h-10 rounded-full bg-black/45 border border-white/15 flex items-center justify-center backdrop-blur-sm">
+          <i class="fa-solid ${safeIcon} text-lg text-white/90" aria-hidden="true"></i>
+        </div>
+      </div>
+      <div class="relative z-20 bg-black/75 backdrop-blur-sm -mx-2.5 -mb-2.5 px-2 py-1 border-t border-white/10">
+        <div class="text-[9px] font-bold text-gray-200 truncate text-center uppercase tracking-wider">
+          ${safePhase}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+export function renderWatchSwitchHtml(item, comp) {
+  const isCompleted = comp.status === 'completed';
+  const isInProgress = comp.status === 'in_progress';
+  const safeId = escapeHtml(item.id);
+  const safeTitle = escapeHtml(item.title);
+
+  let trackClasses = 'bg-gray-800 border-gray-600/80';
+  let knobTranslate = 'translate-x-0.5 bg-gray-300';
+  let labelText = 'No visto';
+  let labelColor = 'text-gray-400';
+
+  if (isCompleted) {
+    trackClasses = 'bg-emerald-500 border-emerald-400 shadow-md shadow-emerald-500/25';
+    knobTranslate = 'translate-x-5 bg-white';
+    labelText = 'Visto';
+    labelColor = 'text-emerald-400';
+  } else if (isInProgress) {
+    trackClasses = 'bg-amber-500/80 border-amber-400';
+    knobTranslate = 'translate-x-2.5 bg-white';
+    labelText = `${comp.watchedCount}/${comp.totalCount} ep.`;
+    labelColor = 'text-amber-300';
+  }
+
+  const actionLabel = isCompleted ? `Desmarcar ${safeTitle} como visto` : `Marcar ${safeTitle} como visto`;
+
+  return `
+    <button type="button"
+         data-action="toggle-item"
+         data-item-id="${safeId}"
+         role="switch"
+         aria-checked="${isCompleted}"
+         aria-label="${actionLabel}"
+         title="${isCompleted ? 'Marcar como no visto' : 'Marcar como visto'}"
+         class="inline-flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-[#0B0E14] hover:bg-gray-900 border border-marvel-border cursor-pointer select-none transition group focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
+      <span class="text-xs font-bold ${labelColor} group-hover:text-white transition">
+        ${escapeHtml(labelText)}
+      </span>
+      <span class="watch-switch-track relative inline-flex items-center w-11 h-6 rounded-full border ${trackClasses}" aria-hidden="true">
+        <span class="watch-switch-knob inline-block w-4 h-4 rounded-full shadow-md transform ${knobTranslate} flex items-center justify-center">
+          ${isCompleted ? '<i class="fa-solid fa-check text-[9px] text-emerald-600"></i>' : isInProgress ? '<i class="fa-solid fa-ellipsis text-[8px] text-amber-600"></i>' : ''}
+        </span>
+      </span>
+    </button>
+  `;
+}
+
+export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
+  const comp = getItemCompletionStatus(item, userProgress);
+  const catStyle = getCategoryColors(item.category);
+  const isSeries = Array.isArray(item.seasons) && item.seasons.length > 0;
+  const userStars = userProgress.userRatings[item.id] || 0;
+  const hasNote = Boolean(userProgress.userNotes[item.id]);
+  const sagaShort = getShortSagaName(item.phase);
+
+  const safeId = escapeHtml(item.id);
+  const safeTitle = escapeHtml(item.title);
+  const safePhase = escapeHtml(item.phase);
+  const safeSaga = escapeHtml(sagaShort);
+  const safeYear = escapeHtml(item.year);
+  const safeTimeline = escapeHtml(item.timelineYear);
+  const safeSynopsis = escapeHtml(item.synopsis);
+  const safeImdbId = item.imdbId ? encodeURIComponent(item.imdbId) : '';
+
+  return `
+    <article data-action="open-detail"
+        data-item-id="${safeId}"
+        tabindex="0"
+        aria-label="${safeTitle}"
+        class="card-hover cursor-pointer bg-marvel-card border ${comp.status === 'completed' ? 'border-emerald-500/40 bg-emerald-950/10' : 'border-marvel-border'} rounded-2xl p-3.5 flex flex-col justify-between gap-3 relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
+
+      <div class="flex gap-3.5">
+        ${renderPosterArt(item, globalIndex, mediaApi)}
+
+        <div class="flex-1 min-w-0 flex flex-col justify-between">
+          <div>
+            <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${catStyle.badge}">
+                ${escapeHtml(catStyle.label)}
+              </span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-gray-200 border border-white/10">
+                ${safePhase} • ${safeSaga}
+              </span>
+              ${item.doomsdayEssential ? `
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" title="Imprescindible para Avengers: Doomsday">
+                  <i class="fa-solid fa-bolt mr-0.5" aria-hidden="true"></i>Doomsday
+                </span>
+              ` : ''}
+              ${userStars > 0 ? `
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
+                  <i class="fa-solid fa-star mr-0.5" aria-hidden="true"></i>${userStars}/5
+                </span>
+              ` : ''}
+            </div>
+
+            <h2 class="font-bold text-sm sm:text-base text-white leading-snug line-clamp-2 ${comp.status === 'completed' ? 'line-through decoration-emerald-500/60 text-gray-300' : ''}">
+              ${safeTitle}
+            </h2>
+
+            <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-gray-400 mt-1">
+              <span><i class="fa-regular fa-calendar mr-1 text-gray-500" aria-hidden="true"></i>Estreno: ${safeYear}</span>
+              <span class="text-sky-300/90 font-medium"><i class="fa-solid fa-timeline mr-1" aria-hidden="true"></i>${safeTimeline}</span>
+              ${item.postCredits > 0 ? `<span class="text-amber-400/90" title="Escenas poscréditos"><i class="fa-solid fa-film mr-1" aria-hidden="true"></i>${item.postCredits} poscréditos</span>` : ''}
+            </div>
+
+            <p class="text-xs text-gray-300/90 mt-2 line-clamp-3 leading-relaxed">
+              ${safeSynopsis}
+            </p>
+          </div>
+
+          ${isSeries ? `
+            <div class="mt-2.5 pt-2 border-t border-marvel-border/60">
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="text-blue-300 font-semibold">
+                  <i class="fa-solid fa-list-check mr-1" aria-hidden="true"></i>${comp.watchedCount}/${comp.totalCount} episodios vistos
+                </span>
+                <span class="font-bold text-gray-300">${comp.percent}%</span>
+              </div>
+              <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-500 transition-all duration-300" style="width: ${comp.percent}%"></div>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2.5 border-t border-marvel-border/70 gap-2">
+        <div class="flex items-center gap-1.5">
+          <button type="button"
+              data-action="open-detail"
+              data-item-id="${safeId}"
+              class="text-xs font-semibold text-gray-300 hover:text-white flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0B0E14] border border-marvel-border focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
+            <i class="fa-solid ${isSeries ? 'fa-images text-blue-400' : 'fa-circle-info text-gray-400'}" aria-hidden="true"></i>
+            ${isSeries ? 'Capítulos' : 'Reseña'}
+            ${hasNote ? '<i class="fa-solid fa-comment-dots text-amber-400 ml-1" title="Tienes una nota guardada" aria-label="Tienes una nota guardada"></i>' : ''}
+          </button>
+          ${safeImdbId ? `
+            <a href="https://www.imdb.com/title/${safeImdbId}/" target="_blank" rel="noopener noreferrer"
+               data-stop-card="true"
+               class="px-2 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 text-xs font-bold transition"
+               title="Ver ficha en IMDb">
+              IMDb
+            </a>
+          ` : ''}
+        </div>
+
+        ${renderWatchSwitchHtml(item, comp)}
+      </div>
+    </article>
+  `;
+}
+
+export function renderGlobalStats(catalog, userProgress) {
+  const stats = computeGlobalStats(catalog, userProgress);
+  const progressLabel = document.getElementById('progressLabel');
+  const progressPercent = document.getElementById('progressPercent');
+  const progressBar = document.getElementById('progressBar');
+  const episodesCounter = document.getElementById('episodesCounter');
+  const timeRemaining = document.getElementById('timeRemaining');
+  const countAll = document.getElementById('count-all');
+
+  if (progressLabel) progressLabel.textContent = `${stats.completedItems} / ${stats.totalItems} títulos vistos`;
+  if (progressPercent) progressPercent.textContent = `${stats.percent}%`;
+  if (progressBar) progressBar.style.width = `${stats.percent}%`;
+  if (episodesCounter) episodesCounter.textContent = `${stats.watchedEpisodes} / ${stats.totalEpisodes} episodios`;
+  if (timeRemaining) timeRemaining.textContent = `${stats.remainingHours}h restantes`;
+  if (countAll) countAll.textContent = String(stats.totalItems);
+}
+
+export function renderMarathonPlanner(catalog, filterState, userProgress) {
+  const scopeSelect = document.getElementById('plannerScopeSelect');
+  const scope = scopeSelect ? scopeSelect.value : 'filtered';
+  const plan = computeMarathonPlan(catalog, filterState, userProgress, scope);
+
+  const daysBadge = document.getElementById('plannerDaysLeftBadge');
+  if (daysBadge) {
+    daysBadge.textContent = plan.isReached ? '¡Fecha objetivo alcanzada!' : `Faltan ${plan.daysLeft} días`;
+  }
+
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  setText('planPendingHours', `${plan.pendingHours} h`);
+  setText('planPendingItems', `${plan.pendingTitles} títulos (${plan.pendingEpisodesOrMovies} uds.)`);
+  setText('planDailyPace', `${plan.minsPerDay} min / día`);
+  setText('planDailyEps', `~${plan.epsPerDay} cap./pelis al día`);
+  setText('planWeeklyPace', `${plan.hoursPerWeek} h / semana`);
+  setText('planWeeklyMovies', `~${plan.titlesPerWeek} títulos/sem`);
+
+  if (plan.nextItem) {
+    setText('planNextItem', plan.nextItem.title);
+    setText('planNextMeta', `${plan.nextItem.phase} • ${plan.nextItem.timelineYear}`);
+  } else {
+    setText('planNextItem', '¡Todo completado!');
+    setText('planNextMeta', '100% al día');
+  }
+}
+
+export function renderCatalogGrid({ catalog, list, filterState, userProgress, collapsedGroups, mediaApi, itemsById }) {
+  const grid = document.getElementById('catalogGrid');
+  const emptyState = document.getElementById('emptyState');
+  const resultsCountEl = document.getElementById('resultsCountText');
+  if (!grid || !emptyState || !resultsCountEl) return;
+
+  resultsCountEl.textContent = `Mostrando ${list.length} de ${catalog.length} títulos y temporadas (${
+    filterState.orderMode === 'release' ? '1. Orden de Publicación' : '2. Orden Cronológico por Año'
+  })`;
+
+  if (list.length === 0) {
+    grid.innerHTML = '';
+    mediaApi.disconnectObserver();
+    emptyState.classList.remove('hidden');
+    return;
+  }
+  emptyState.classList.add('hidden');
+
+  if (filterState.groupMode === 'none') {
+    grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
+    grid.innerHTML = list.map((item, idx) => renderCardHtml(item, idx + 1, userProgress, mediaApi)).join('');
+    mediaApi.observeVisiblePosters(grid, itemsById);
+    return;
+  }
+
+  grid.className = 'space-y-6';
+  const groups = [];
+  const groupMap = {};
+
+  list.forEach((item, idx) => {
+    const meta = getItemSagaMeta(item, filterState.orderMode, filterState.groupMode);
+    if (!groupMap[meta.id]) {
+      const newGroup = { ...meta, items: [] };
+      groupMap[meta.id] = newGroup;
+      groups.push(newGroup);
+    }
+    groupMap[meta.id].items.push({ item, globalIndex: idx + 1 });
+  });
+
+  if (filterState.groupMode === 'strict_phases') {
+    groups.sort((a, b) => (a.order || 99) - (b.order || 99));
+    let runningIdx = 1;
+    groups.forEach((g) => {
+      g.items.forEach((entry) => {
+        entry.globalIndex = runningIdx++;
+      });
+    });
+  }
+
+  grid.innerHTML = groups
+    .map((group) => {
+      const totalInGroup = group.items.length;
+      const completedInGroup = group.items.filter(
+        (e) => getItemCompletionStatus(e.item, userProgress).status === 'completed'
+      ).length;
+      const pct = totalInGroup > 0 ? Math.round((completedInGroup / totalInGroup) * 100) : 0;
+      const isCollapsed = Boolean(collapsedGroups[group.id]);
+      const allGroupCompleted = completedInGroup === totalInGroup && totalInGroup > 0;
+      const safeGroupId = escapeHtml(group.id);
+      const safeGroupTitle = escapeHtml(group.title);
+
+      return `
+        <section data-group-section="${safeGroupId}" class="rounded-2xl border border-marvel-border bg-[#0E131D]/90 overflow-hidden shadow-xl">
+          <div data-action="toggle-group-collapse"
+               data-group-id="${safeGroupId}"
+               class="cursor-pointer p-4 sm:px-5 bg-gradient-to-r ${group.accent} border-b ${isCollapsed ? 'border-transparent' : 'border-marvel-border'} flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 select-none transition hover:brightness-110">
+
+            <div class="flex items-start sm:items-center gap-3.5">
+              <div class="w-11 h-11 rounded-xl bg-[#0B0E14]/90 border border-white/15 flex items-center justify-center shrink-0 shadow-md">
+                <i class="fa-solid ${escapeHtml(group.icon || 'fa-layer-group')} text-lg text-white" aria-hidden="true"></i>
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-0.5">
+                  <span class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border ${group.badgeColor}">
+                    ${escapeHtml(group.saga)}
+                  </span>
+                  <span class="text-xs font-bold text-gray-300">
+                    ${totalInGroup} ${totalInGroup === 1 ? 'título' : 'títulos'}
+                  </span>
+                </div>
+                <h3 class="text-base sm:text-lg font-extrabold text-white leading-snug">
+                  ${safeGroupTitle}
+                </h3>
+                <p class="text-xs text-gray-300/80 mt-0.5">
+                  ${escapeHtml(group.subtitle)}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap sm:flex-nowrap items-center justify-between lg:justify-end gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/10">
+              <div class="w-40 sm:w-44 bg-[#0B0E14]/85 border border-marvel-border rounded-xl px-3 py-1.5">
+                <div class="flex justify-between text-[11px] mb-1">
+                  <span class="text-gray-300 font-semibold">${completedInGroup}/${totalInGroup} vistos</span>
+                  <span class="font-bold ${allGroupCompleted ? 'text-emerald-400' : 'text-amber-400'}">${pct}%</span>
+                </div>
+                <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                  <div class="h-full ${allGroupCompleted ? 'bg-emerald-500' : 'bg-gradient-to-r from-marvel-red to-amber-400'} transition-all duration-300" style="width: ${pct}%"></div>
+                </div>
+              </div>
+
+              <button type="button"
+                   data-action="toggle-group-watched"
+                   data-group-id="${safeGroupId}"
+                   role="switch"
+                   aria-checked="${allGroupCompleted}"
+                   aria-label="${allGroupCompleted ? `Desmarcar bloque ${safeGroupTitle}` : `Marcar bloque ${safeGroupTitle} como visto`}"
+                   title="${allGroupCompleted ? 'Desmarcar toda esta fase/era' : 'Marcar toda esta fase/era como vista'}"
+                   class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#0B0E14]/90 hover:bg-gray-900 border border-marvel-border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
+                <span class="text-[11px] font-bold ${allGroupCompleted ? 'text-emerald-400' : 'text-gray-400'}">
+                  ${allGroupCompleted ? 'Fase vista' : 'Marcar fase'}
+                </span>
+                <span class="watch-switch-track relative inline-flex items-center w-9 h-5 rounded-full border ${allGroupCompleted ? 'bg-emerald-500 border-emerald-400' : 'bg-gray-800 border-gray-600'}" aria-hidden="true">
+                  <span class="watch-switch-knob inline-block w-3.5 h-3.5 rounded-full bg-white shadow transform ${allGroupCompleted ? 'translate-x-4' : 'translate-x-0.5'}"></span>
+                </span>
+              </button>
+
+              <button type="button"
+                   data-action="toggle-group-collapse"
+                   data-group-id="${safeGroupId}"
+                   aria-expanded="${!isCollapsed}"
+                   aria-label="${isCollapsed ? `Desplegar ${safeGroupTitle}` : `Plegar ${safeGroupTitle}`}"
+                   class="w-8 h-8 rounded-lg bg-[#0B0E14]/80 border border-marvel-border text-gray-300 hover:text-white flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
+                <i class="fa-solid ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'} text-xs" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="${isCollapsed ? 'hidden' : 'p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'}">
+            ${group.items.map((entry) => renderCardHtml(entry.item, entry.globalIndex, userProgress, mediaApi)).join('')}
+          </div>
+        </section>
+      `;
+    })
+    .join('');
+
+  syncToggleAllGroupsButton(collapsedGroups);
+  mediaApi.observeVisiblePosters(grid, itemsById);
+}
+
+export function syncToggleAllGroupsButton(collapsedGroups) {
+  const btn = document.getElementById('btnToggleAllGroups');
+  if (!btn) return;
+  const groupEls = document.querySelectorAll('[data-group-section]');
+  const anyExpanded = Array.from(groupEls).some(
+    (el) => !collapsedGroups[el.getAttribute('data-group-section')]
+  );
+  btn.innerHTML = anyExpanded
+    ? '<i class="fa-solid fa-angles-up" aria-hidden="true"></i><span>Plegar bloques</span>'
+    : '<i class="fa-solid fa-angles-down" aria-hidden="true"></i><span>Desplegar bloques</span>';
+}
+
+export function renderDetailModalBody(item, { filterState, userProgress, mediaApi }) {
+  const comp = getItemCompletionStatus(item, userProgress);
+  const isSeries = Array.isArray(item.seasons) && item.seasons.length > 0;
+  const userStars = userProgress.userRatings[item.id] || 0;
+  const userNote = typeof userProgress.userNotes[item.id] === 'string' ? userProgress.userNotes[item.id] : '';
+  const epMap = userProgress.watchedEpisodes[item.id] || {};
+  const liveEpMeta = mediaApi.getEpisodeMeta(item.id);
+
+  const safeItemId = escapeHtml(item.id);
+  const safeTitle = escapeHtml(item.title);
+  const safeReleaseDate = escapeHtml(item.releaseDate);
+  const safeSynopsis = escapeHtml(item.synopsis);
+  const safeUserNote = escapeHtml(userNote);
+
+  const progInfo = document.getElementById('modalProgressInfo');
+  if (progInfo) {
+    progInfo.textContent = isSeries
+      ? `${comp.watchedCount}/${comp.totalCount} episodios (${comp.percent}%)`
+      : comp.status === 'completed'
+        ? 'Completado'
+        : 'Pendiente';
+  }
+
+  let seasonsHtml = '';
+  if (isSeries) {
+    seasonsHtml = `
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-blue-400">
+            <i class="fa-solid fa-list-check mr-1" aria-hidden="true"></i>Checklist de Episodios (${comp.watchedCount}/${comp.totalCount})
+          </h4>
+        </div>
+        <div class="space-y-3">
+          ${item.seasons
+            .map((season) => {
+              const watchedInSeason = season.episodes.filter((ep) => Boolean(epMap[ep.code])).length;
+              const allSeasonDone = watchedInSeason === season.episodes.length;
+              return `
+                <div class="bg-[#0B0E14] border border-marvel-border rounded-xl overflow-hidden">
+                  <div class="px-4 py-3 bg-gray-900/70 border-b border-marvel-border flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <span class="font-bold text-sm text-white">Temporada ${season.seasonNumber} (${escapeHtml(season.year)})</span>
+                      <span class="text-xs text-gray-400 ml-2">${watchedInSeason}/${season.episodes.length} episodios</span>
+                      ${season.note ? `<p class="text-[11px] text-gray-400 mt-0.5">${escapeHtml(season.note)}</p>` : ''}
+                    </div>
+                    <button type="button"
+                        data-action="toggle-season"
+                        data-item-id="${safeItemId}"
+                        data-season-num="${season.seasonNumber}"
+                        class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                          allSeasonDone
+                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                            : 'bg-marvel-card border-marvel-border text-gray-300 hover:text-white'
+                        }">
+                      <i class="fa-solid ${allSeasonDone ? 'fa-check-double' : 'fa-check'} mr-1" aria-hidden="true"></i>
+                      ${allSeasonDone ? 'Temporada completada' : 'Marcar todos'}
+                    </button>
+                  </div>
+                  <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    ${season.episodes
+                      .map((ep) => {
+                        const isEpWatched = Boolean(epMap[ep.code]);
+                        const meta = liveEpMeta[ep.code] || {};
+                        const displayTitle = escapeHtml(meta.title || ep.title);
+                        const safeAirdate = meta.airdate ? escapeHtml(meta.airdate) : '';
+                        const safeEpCode = escapeHtml(ep.code);
+                        const safeThumb = sanitizeImageUrl(meta.image);
+
+                        return `
+                          <button type="button"
+                               data-action="toggle-episode"
+                               data-item-id="${safeItemId}"
+                               data-ep-code="${safeEpCode}"
+                               role="switch"
+                               aria-checked="${isEpWatched}"
+                               aria-label="${safeEpCode}: ${displayTitle}"
+                               class="text-left flex items-center justify-between gap-2.5 p-2 rounded-xl border cursor-pointer transition select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red ${
+                                 isEpWatched
+                                   ? 'bg-emerald-950/25 border-emerald-500/40 text-emerald-200'
+                                   : 'bg-marvel-card/60 border-marvel-border/70 text-gray-300 hover:border-gray-600'
+                               }">
+                            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                              ${safeThumb ? `
+                                <img src="${escapeHtml(safeThumb)}" alt="${safeEpCode}" loading="lazy" class="w-16 h-10 object-cover rounded-lg border border-white/10 shrink-0">
+                              ` : `
+                                <div class="w-12 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shrink-0 text-[10px] font-mono font-bold text-gray-400">
+                                  ${safeEpCode}
+                                </div>
+                              `}
+                              <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-1.5">
+                                  <span class="text-[10px] font-mono font-bold text-amber-400">${safeEpCode}</span>
+                                  ${safeAirdate ? `<span class="text-[10px] text-gray-500">• ${safeAirdate}</span>` : ''}
+                                </div>
+                                <div class="text-xs font-semibold truncate ${isEpWatched ? 'line-through decoration-emerald-500/60' : ''}" title="${displayTitle}">
+                                  ${displayTitle}
+                                </div>
+                              </div>
+                            </div>
+                            <span class="watch-switch-track relative inline-flex items-center w-9 h-5 rounded-full border shrink-0 ${
+                              isEpWatched ? 'bg-emerald-500 border-emerald-400' : 'bg-gray-800 border-gray-600'
+                            }" aria-hidden="true">
+                              <span class="watch-switch-knob inline-block w-3.5 h-3.5 rounded-full bg-white shadow transform ${
+                                isEpWatched ? 'translate-x-4' : 'translate-x-0.5'
+                              }"></span>
+                            </span>
+                          </button>
+                        `;
+                      })
+                      .join('')}
+                  </div>
+                </div>
+              `;
+            })
+            .join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  const safeImdbId = item.imdbId ? encodeURIComponent(item.imdbId) : '';
+  const externalLinksHtml = `
+    <div class="flex flex-wrap items-center gap-2 pt-1">
+      ${safeImdbId ? `
+        <a href="https://www.imdb.com/title/${safeImdbId}/" target="_blank" rel="noopener noreferrer"
+           class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition">
+          <i class="fa-brands fa-imdb text-sm" aria-hidden="true"></i> Ver ficha oficial en IMDb
+        </a>
+      ` : ''}
+      ${item.category === 'Cómic Canon' ? `
+        <a href="https://marvelcinematicuniverse.fandom.com/wiki/Category:Comics" target="_blank" rel="noopener noreferrer"
+           class="px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 text-xs font-bold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-book-open" aria-hidden="true"></i> Ver en Marvel Cinematic Database (Cómics)
+        </a>
+      ` : ''}
+    </div>
+  `;
+
+  const body = document.getElementById('modalBodyContent');
+  if (!body) return;
+
+  body.innerHTML = `
+    <div class="flex flex-col sm:flex-row gap-4 bg-[#0B0E14] border border-marvel-border rounded-2xl p-4">
+      ${renderPosterArt(item, filterState.orderMode === 'chrono' ? item.chronoOrder : item.releaseOrder, mediaApi)}
+      <div class="flex-1 space-y-2.5">
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 id="detailModalTitle" class="text-lg sm:text-xl font-extrabold text-white">${safeTitle}</h3>
+            <p class="text-xs text-gray-400 mt-0.5">
+              Estreno: <strong>${safeReleaseDate}</strong> • Orden Publicación: <strong>#${item.releaseOrder}</strong> • Orden Cronológico: <strong>#${item.chronoOrder}</strong>
+            </p>
+          </div>
+          ${renderWatchSwitchHtml(item, comp)}
+        </div>
+
+        <div class="bg-marvel-card border border-marvel-border rounded-xl p-3">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-marvel-red block mb-1">Reseña y Conexión Cronológica</span>
+          <p class="text-xs sm:text-sm text-gray-200 leading-relaxed">${safeSynopsis}</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <span class="px-2.5 py-1 rounded-lg bg-marvel-card border border-marvel-border text-gray-300">
+            <i class="fa-regular fa-clock mr-1 text-gray-400" aria-hidden="true"></i>Duración total: ${Math.round((item.runtimeMins / 60) * 10) / 10} h (${item.runtimeMins} min)
+          </span>
+          <span class="px-2.5 py-1 rounded-lg bg-marvel-card border border-marvel-border text-gray-300">
+            <i class="fa-solid fa-film mr-1 text-amber-400" aria-hidden="true"></i>Escenas poscréditos: ${item.postCredits}
+          </span>
+          ${item.doomsdayEssential ? `
+            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold">
+              <i class="fa-solid fa-bolt mr-1" aria-hidden="true"></i>Esencial para Avengers: Doomsday
+            </span>
+          ` : ''}
+        </div>
+
+        ${externalLinksHtml}
+      </div>
+    </div>
+
+    <div class="bg-[#0B0E14] border border-marvel-border rounded-2xl p-4 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-400">
+          <i class="fa-solid fa-pen-to-square mr-1" aria-hidden="true"></i>Tu Valoración y Notas Personales
+        </span>
+        <div class="flex items-center gap-1" role="group" aria-label="Valoración en estrellas">
+          <span class="text-xs text-gray-400 mr-1">Tu nota:</span>
+          ${[1, 2, 3, 4, 5]
+            .map(
+              (star) => `
+                <button type="button"
+                    data-action="set-rating"
+                    data-item-id="${safeItemId}"
+                    data-stars="${star}"
+                    aria-label="Valorar con ${star} de 5 estrellas"
+                    aria-pressed="${star <= userStars}"
+                    class="text-base px-1 transition ${star <= userStars ? 'text-amber-400 scale-110' : 'text-gray-600 hover:text-gray-400'}">
+                  <i class="fa-solid fa-star" aria-hidden="true"></i>
+                </button>
+              `
+            )
+            .join('')}
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <input id="userNoteInput" type="text" value="${safeUserNote}"
+            aria-label="Nota personal"
+            placeholder="Escribe aquí tu opinión, por qué minuto vas o con quién la viste..."
+            class="flex-1 bg-marvel-card border border-marvel-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
+        <button type="button"
+            data-action="save-note"
+            data-item-id="${safeItemId}"
+            class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 text-xs font-bold transition">
+          Guardar nota
+        </button>
+      </div>
+    </div>
+
+    ${seasonsHtml}
+  `;
+}
+
+export function updateSyncBadge(text, color) {
+  const badge = document.getElementById('syncBadge');
+  if (!badge) return;
+  const safeText = escapeHtml(text);
+  if (color === 'emerald') {
+    badge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+    badge.innerHTML = `<i class="fa-solid fa-cloud-check mr-1" aria-hidden="true"></i>${safeText}`;
+  } else {
+    badge.className = 'text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20';
+    badge.innerHTML = `<i class="fa-solid fa-floppy-disk mr-1" aria-hidden="true"></i>${safeText}`;
+  }
+}

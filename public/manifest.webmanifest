@@ -1,0 +1,19 @@
+{
+  "name": "Checklist Maestro UCM & Multiverso",
+  "short_name": "UCM Tracker",
+  "description": "Checklist interactivo del Universo Cinematográfico de Marvel, series Disney+, ABC, Netflix, Fox, Sony y Cómics Canon.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0B0E14",
+  "theme_color": "#E62429",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
