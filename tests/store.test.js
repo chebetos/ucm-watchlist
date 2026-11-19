@@ -4,6 +4,9 @@ import {
   LOCAL_STORAGE_KEY,
   OMDB_STORAGE_KEY,
   EXTERNAL_MEDIA_STORAGE_KEY,
+  MAX_NOTE_LENGTH,
+  MAX_MAP_ENTRIES,
+  MAX_SYNC_CODE_LENGTH,
   isValidIsoDate,
   createDefaultProgress,
   normalizeUserProgress,
@@ -14,6 +17,7 @@ import {
   saveOmdbApiKeyToStorage,
   loadExternalMediaPref,
   saveExternalMediaPref,
+  saveProgressToStorage,
 } from '../src/store.js';
 
 function createMemoryStorage() {
@@ -61,6 +65,23 @@ describe('normalizeUserProgress', () => {
 
     expect(({}).polluted).toBeUndefined();
     expect(Object.keys(normalized.watchedItems)).toEqual(['mcu_iron_man']);
+  });
+
+  test('limita longitud de notas, cantidad de entradas y tamaño de código de sincronización', () => {
+    const hugeWatched = {};
+    for (let i = 0; i < MAX_MAP_ENTRIES + 200; i++) {
+      hugeWatched[`item_${i}`] = true;
+    }
+    const normalized = normalizeUserProgress({
+      watchedItems: hugeWatched,
+      userNotes: { mcu_iron_man: 'a'.repeat(MAX_NOTE_LENGTH + 500) },
+    });
+
+    expect(Object.keys(normalized.watchedItems).length).toBe(MAX_MAP_ENTRIES);
+    expect(normalized.userNotes.mcu_iron_man.length).toBe(MAX_NOTE_LENGTH);
+
+    const oversizedCode = 'A'.repeat(MAX_SYNC_CODE_LENGTH + 1);
+    expect(() => decodeSyncCode(oversizedCode)).toThrow('Código demasiado grande');
   });
 });
 
@@ -119,5 +140,17 @@ describe('Aislamiento de omdbApiKey y sincronización', () => {
     saveExternalMediaPref(false, storage);
     expect(storage.getItem(EXTERNAL_MEDIA_STORAGE_KEY)).toBeNull();
     expect(loadExternalMediaPref(storage)).toBe(false);
+  });
+
+  test('saveProgressToStorage devuelve true al guardar y false ante QuotaExceededError', () => {
+    const storage = createMemoryStorage();
+    expect(saveProgressToStorage(createDefaultProgress(), storage)).toBe(true);
+
+    const failingStorage = {
+      setItem: () => {
+        throw new Error('QuotaExceededError');
+      },
+    };
+    expect(saveProgressToStorage(createDefaultProgress(), failingStorage)).toBe(false);
   });
 });

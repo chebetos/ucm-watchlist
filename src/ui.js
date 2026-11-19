@@ -36,6 +36,7 @@ export function renderPosterArt(item, orderNumber, mediaApi) {
            ${cachedUrl ? `src="${escapeHtml(cachedUrl)}"` : ''}
            alt="${safeTitle}"
            loading="lazy"
+           referrerpolicy="no-referrer"
            class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${cachedUrl ? '' : 'opacity-0'} z-0">
       <div class="relative z-20 flex items-center justify-between">
         <span class="text-[10px] font-black bg-black/75 backdrop-blur-sm text-white px-1.5 py-0.5 rounded border border-white/15">
@@ -426,7 +427,7 @@ function renderEpisodeCardHtml({ safeItemId, seasonNumber, ep, isEpWatched, meta
   const knobPosition = isEpWatched ? 'translate-x-4' : 'translate-x-0.5';
 
   const thumbHtml = safeThumb
-    ? `<img src="${escapeHtml(safeThumb)}" alt="${safeEpCode}" loading="lazy" class="w-16 h-10 object-cover rounded-lg border border-white/10 shrink-0">`
+    ? `<img src="${escapeHtml(safeThumb)}" alt="${safeEpCode}" loading="lazy" referrerpolicy="no-referrer" class="w-16 h-10 object-cover rounded-lg border border-white/10 shrink-0">`
     : `<div class="w-12 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shrink-0 text-[10px] font-mono font-bold text-gray-400">${safeEpCode}</div>`;
 
   return `
@@ -656,7 +657,7 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
         </div>
       </div>
       <div class="flex gap-2">
-        <input id="userNoteInput" type="text" value="${safeUserNote}"
+        <input id="userNoteInput" type="text" maxlength="2000" value="${safeUserNote}"
             aria-label="Nota personal"
             placeholder="Escribe aquí tu opinión, por qué minuto vas o con quién la viste..."
             class="flex-1 bg-marvel-card border border-marvel-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400">

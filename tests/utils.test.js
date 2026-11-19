@@ -18,15 +18,26 @@ describe('escapeHtml', () => {
 });
 
 describe('sanitizeImageUrl', () => {
-  test('acepta URLs https válidas', () => {
+  test('acepta URLs https válidas de hosts permitidos', () => {
     expect(sanitizeImageUrl('https://static.tvmaze.com/uploads/images/medium_landscape/1/123.jpg')).toBe(
       'https://static.tvmaze.com/uploads/images/medium_landscape/1/123.jpg'
     );
+    expect(sanitizeImageUrl('https://m.media-amazon.com/images/poster.jpg')).toBe(
+      'https://m.media-amazon.com/images/poster.jpg'
+    );
+    expect(sanitizeImageUrl('https://upload.wikimedia.org/wikipedia/en/poster.jpg')).toBe(
+      'https://upload.wikimedia.org/wikipedia/en/poster.jpg'
+    );
+    expect(sanitizeImageUrl('https://covers.openlibrary.org/b/isbn/123-M.jpg')).toBe(
+      'https://covers.openlibrary.org/b/isbn/123-M.jpg'
+    );
   });
 
-  test('rechaza esquemas inseguros o URLs inválidas', () => {
+  test('rechaza esquemas inseguros, hosts no permitidos, credenciales embebidas o URLs inválidas', () => {
     expect(sanitizeImageUrl('javascript:alert(1)')).toBeNull();
-    expect(sanitizeImageUrl('http://insecure.example.com/a.jpg')).toBeNull();
+    expect(sanitizeImageUrl('http://static.tvmaze.com/a.jpg')).toBeNull();
+    expect(sanitizeImageUrl('https://evil.example.com/tracker.png')).toBeNull();
+    expect(sanitizeImageUrl('https://user:pass@static.tvmaze.com/a.jpg')).toBeNull();
     expect(sanitizeImageUrl('data:text/html,<script>alert(1)</script>')).toBeNull();
     expect(sanitizeImageUrl('')).toBeNull();
     expect(sanitizeImageUrl(null)).toBeNull();

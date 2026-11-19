@@ -10,11 +10,23 @@ export function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (ch) => HTML_ESCAPE_MAP[ch]);
 }
 
+export const ALLOWED_IMAGE_HOSTS = new Set([
+  'm.media-amazon.com',
+  'static.tvmaze.com',
+  'upload.wikimedia.org',
+  'covers.openlibrary.org',
+]);
+
 export function sanitizeImageUrl(url) {
   if (typeof url !== 'string' || !url.trim()) return null;
   try {
     const parsed = new URL(url.trim());
-    if (parsed.protocol === 'https:') {
+    if (
+      parsed.protocol === 'https:' &&
+      !parsed.username &&
+      !parsed.password &&
+      ALLOWED_IMAGE_HOSTS.has(parsed.hostname)
+    ) {
       return parsed.href;
     }
     return null;

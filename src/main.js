@@ -11,8 +11,8 @@ import {
   saveExternalMediaPref,
   loadProgressFromStorage,
   saveProgressToStorage,
-  initCloudPersistence,
-  saveProgressToCloud,
+  MAX_IMPORT_FILE_BYTES,
+  MAX_NOTE_LENGTH,
 } from './store.js';
 import {
   getItemCompletionStatus,
@@ -68,8 +68,13 @@ function showToast(msg) {
 }
 
 function saveProgress() {
-  saveProgressToStorage(userProgress);
-  saveProgressToCloud(userProgress);
+  const saved = saveProgressToStorage(userProgress);
+  if (!saved) {
+    updateSyncBadge('Sin espacio local', 'amber');
+    showToast('No se pudo guardar en el navegador (cuota llena o modo privado)');
+  } else {
+    updateSyncBadge('Guardado local', 'emerald');
+  }
 }
 
 function renderApp() {
@@ -222,7 +227,7 @@ function setUserRating(itemId, stars) {
 }
 
 function saveUserNote(itemId, text) {
-  const trimmed = String(text ?? '').trim();
+  const trimmed = String(text ?? '').trim().slice(0, MAX_NOTE_LENGTH);
   if (trimmed) userProgress.userNotes[itemId] = trimmed;
   else delete userProgress.userNotes[itemId];
   saveProgress();
@@ -541,6 +546,11 @@ function handleUploadJsonBackup(event) {
   const input = event.target;
   const file = input.files?.[0];
   if (!file) return;
+  if (file.size > MAX_IMPORT_FILE_BYTES) {
+    input.value = '';
+    showToast('El archivo JSON supera el límite máximo permitido (512 KB)');
+    return;
+  }
 
   const reader = new FileReader();
   reader.onload = (e) => {
@@ -860,18 +870,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const startExpanded = !isCompactViewport();
   setPlannerExpanded(startExpanded);
   setFiltersExpanded(startExpanded);
+  updateSyncBadge('Guardado local', 'emerald');
   renderApp();
-
-  initCloudPersistence({
-    onRemoteProgress: (remoteRaw) => {
-      userProgress = normalizeUserProgress(remoteRaw, userProgress);
-      saveProgressToStorage(userProgress);
-      const tInput = document.getElementById('targetDateInput');
-      if (tInput && userProgress.targetDate) {
-        tInput.value = userProgress.targetDate;
-      }
-      renderApp();
-    },
-    onStatusChange: (text, color) => updateSyncBadge(text, color),
-  });
 });
