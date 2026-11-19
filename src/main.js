@@ -274,19 +274,24 @@ async function openDetailModal(itemId) {
 // ============================================================================
 // CONTROLES DE FILTROS, GRUPOS Y PLANIFICADOR
 // ============================================================================
+const ORDER_BTN_BASE_CLASS =
+  'py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-center leading-tight';
+const ORDER_BTN_ACTIVE_CLASS = `${ORDER_BTN_BASE_CLASS} bg-marvel-red text-white shadow`;
+const ORDER_BTN_INACTIVE_CLASS = `${ORDER_BTN_BASE_CLASS} text-gray-400 hover:text-white`;
+
+const CAT_PILL_BASE_CLASS = 'cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold';
+const CAT_PILL_ACTIVE_CLASS = `${CAT_PILL_BASE_CLASS} bg-white text-gray-900 shadow`;
+const CAT_PILL_INACTIVE_CLASS = `${CAT_PILL_BASE_CLASS} bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border`;
+
 function setOrderMode(mode) {
   filterState.orderMode = mode;
   const btnRelease = document.getElementById('btnOrderRelease');
   const btnChrono = document.getElementById('btnOrderChrono');
 
   if (btnRelease && btnChrono) {
-    if (mode === 'release') {
-      btnRelease.className = 'flex-1 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 bg-marvel-red text-white shadow';
-      btnChrono.className = 'flex-1 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-gray-400 hover:text-white';
-    } else {
-      btnChrono.className = 'flex-1 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 bg-marvel-red text-white shadow';
-      btnRelease.className = 'flex-1 py-2 px-3 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-gray-400 hover:text-white';
-    }
+    const isRelease = mode === 'release';
+    btnRelease.className = isRelease ? ORDER_BTN_ACTIVE_CLASS : ORDER_BTN_INACTIVE_CLASS;
+    btnChrono.className = isRelease ? ORDER_BTN_INACTIVE_CLASS : ORDER_BTN_ACTIVE_CLASS;
   }
   renderApp();
 }
@@ -294,11 +299,8 @@ function setOrderMode(mode) {
 function setCategoryFilter(cat) {
   filterState.category = cat;
   document.querySelectorAll('.cat-pill').forEach((btn) => {
-    if (btn.getAttribute('data-cat') === cat) {
-      btn.className = 'cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-900 shadow';
-    } else {
-      btn.className = 'cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border';
-    }
+    const isActive = btn.getAttribute('data-cat') === cat;
+    btn.className = isActive ? CAT_PILL_ACTIVE_CLASS : CAT_PILL_INACTIVE_CLASS;
   });
   renderApp();
 }
@@ -619,6 +621,105 @@ function handleSaveOmdbApiKey() {
   }
 }
 
+function setEpisodeCardSynopsisExpanded(card, expanded) {
+  const panel = card?.querySelector('[data-episode-synopsis]');
+  if (!panel) return;
+  panel.classList.toggle('hidden', !expanded);
+  card.querySelector('[data-action="toggle-episode-synopsis"]')?.setAttribute('aria-expanded', String(expanded));
+  card.querySelector('[data-ep-chevron]')?.classList.toggle('rotate-180', expanded);
+}
+
+function handleCatalogGridClick(e) {
+  if (e.target.closest('[data-stop-card="true"]')) return;
+
+  const toggleItemBtn = e.target.closest('[data-action="toggle-item"]');
+  if (toggleItemBtn) {
+    e.stopPropagation();
+    toggleItemWatched(toggleItemBtn.getAttribute('data-item-id'));
+    return;
+  }
+
+  const toggleGroupWatchedBtn = e.target.closest('[data-action="toggle-group-watched"]');
+  if (toggleGroupWatchedBtn) {
+    e.stopPropagation();
+    toggleGroupWatched(toggleGroupWatchedBtn.getAttribute('data-group-id'));
+    return;
+  }
+
+  const toggleCollapseEl = e.target.closest('[data-action="toggle-group-collapse"]');
+  if (toggleCollapseEl) {
+    toggleGroupCollapse(toggleCollapseEl.getAttribute('data-group-id'));
+    return;
+  }
+
+  const detailTrigger = e.target.closest('[data-action="open-detail"]');
+  if (detailTrigger) {
+    openDetailModal(detailTrigger.getAttribute('data-item-id'));
+  }
+}
+
+function handleDetailModalClick(e) {
+  const toggleItemBtn = e.target.closest('[data-action="toggle-item"]');
+  if (toggleItemBtn) {
+    toggleItemWatched(toggleItemBtn.getAttribute('data-item-id'));
+    return;
+  }
+
+  const toggleEpBtn = e.target.closest('[data-action="toggle-episode"]');
+  if (toggleEpBtn) {
+    toggleEpisodeWatched(
+      toggleEpBtn.getAttribute('data-item-id'),
+      toggleEpBtn.getAttribute('data-ep-code')
+    );
+    return;
+  }
+
+  const toggleEpSynopsisBtn = e.target.closest('[data-action="toggle-episode-synopsis"]');
+  if (toggleEpSynopsisBtn) {
+    const card = toggleEpSynopsisBtn.closest('[data-episode-card]');
+    const panel = card?.querySelector('[data-episode-synopsis]');
+    if (panel) {
+      setEpisodeCardSynopsisExpanded(card, panel.classList.contains('hidden'));
+    }
+    return;
+  }
+
+  const toggleSeasonSynopsesBtn = e.target.closest('[data-action="toggle-season-synopses"]');
+  if (toggleSeasonSynopsesBtn) {
+    const seasonBlock = toggleSeasonSynopsesBtn.closest('[data-season-block]');
+    if (!seasonBlock) return;
+    const shouldOpen = toggleSeasonSynopsesBtn.getAttribute('aria-expanded') !== 'true';
+    toggleSeasonSynopsesBtn.setAttribute('aria-expanded', String(shouldOpen));
+    const label = toggleSeasonSynopsesBtn.querySelector('[data-season-synopses-label]');
+    if (label) label.textContent = shouldOpen ? 'Ocultar reseñas' : 'Ver reseñas';
+    seasonBlock.querySelectorAll('[data-episode-card]').forEach((card) => {
+      setEpisodeCardSynopsisExpanded(card, shouldOpen);
+    });
+    return;
+  }
+
+  const toggleSeasonBtn = e.target.closest('[data-action="toggle-season"]');
+  if (toggleSeasonBtn) {
+    toggleSeasonWatched(
+      toggleSeasonBtn.getAttribute('data-item-id'),
+      Number(toggleSeasonBtn.getAttribute('data-season-num'))
+    );
+    return;
+  }
+
+  const ratingBtn = e.target.closest('[data-action="set-rating"]');
+  if (ratingBtn) {
+    setUserRating(ratingBtn.getAttribute('data-item-id'), Number(ratingBtn.getAttribute('data-stars')));
+    return;
+  }
+
+  const saveNoteBtn = e.target.closest('[data-action="save-note"]');
+  if (saveNoteBtn) {
+    const noteInput = document.getElementById('userNoteInput');
+    saveUserNote(saveNoteBtn.getAttribute('data-item-id'), noteInput ? noteInput.value : '');
+  }
+}
+
 // ============================================================================
 // REGISTRO DE EVENTOS Y DELEGACIÓN
 // ============================================================================
@@ -706,38 +807,9 @@ function bindEvents() {
     openModal('syncModal');
   });
 
-  // Delegación de clics en catálogo
+  // Delegación de clics y teclado en catálogo
   const catalogGrid = document.getElementById('catalogGrid');
-  catalogGrid?.addEventListener('click', (e) => {
-    if (e.target.closest('[data-stop-card="true"]')) return;
-
-    const toggleItemBtn = e.target.closest('[data-action="toggle-item"]');
-    if (toggleItemBtn) {
-      e.stopPropagation();
-      toggleItemWatched(toggleItemBtn.getAttribute('data-item-id'));
-      return;
-    }
-
-    const toggleGroupWatchedBtn = e.target.closest('[data-action="toggle-group-watched"]');
-    if (toggleGroupWatchedBtn) {
-      e.stopPropagation();
-      toggleGroupWatched(toggleGroupWatchedBtn.getAttribute('data-group-id'));
-      return;
-    }
-
-    const toggleCollapseEl = e.target.closest('[data-action="toggle-group-collapse"]');
-    if (toggleCollapseEl) {
-      toggleGroupCollapse(toggleCollapseEl.getAttribute('data-group-id'));
-      return;
-    }
-
-    const detailTrigger = e.target.closest('[data-action="open-detail"]');
-    if (detailTrigger) {
-      openDetailModal(detailTrigger.getAttribute('data-item-id'));
-    }
-  });
-
-  // Soporte de teclado (Enter / Space) en tarjetas del catálogo
+  catalogGrid?.addEventListener('click', handleCatalogGridClick);
   catalogGrid?.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const card = e.target.closest('article[data-action="open-detail"]');
@@ -748,77 +820,7 @@ function bindEvents() {
 
   // Delegación de clics en el modal de detalle
   const modalBody = document.getElementById('modalBodyContent');
-  modalBody?.addEventListener('click', (e) => {
-    const toggleItemBtn = e.target.closest('[data-action="toggle-item"]');
-    if (toggleItemBtn) {
-      toggleItemWatched(toggleItemBtn.getAttribute('data-item-id'));
-      return;
-    }
-
-    const toggleEpBtn = e.target.closest('[data-action="toggle-episode"]');
-    if (toggleEpBtn) {
-      toggleEpisodeWatched(
-        toggleEpBtn.getAttribute('data-item-id'),
-        toggleEpBtn.getAttribute('data-ep-code')
-      );
-      return;
-    }
-
-    const toggleEpSynopsisBtn = e.target.closest('[data-action="toggle-episode-synopsis"]');
-    if (toggleEpSynopsisBtn) {
-      const card = toggleEpSynopsisBtn.closest('[data-episode-card]');
-      const panel = card?.querySelector('[data-episode-synopsis]');
-      if (panel) {
-        const isOpen = !panel.classList.contains('hidden');
-        panel.classList.toggle('hidden', isOpen);
-        toggleEpSynopsisBtn.setAttribute('aria-expanded', String(!isOpen));
-        const chevron = toggleEpSynopsisBtn.querySelector('[data-ep-chevron]');
-        chevron?.classList.toggle('rotate-180', !isOpen);
-      }
-      return;
-    }
-
-    const toggleSeasonSynopsesBtn = e.target.closest('[data-action="toggle-season-synopses"]');
-    if (toggleSeasonSynopsesBtn) {
-      const seasonBlock = toggleSeasonSynopsesBtn.closest('[data-season-block]');
-      if (seasonBlock) {
-        const shouldOpen = toggleSeasonSynopsesBtn.getAttribute('aria-expanded') !== 'true';
-        toggleSeasonSynopsesBtn.setAttribute('aria-expanded', String(shouldOpen));
-        const label = toggleSeasonSynopsesBtn.querySelector('[data-season-synopses-label]');
-        if (label) label.textContent = shouldOpen ? 'Ocultar reseñas' : 'Ver reseñas';
-        seasonBlock.querySelectorAll('[data-episode-card]').forEach((card) => {
-          const panel = card.querySelector('[data-episode-synopsis]');
-          const btn = card.querySelector('[data-action="toggle-episode-synopsis"]');
-          const chevron = card.querySelector('[data-ep-chevron]');
-          if (panel) panel.classList.toggle('hidden', !shouldOpen);
-          if (btn) btn.setAttribute('aria-expanded', String(shouldOpen));
-          if (chevron) chevron.classList.toggle('rotate-180', shouldOpen);
-        });
-      }
-      return;
-    }
-
-    const toggleSeasonBtn = e.target.closest('[data-action="toggle-season"]');
-    if (toggleSeasonBtn) {
-      toggleSeasonWatched(
-        toggleSeasonBtn.getAttribute('data-item-id'),
-        Number(toggleSeasonBtn.getAttribute('data-season-num'))
-      );
-      return;
-    }
-
-    const ratingBtn = e.target.closest('[data-action="set-rating"]');
-    if (ratingBtn) {
-      setUserRating(ratingBtn.getAttribute('data-item-id'), Number(ratingBtn.getAttribute('data-stars')));
-      return;
-    }
-
-    const saveNoteBtn = e.target.closest('[data-action="save-note"]');
-    if (saveNoteBtn) {
-      const noteInput = document.getElementById('userNoteInput');
-      saveUserNote(saveNoteBtn.getAttribute('data-item-id'), noteInput ? noteInput.value : '');
-    }
-  });
+  modalBody?.addEventListener('click', handleDetailModalClick);
 
   // Manejo de errores de carga de pósters en fase de captura (compatible con CSP estricta sin inline onerror)
   const handlePosterError = (e) => {
@@ -855,13 +857,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   bindEvents();
-  if (isCompactViewport()) {
-    setPlannerExpanded(false);
-    setFiltersExpanded(false);
-  } else {
-    setPlannerExpanded(true);
-    setFiltersExpanded(true);
-  }
+  const startExpanded = !isCompactViewport();
+  setPlannerExpanded(startExpanded);
+  setFiltersExpanded(startExpanded);
   renderApp();
 
   initCloudPersistence({
