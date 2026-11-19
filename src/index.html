@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <title>MCU &amp; Multiverse Master Tracker — Rumbo a Doomsday</title>
+    <title>UCM &amp; Multiverso — Checklist No Oficial</title>
     <!-- Configuración PWA (Progressive Web App) -->
     <meta name="theme-color" content="#0B0E14">
     <meta name="mobile-web-app-capable" content="yes">
@@ -14,9 +14,6 @@
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="apple-touch-icon" href="/icon.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body class="min-h-screen flex flex-col selection:bg-marvel-red selection:text-white">
@@ -28,8 +25,9 @@
                 <!-- Brand -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="bg-marvel-red text-white font-black tracking-tighter px-2.5 py-1 rounded text-lg sm:text-xl shadow-lg shadow-marvel-red/30 select-none">
-                            MARVEL
+                        <div class="bg-[#182234] border border-emerald-500/40 text-white font-black tracking-wider px-2.5 py-1 rounded-lg text-base sm:text-lg shadow-lg shadow-emerald-500/10 select-none flex items-center gap-1.5">
+                            <i class="fa-solid fa-list-check text-emerald-400 text-sm" aria-hidden="true"></i>
+                            <span>UCM</span>
                         </div>
                         <div>
                             <h1 class="font-extrabold text-base sm:text-lg tracking-tight text-white flex items-center gap-2">
@@ -38,7 +36,7 @@
                                     <i class="fa-solid fa-cloud-check mr-1" aria-hidden="true"></i>Guardado automático
                                 </span>
                             </h1>
-                            <p class="text-xs text-gray-400">Películas, Disney+, ABC, Netflix, Legado Fox y Cómics Canon</p>
+                            <p class="text-xs text-gray-400">Guía fan no oficial: películas, series y cómics</p>
                         </div>
                     </div>
                     <!-- Mobile Quick Actions -->
@@ -315,6 +313,24 @@
         </div>
     </main>
 
+    <!-- Footer Legal -->
+    <footer class="border-t border-marvel-border bg-[#0B0E14]/95 mt-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-gray-400">
+            <p class="text-center sm:text-left">
+                Proyecto fan independiente, no oficial y sin ánimo de lucro. No afiliado ni respaldado por The Walt Disney Company, Marvel, Sony Pictures ni 20th Century Studios.
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-3 shrink-0">
+                <button type="button" data-open-modal="legalModal" class="text-gray-300 hover:text-white underline underline-offset-2 transition">
+                    Aviso Legal, Privacidad y Créditos
+                </button>
+                <span aria-hidden="true" class="text-gray-600">•</span>
+                <a href="mailto:rice-shape-margin@duck.com" class="text-gray-300 hover:text-white transition">
+                    Contacto / DMCA
+                </a>
+            </div>
+        </div>
+    </footer>
+
     <!-- Modal: PWA Install -->
     <div id="pwaModal" role="dialog" aria-modal="true" aria-labelledby="pwaModalTitle" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-marvel-card border border-marvel-border rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
@@ -470,18 +486,35 @@
                 </button>
             </div>
             <div class="p-5 overflow-y-auto space-y-4 text-xs sm:text-sm text-gray-300 leading-relaxed">
-                <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-3.5 text-blue-200 space-y-1.5">
-                    <div class="font-bold text-white flex items-center gap-1.5">
-                        <i class="fa-solid fa-circle-check text-emerald-400" aria-hidden="true"></i>
-                        Motor Automático Activo (Sin necesidad de claves)
+                <!-- Interruptor Opt-In de Portadas Externas (Privacidad RGPD) -->
+                <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <div class="font-bold text-white flex items-center gap-1.5">
+                                <i class="fa-solid fa-shield-halved text-emerald-400" aria-hidden="true"></i>
+                                Cargar portadas y fotogramas desde APIs externas (Opcional)
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">
+                                Por defecto está <strong>desactivado</strong> para proteger tu privacidad: la app usa pósters estilizados propios sin conectarse a ningún servidor externo.
+                            </p>
+                        </div>
+                        <button type="button"
+                            id="btnToggleExternalMedia"
+                            role="switch"
+                            aria-checked="false"
+                            aria-label="Activar carga de portadas desde APIs externas"
+                            class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-marvel-card hover:bg-gray-900 border border-marvel-border cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+                            <span id="externalMediaStatusLabel" class="text-xs font-bold text-gray-400">Desactivado</span>
+                            <span id="externalMediaTrack" class="watch-switch-track relative inline-flex items-center w-11 h-6 rounded-full border bg-gray-800 border-gray-600/80" aria-hidden="true">
+                                <span id="externalMediaKnob" class="watch-switch-knob inline-block w-4 h-4 rounded-full shadow-md transform translate-x-0.5 bg-gray-300"></span>
+                            </span>
+                        </button>
                     </div>
-                    <p class="text-xs">
-                        La aplicación ya descarga automáticamente en segundo plano las portadas oficiales conforme navegas:
-                    </p>
-                    <ul class="list-disc pl-5 text-xs space-y-1">
-                        <li><strong>Series, Temporadas y Fotogramas de cada Episodio:</strong> Conectado en tiempo real a la API de <strong>TVMaze</strong> para traer el póster de cada temporada, la foto real de cada capítulo y su fecha de emisión.</li>
-                        <li><strong>Películas (UCM, Fox y Sony) y Cómics Canon:</strong> Conectado a la API REST de <strong>Wikimedia / Wikipedia</strong> y <strong>OpenLibrary Covers</strong> para obtener los pósters de cine y portadas oficiales de los cómics.</li>
-                    </ul>
+                    <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-blue-200 text-xs space-y-1">
+                        <p>
+                            Si activas esta opción, tu navegador realizará peticiones directas a <strong>TVMaze</strong>, <strong>Wikipedia / Wikimedia</strong> y <strong>Open Library</strong> (y a <strong>OMDb</strong> si añades tu clave), lo que implica que esos servicios recibirán tu dirección IP conforme a sus políticas de privacidad.
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Optional OMDb Key Input -->
@@ -491,7 +524,7 @@
                         Opcional: Clave gratuita de OMDb API (Datos directos de IMDb)
                     </label>
                     <p class="text-xs text-gray-400">
-                        IMDb bloquea el acceso directo desde navegadores sin clave, pero a través de <strong>OMDb API</strong> puedes introducir tu API Key opcional para priorizar los pósters directos de IMDb. Se guarda localmente en este navegador y nunca se exporta.
+                        Solo se utiliza si activas la carga de portadas externas arriba. Se guarda localmente en este navegador y nunca se incluye en tus códigos de sincronización ni copias JSON.
                     </p>
                     <div class="flex gap-2">
                         <input id="omdbApiKeyInput" type="text" placeholder="Ej: a1b2c3d4 (Opcional)"
@@ -523,6 +556,80 @@
             <div class="flex justify-end gap-2 pt-2">
                 <button type="button" data-close-modal="confirmResetModal" class="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 text-xs font-bold">Cancelar</button>
                 <button type="button" id="btnConfirmReset" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold">Sí, reiniciar todo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Legal, Privacy & Credits -->
+    <div id="legalModal" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-marvel-card border border-marvel-border rounded-2xl max-w-2xl w-full max-h-[88vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-marvel-border bg-[#0B0E14]">
+                <h3 id="legalModalTitle" class="font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-scale-balanced text-emerald-400" aria-hidden="true"></i>
+                    Aviso Legal, Privacidad y Créditos
+                </h3>
+                <button type="button" data-close-modal="legalModal" aria-label="Cerrar aviso legal" class="text-gray-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 text-xs text-gray-300 leading-relaxed">
+                <section class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2">
+                    <h4 class="font-bold text-white text-sm">1. Propiedad Intelectual, No Afiliación y Retirada (DMCA)</h4>
+                    <p>
+                        Esta web es un <strong>proyecto personal, fan, no oficial y estrictamente sin ánimo de lucro</strong> (sin publicidad, afiliados ni monetización). No está afiliada, patrocinada, autorizada ni relacionada oficialmente con <strong>The Walt Disney Company</strong>, <strong>Marvel Characters, Inc.</strong>, <strong>Marvel Studios</strong>, <strong>Sony Pictures Entertainment</strong> ni <strong>20th Century Studios</strong>.
+                    </p>
+                    <p>
+                        Todos los personajes, nombres, títulos, marcas registradas, pósters y fotogramas pertenecen a sus respectivos titulares de derechos. Esta aplicación <strong>no aloja ni distribuye</strong> películas, series ni cómics; únicamente proporciona un listado informativo y una herramienta de seguimiento personal.
+                    </p>
+                    <p>
+                        Si eres titular de derechos y consideras que algún contenido debe retirarse, escribe a <a href="mailto:rice-shape-margin@duck.com" class="text-emerald-400 underline">rice-shape-margin@duck.com</a> y se retirará de forma inmediata.
+                    </p>
+                </section>
+
+                <section class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2">
+                    <h4 class="font-bold text-white text-sm">2. Privacidad y Almacenamiento Local (RGPD / LSSI-CE)</h4>
+                    <p>
+                        Esta web <strong>no utiliza cookies de seguimiento ni herramientas de analítica</strong> y no recopila ni envía tus datos personales a ningún servidor propio.
+                    </p>
+                    <p>
+                        Para recordar tu progreso y ajustes de forma local en tu dispositivo se utiliza exclusivamente almacenamiento técnico en <code>localStorage</code> (exento de banner de consentimiento conforme al art. 22.2 de la LSSI-CE):
+                    </p>
+                    <ul class="list-disc pl-5 space-y-1 text-gray-400">
+                        <li><code>mcu_multiverse_master_progress_v2</code>: títulos y episodios marcados, valoraciones, notas personales y fecha objetivo.</li>
+                        <li><code>mcu_multiverse_external_media_v1</code>: preferencia opcional (opt-in) sobre la carga de portadas desde APIs externas.</li>
+                        <li><code>mcu_multiverse_omdb_key_v1</code>: clave personal opcional de OMDb API (nunca se incluye al exportar progreso).</li>
+                    </ul>
+                    <p>
+                        Puedes borrar estos datos en cualquier momento desde el botón <em>Reiniciar</em> o desde la configuración de tu navegador. Por defecto la aplicación realiza <strong>cero peticiones a servidores externos</strong>; únicamente si activas manualmente la carga opcional de portadas en <em>Portadas IMDb / TV</em>, tu navegador consultará a TVMaze, Wikipedia, Open Library (y OMDb si añades tu clave), compartiendo tu dirección IP con dichos terceros conforme a sus respectivas políticas de privacidad.
+                    </p>
+                </section>
+
+                <section class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2">
+                    <h4 class="font-bold text-white text-sm">3. Créditos y Licencias de Terceros</h4>
+                    <ul class="list-disc pl-5 space-y-1 text-gray-300">
+                        <li><strong>TVmaze API:</strong> metadatos y fotogramas de episodios bajo licencia <a href="https://www.tvmaze.com/api" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">CC BY-SA 4.0</a>.</li>
+                        <li><strong>Wikipedia / Wikimedia REST API:</strong> resúmenes y miniaturas bajo licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">CC BY-SA 4.0</a>.</li>
+                        <li><strong>Open Library (Internet Archive):</strong> portadas de cómics vía <a href="https://openlibrary.org/" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">Open Library Covers API</a>.</li>
+                        <li><strong>OMDb API:</strong> proveedor opcional de pósters vía <a href="https://www.omdbapi.com/" target="_blank" rel="noopener noreferrer" class="text-sky-400 underline">omdbapi.com</a>.</li>
+                        <li><strong>Font Awesome Free:</strong> iconos empaquetados localmente (CC BY 4.0 / SIL OFL / MIT).</li>
+                        <li><strong>Tipografía Inter:</strong> autoalojada mediante <code>@fontsource-variable/inter</code> (licencia SIL OFL 1.1).</li>
+                    </ul>
+                </section>
+
+                <section class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2">
+                    <h4 class="font-bold text-white text-sm">4. Aviso Legal y Limitación de Responsabilidad</h4>
+                    <p>
+                        <strong>Responsable:</strong> Cesar D. — <strong>Contacto:</strong> <a href="mailto:rice-shape-margin@duck.com" class="text-emerald-400 underline">rice-shape-margin@duck.com</a>.
+                    </p>
+                    <p>
+                        Esta herramienta se ofrece «tal cual» (<em>as-is</em>), sin garantía de disponibilidad ininterrumpida ni exactitud absoluta de fechas de estreno futuras. El responsable no se hace cargo de la pérdida del progreso guardado localmente si borras la caché o cambias de dispositivo; se recomienda utilizar periódicamente la exportación en archivo <code>.JSON</code>.
+                    </p>
+                </section>
+            </div>
+            <div class="px-5 py-3 border-t border-marvel-border bg-[#0B0E14] flex justify-end">
+                <button type="button" data-close-modal="legalModal" class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold transition">
+                    Cerrar
+                </button>
             </div>
         </div>
     </div>

@@ -1,5 +1,6 @@
 export const LOCAL_STORAGE_KEY = 'mcu_multiverse_master_progress_v2';
 export const OMDB_STORAGE_KEY = 'mcu_multiverse_omdb_key_v1';
+export const EXTERNAL_MEDIA_STORAGE_KEY = 'mcu_multiverse_external_media_v1';
 export const DEFAULT_TARGET_DATE = '2026-12-18';
 
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -17,13 +18,25 @@ function safeKeys(obj) {
   );
 }
 
+export function isValidIsoDate(str) {
+  if (typeof str !== 'string' || !ISO_DATE_RE.test(str)) return false;
+  const [y, m, d] = str.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return (
+    !Number.isNaN(date.getTime()) &&
+    date.getUTCFullYear() === y &&
+    date.getUTCMonth() === m - 1 &&
+    date.getUTCDate() === d
+  );
+}
+
 export function createDefaultProgress(targetDate = DEFAULT_TARGET_DATE) {
   return {
     watchedItems: {},
     watchedEpisodes: {},
     userRatings: {},
     userNotes: {},
-    targetDate: ISO_DATE_RE.test(targetDate) ? targetDate : DEFAULT_TARGET_DATE,
+    targetDate: isValidIsoDate(targetDate) ? targetDate : DEFAULT_TARGET_DATE,
   };
 }
 
@@ -36,7 +49,7 @@ export function createDefaultProgress(targetDate = DEFAULT_TARGET_DATE) {
  */
 export function normalizeUserProgress(raw, current = null) {
   const fallbackDate =
-    current && typeof current.targetDate === 'string' && ISO_DATE_RE.test(current.targetDate)
+    current && isValidIsoDate(current.targetDate)
       ? current.targetDate
       : DEFAULT_TARGET_DATE;
 
@@ -90,7 +103,7 @@ export function normalizeUserProgress(raw, current = null) {
     }
   }
 
-  if (typeof raw.targetDate === 'string' && ISO_DATE_RE.test(raw.targetDate)) {
+  if (isValidIsoDate(raw.targetDate)) {
     base.targetDate = raw.targetDate;
   }
 
@@ -158,6 +171,26 @@ export function saveOmdbApiKeyToStorage(key, storage = globalThis.localStorage) 
       storage?.setItem(OMDB_STORAGE_KEY, cleaned);
     } else {
       storage?.removeItem(OMDB_STORAGE_KEY);
+    }
+  } catch {
+    // Ignorar errores de almacenamiento
+  }
+}
+
+export function loadExternalMediaPref(storage = globalThis.localStorage) {
+  try {
+    return storage?.getItem(EXTERNAL_MEDIA_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function saveExternalMediaPref(enabled, storage = globalThis.localStorage) {
+  try {
+    if (enabled) {
+      storage?.setItem(EXTERNAL_MEDIA_STORAGE_KEY, 'true');
+    } else {
+      storage?.removeItem(EXTERNAL_MEDIA_STORAGE_KEY);
     }
   } catch {
     // Ignorar errores de almacenamiento

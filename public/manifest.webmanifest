@@ -1,7 +1,7 @@
 {
-  "name": "Checklist Maestro UCM & Multiverso",
+  "name": "Checklist UCM & Multiverso (No Oficial)",
   "short_name": "UCM Tracker",
-  "description": "Checklist interactivo del Universo Cinematográfico de Marvel, series Disney+, ABC, Netflix, Fox, Sony y Cómics Canon.",
+  "description": "Checklist fan no oficial y sin ánimo de lucro para seguir películas, series y cómics del UCM y Multiverso.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

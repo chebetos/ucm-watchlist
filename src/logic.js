@@ -92,8 +92,11 @@ export function computeGlobalStats(catalog, userProgress) {
 }
 
 export function computeMarathonPlan(catalog, filterState, userProgress, scope = 'filtered', now = new Date()) {
-  const targetStr = userProgress.targetDate || '2026-12-18';
-  const targetDate = new Date(`${targetStr}T23:59:59`);
+  const rawTarget = userProgress.targetDate || '2026-12-18';
+  const parsedTarget = new Date(`${rawTarget}T23:59:59`);
+  const isTargetValid = !Number.isNaN(parsedTarget.getTime());
+  const targetStr = isTargetValid ? rawTarget : '2026-12-18';
+  const targetDate = isTargetValid ? parsedTarget : new Date('2026-12-18T23:59:59');
   const diffMs = targetDate.getTime() - now.getTime();
   const daysLeft = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 

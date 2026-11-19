@@ -32,10 +32,9 @@ export function renderPosterArt(item, orderNumber, mediaApi) {
          style="background: linear-gradient(155deg, ${escapeHtml(c1)} 0%, #0B0E14 68%, ${escapeHtml(c2)} 100%);">
       <div class="poster-shine absolute inset-0 pointer-events-none z-10"></div>
       <img data-poster-id="${safeId}"
-           src="${escapeHtml(cachedUrl)}"
+           ${cachedUrl ? `src="${escapeHtml(cachedUrl)}"` : ''}
            alt="${safeTitle}"
            loading="lazy"
-           onerror="this.classList.add('opacity-0')"
            class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${cachedUrl ? '' : 'opacity-0'} z-0">
       <div class="relative z-20 flex items-center justify-between">
         <span class="text-[10px] font-black bg-black/75 backdrop-blur-sm text-white px-1.5 py-0.5 rounded border border-white/15">

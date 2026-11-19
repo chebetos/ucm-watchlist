@@ -1,6 +1,10 @@
 import { sanitizeImageUrl } from './utils.js';
 
-export function createMediaApi({ fetchFn = globalThis.fetch?.bind(globalThis), onPosterResolved = null } = {}) {
+export function createMediaApi({
+  fetchFn = globalThis.fetch?.bind(globalThis),
+  onPosterResolved = null,
+  externalMediaEnabled: initialExternalMediaEnabled = false,
+} = {}) {
   const imageCache = new Map();        // itemId -> httpsUrl
   const tvShowDataCache = new Map();   // tvShowQuery -> tvmazeResponse
   const episodeMetaCache = new Map();  // itemId -> { "S1E1": { image, title, runtime, airdate } }
@@ -9,7 +13,22 @@ export function createMediaApi({ fetchFn = globalThis.fetch?.bind(globalThis), o
   const inFlightTvShowRequests = new Map();
 
   let customOmdbKey = '';
+  let externalMediaEnabled = Boolean(initialExternalMediaEnabled);
   let posterObserver = null;
+
+  function setExternalMediaEnabled(enabled) {
+    externalMediaEnabled = Boolean(enabled);
+    if (!externalMediaEnabled) {
+      disconnectObserver();
+      imageCache.clear();
+      episodeMetaCache.clear();
+      inFlightPosterRequests.clear();
+    }
+  }
+
+  function isExternalMediaEnabled() {
+    return externalMediaEnabled;
+  }
 
   function setOmdbApiKey(key) {
     customOmdbKey = String(key ?? '').trim();
@@ -80,7 +99,7 @@ export function createMediaApi({ fetchFn = globalThis.fetch?.bind(globalThis), o
    * desacoplada de fetchPosterForItem (funciona incluso con clave OMDb activa).
    */
   async function fetchEpisodeMetaForItem(item) {
-    if (!item?.tvShowQuery) return {};
+    if (!externalMediaEnabled || !item?.tvShowQuery) return {};
     if (episodeMetaCache.has(item.id)) return episodeMetaCache.get(item.id);
     const tvData = await fetchTvMazeShow(item.tvShowQuery);
     if (tvData) {
@@ -176,7 +195,7 @@ export function createMediaApi({ fetchFn = globalThis.fetch?.bind(globalThis), o
   }
 
   async function fetchPosterForItem(item) {
-    if (!item?.id) return null;
+    if (!externalMediaEnabled || !item?.id) return null;
     if (imageCache.has(item.id)) return imageCache.get(item.id);
     if (inFlightPosterRequests.has(item.id)) return inFlightPosterRequests.get(item.id);
 
@@ -196,7 +215,7 @@ export function createMediaApi({ fetchFn = globalThis.fetch?.bind(globalThis), o
 
   function observeVisiblePosters(container, itemsById) {
     disconnectObserver();
-    if (!container || typeof document === 'undefined') return;
+    if (!externalMediaEnabled || !container || typeof document === 'undefined') return;
 
     const images = container.querySelectorAll('img[data-poster-id]');
     if (images.length === 0) return;
@@ -244,6 +263,8 @@ export function createMediaApi({ fetchFn = globalThis.fetch?.bind(globalThis), o
   }
 
   return {
+    setExternalMediaEnabled,
+    isExternalMediaEnabled,
     setOmdbApiKey,
     getOmdbApiKey,
     getCachedPoster,

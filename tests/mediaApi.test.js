@@ -2,6 +2,22 @@ import { describe, expect, test } from 'bun:test';
 import { createMediaApi } from '../src/mediaApi.js';
 
 describe('createMediaApi', () => {
+  test('por defecto (opt-in desactivado) no realiza ninguna petición HTTP externa', async () => {
+    let calls = 0;
+    const mockFetch = async () => {
+      calls++;
+      return { ok: true, json: async () => ({}) };
+    };
+
+    const api = createMediaApi({ fetchFn: mockFetch });
+    expect(api.isExternalMediaEnabled()).toBe(false);
+
+    const item = { id: 'dplus_loki_s1', imdbId: 'tt9140554', tvShowQuery: 'Loki', wiki: 'Loki_(TV_series)' };
+    expect(await api.fetchPosterForItem(item)).toBeNull();
+    expect(await api.fetchEpisodeMetaForItem(item)).toEqual({});
+    expect(calls).toBe(0);
+  });
+
   test('codifica omdbApiKey con encodeURIComponent y desacopla TVMaze para episodios', async () => {
     const requestedUrls = [];
     const mockFetch = async (url) => {
@@ -34,7 +50,7 @@ describe('createMediaApi', () => {
       return { ok: false };
     };
 
-    const api = createMediaApi({ fetchFn: mockFetch });
+    const api = createMediaApi({ fetchFn: mockFetch, externalMediaEnabled: true });
     api.setOmdbApiKey('my key&bad=1');
 
     const item = {
@@ -70,7 +86,7 @@ describe('createMediaApi', () => {
       return { ok: false };
     };
 
-    const api = createMediaApi({ fetchFn: mockFetch });
+    const api = createMediaApi({ fetchFn: mockFetch, externalMediaEnabled: true });
     const comic = {
       id: 'comic_test',
       comicIsbn: '9780785157977',
@@ -94,7 +110,7 @@ describe('createMediaApi', () => {
       };
     };
 
-    const api = createMediaApi({ fetchFn: mockFetch });
+    const api = createMediaApi({ fetchFn: mockFetch, externalMediaEnabled: true });
     const movie = { id: 'mcu_iron_man', wiki: 'Iron_Man_(2008_film)' };
 
     const [p1, p2, p3] = await Promise.all([
