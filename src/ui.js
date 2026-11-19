@@ -409,6 +409,143 @@ export function syncToggleAllGroupsButton(collapsedGroups) {
     : '<i class="fa-solid fa-angles-down" aria-hidden="true"></i><span>Desplegar bloques</span>';
 }
 
+function renderEpisodeCardHtml({ safeItemId, seasonNumber, ep, isEpWatched, meta, synopsis }) {
+  const displayTitle = escapeHtml(meta.title || ep.title);
+  const safeAirdate = meta.airdate ? escapeHtml(meta.airdate) : '';
+  const safeEpCode = escapeHtml(ep.code);
+  const safeThumb = sanitizeImageUrl(meta.image);
+  const safeSynopsis = escapeHtml(synopsis);
+  const panelId = `ep-synopsis-${seasonNumber}-${safeEpCode}`;
+
+  const cardTheme = isEpWatched
+    ? 'bg-emerald-950/25 border-emerald-500/40 text-emerald-200'
+    : 'bg-marvel-card/60 border-marvel-border/70 text-gray-300 hover:border-gray-600';
+  const trackTheme = isEpWatched
+    ? 'bg-emerald-500 border-emerald-400'
+    : 'bg-gray-800 border-gray-600';
+  const knobPosition = isEpWatched ? 'translate-x-4' : 'translate-x-0.5';
+
+  const thumbHtml = safeThumb
+    ? `<img src="${escapeHtml(safeThumb)}" alt="${safeEpCode}" loading="lazy" class="w-16 h-10 object-cover rounded-lg border border-white/10 shrink-0">`
+    : `<div class="w-12 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shrink-0 text-[10px] font-mono font-bold text-gray-400">${safeEpCode}</div>`;
+
+  return `
+    <div data-episode-card="${safeEpCode}"
+         class="rounded-xl border transition select-none overflow-hidden ${cardTheme}">
+      <div class="flex items-center justify-between gap-2 p-2">
+        <button type="button"
+             data-action="toggle-episode-synopsis"
+             data-ep-code="${safeEpCode}"
+             aria-expanded="true"
+             aria-controls="${panelId}"
+             title="Mostrar u ocultar reseña de ${safeEpCode}"
+             class="text-left flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
+          ${thumbHtml}
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-bold text-amber-400">${safeEpCode}</span>
+              ${safeAirdate ? `<span class="text-[10px] text-gray-500">• ${safeAirdate}</span>` : ''}
+              ${safeSynopsis ? '<i data-ep-chevron class="fa-solid fa-chevron-down rotate-180 text-[9px] text-gray-500 ml-auto transition-transform duration-200" aria-hidden="true"></i>' : ''}
+            </div>
+            <div class="text-xs font-semibold truncate ${isEpWatched ? 'line-through decoration-emerald-500/60' : ''}" title="${displayTitle}">
+              ${displayTitle}
+            </div>
+          </div>
+        </button>
+        <button type="button"
+             data-action="toggle-episode"
+             data-item-id="${safeItemId}"
+             data-ep-code="${safeEpCode}"
+             role="switch"
+             aria-checked="${isEpWatched}"
+             aria-label="${isEpWatched ? 'Desmarcar' : 'Marcar'} ${safeEpCode}: ${displayTitle}"
+             title="${isEpWatched ? 'Marcar como no visto' : 'Marcar como visto'}"
+             class="shrink-0 p-1 rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
+          <span class="watch-switch-track relative inline-flex items-center w-9 h-5 rounded-full border ${trackTheme}" aria-hidden="true">
+            <span class="watch-switch-knob inline-block w-3.5 h-3.5 rounded-full bg-white shadow transform ${knobPosition}"></span>
+          </span>
+        </button>
+      </div>
+      ${safeSynopsis ? `
+        <div id="${panelId}" data-episode-synopsis class="px-3 py-2 text-[11px] sm:text-xs text-gray-300 leading-relaxed bg-[#0B0E14]/80 border-t border-marvel-border/60 select-text">
+          ${safeSynopsis}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderSeasonsSectionHtml({ item, safeItemId, comp, epMap, liveEpMeta }) {
+  const seasonsMarkup = item.seasons
+    .map((season) => {
+      const watchedInSeason = season.episodes.filter((ep) => Boolean(epMap[ep.code])).length;
+      const allSeasonDone = watchedInSeason === season.episodes.length;
+      const seasonBtnTheme = allSeasonDone
+        ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+        : 'bg-marvel-card border-marvel-border text-gray-300 hover:text-white';
+
+      const episodesMarkup = season.episodes
+        .map((ep) =>
+          renderEpisodeCardHtml({
+            safeItemId,
+            seasonNumber: season.seasonNumber,
+            ep,
+            isEpWatched: Boolean(epMap[ep.code]),
+            meta: liveEpMeta[ep.code] || {},
+            synopsis: getEpisodeSynopsis(item.id, ep.code),
+          })
+        )
+        .join('');
+
+      return `
+        <div data-season-block="${season.seasonNumber}" class="bg-[#0B0E14] border border-marvel-border rounded-xl overflow-hidden">
+          <div class="px-4 py-3 bg-gray-900/70 border-b border-marvel-border flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="font-bold text-sm text-white">Temporada ${season.seasonNumber} (${escapeHtml(season.year)})</span>
+              <span class="text-xs text-gray-400 ml-2">${watchedInSeason}/${season.episodes.length} episodios</span>
+              ${season.note ? `<p class="text-[11px] text-gray-400 mt-0.5">${escapeHtml(season.note)}</p>` : ''}
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button type="button"
+                  data-action="toggle-season-synopses"
+                  data-season-num="${season.seasonNumber}"
+                  aria-expanded="true"
+                  class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-marvel-border bg-marvel-card text-sky-300 hover:text-white hover:border-sky-500/40 transition inline-flex items-center gap-1">
+                <i class="fa-solid fa-book-open text-[10px]" aria-hidden="true"></i>
+                <span data-season-synopses-label>Ocultar reseñas</span>
+              </button>
+              <button type="button"
+                  data-action="toggle-season"
+                  data-item-id="${safeItemId}"
+                  data-season-num="${season.seasonNumber}"
+                  class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${seasonBtnTheme}">
+                <i class="fa-solid ${allSeasonDone ? 'fa-check-double' : 'fa-check'} mr-1" aria-hidden="true"></i>
+                ${allSeasonDone ? 'Temporada completada' : 'Marcar todos'}
+              </button>
+            </div>
+          </div>
+          <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
+            ${episodesMarkup}
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+
+  return `
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <h4 class="text-xs font-bold uppercase tracking-wider text-blue-400">
+          <i class="fa-solid fa-list-check mr-1" aria-hidden="true"></i>Checklist de Episodios (${comp.watchedCount}/${comp.totalCount})
+        </h4>
+      </div>
+      <div class="space-y-3">
+        ${seasonsMarkup}
+      </div>
+    </div>
+  `;
+}
+
 export function renderDetailModalBody(item, { filterState, userProgress, mediaApi }) {
   const comp = getItemCompletionStatus(item, userProgress);
   const isSeries = Array.isArray(item.seasons) && item.seasons.length > 0;
@@ -432,133 +569,9 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
         : 'Pendiente';
   }
 
-  let seasonsHtml = '';
-  if (isSeries) {
-    seasonsHtml = `
-      <div class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h4 class="text-xs font-bold uppercase tracking-wider text-blue-400">
-            <i class="fa-solid fa-list-check mr-1" aria-hidden="true"></i>Checklist de Episodios (${comp.watchedCount}/${comp.totalCount})
-          </h4>
-        </div>
-        <div class="space-y-3">
-          ${item.seasons
-            .map((season) => {
-              const watchedInSeason = season.episodes.filter((ep) => Boolean(epMap[ep.code])).length;
-              const allSeasonDone = watchedInSeason === season.episodes.length;
-              return `
-                <div data-season-block="${season.seasonNumber}" class="bg-[#0B0E14] border border-marvel-border rounded-xl overflow-hidden">
-                  <div class="px-4 py-3 bg-gray-900/70 border-b border-marvel-border flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <span class="font-bold text-sm text-white">Temporada ${season.seasonNumber} (${escapeHtml(season.year)})</span>
-                      <span class="text-xs text-gray-400 ml-2">${watchedInSeason}/${season.episodes.length} episodios</span>
-                      ${season.note ? `<p class="text-[11px] text-gray-400 mt-0.5">${escapeHtml(season.note)}</p>` : ''}
-                    </div>
-                    <div class="flex flex-wrap items-center gap-1.5">
-                      <button type="button"
-                          data-action="toggle-season-synopses"
-                          data-season-num="${season.seasonNumber}"
-                          aria-expanded="true"
-                          class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-marvel-border bg-marvel-card text-sky-300 hover:text-white hover:border-sky-500/40 transition inline-flex items-center gap-1">
-                        <i class="fa-solid fa-book-open text-[10px]" aria-hidden="true"></i>
-                        <span data-season-synopses-label>Ocultar reseñas</span>
-                      </button>
-                      <button type="button"
-                          data-action="toggle-season"
-                          data-item-id="${safeItemId}"
-                          data-season-num="${season.seasonNumber}"
-                          class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
-                            allSeasonDone
-                              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                              : 'bg-marvel-card border-marvel-border text-gray-300 hover:text-white'
-                          }">
-                        <i class="fa-solid ${allSeasonDone ? 'fa-check-double' : 'fa-check'} mr-1" aria-hidden="true"></i>
-                        ${allSeasonDone ? 'Temporada completada' : 'Marcar todos'}
-                      </button>
-                    </div>
-                  </div>
-                  <div class="p-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5 items-start">
-                    ${season.episodes
-                      .map((ep) => {
-                        const isEpWatched = Boolean(epMap[ep.code]);
-                        const meta = liveEpMeta[ep.code] || {};
-                        const displayTitle = escapeHtml(meta.title || ep.title);
-                        const safeAirdate = meta.airdate ? escapeHtml(meta.airdate) : '';
-                        const safeEpCode = escapeHtml(ep.code);
-                        const safeThumb = sanitizeImageUrl(meta.image);
-                        const synopsisText = getEpisodeSynopsis(item.id, ep.code);
-                        const safeSynopsis = escapeHtml(synopsisText);
-                        const panelId = `ep-synopsis-${season.seasonNumber}-${safeEpCode}`;
-
-                        return `
-                          <div data-episode-card="${safeEpCode}"
-                               class="rounded-xl border transition select-none overflow-hidden ${
-                                 isEpWatched
-                                   ? 'bg-emerald-950/25 border-emerald-500/40 text-emerald-200'
-                                   : 'bg-marvel-card/60 border-marvel-border/70 text-gray-300 hover:border-gray-600'
-                               }">
-                            <div class="flex items-center justify-between gap-2 p-2">
-                              <button type="button"
-                                   data-action="toggle-episode-synopsis"
-                                   data-ep-code="${safeEpCode}"
-                                   aria-expanded="true"
-                                   aria-controls="${panelId}"
-                                   title="Mostrar u ocultar reseña de ${safeEpCode}"
-                                   class="text-left flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
-                                ${safeThumb ? `
-                                  <img src="${escapeHtml(safeThumb)}" alt="${safeEpCode}" loading="lazy" class="w-16 h-10 object-cover rounded-lg border border-white/10 shrink-0">
-                                ` : `
-                                  <div class="w-12 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shrink-0 text-[10px] font-mono font-bold text-gray-400">
-                                    ${safeEpCode}
-                                  </div>
-                                `}
-                                <div class="min-w-0 flex-1">
-                                  <div class="flex items-center gap-1.5">
-                                    <span class="text-[10px] font-mono font-bold text-amber-400">${safeEpCode}</span>
-                                    ${safeAirdate ? `<span class="text-[10px] text-gray-500">• ${safeAirdate}</span>` : ''}
-                                    ${safeSynopsis ? `<i data-ep-chevron class="fa-solid fa-chevron-down rotate-180 text-[9px] text-gray-500 ml-auto transition-transform duration-200" aria-hidden="true"></i>` : ''}
-                                  </div>
-                                  <div class="text-xs font-semibold truncate ${isEpWatched ? 'line-through decoration-emerald-500/60' : ''}" title="${displayTitle}">
-                                    ${displayTitle}
-                                  </div>
-                                </div>
-                              </button>
-                              <button type="button"
-                                   data-action="toggle-episode"
-                                   data-item-id="${safeItemId}"
-                                   data-ep-code="${safeEpCode}"
-                                   role="switch"
-                                   aria-checked="${isEpWatched}"
-                                   aria-label="${isEpWatched ? 'Desmarcar' : 'Marcar'} ${safeEpCode}: ${displayTitle}"
-                                   title="${isEpWatched ? 'Marcar como no visto' : 'Marcar como visto'}"
-                                   class="shrink-0 p-1 rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
-                                <span class="watch-switch-track relative inline-flex items-center w-9 h-5 rounded-full border ${
-                                  isEpWatched ? 'bg-emerald-500 border-emerald-400' : 'bg-gray-800 border-gray-600'
-                                }" aria-hidden="true">
-                                  <span class="watch-switch-knob inline-block w-3.5 h-3.5 rounded-full bg-white shadow transform ${
-                                    isEpWatched ? 'translate-x-4' : 'translate-x-0.5'
-                                  }"></span>
-                                </span>
-                              </button>
-                            </div>
-                            ${safeSynopsis ? `
-                              <div id="${panelId}" data-episode-synopsis class="px-3 py-2 text-[11px] sm:text-xs text-gray-300 leading-relaxed bg-[#0B0E14]/80 border-t border-marvel-border/60 select-text">
-                                ${safeSynopsis}
-                              </div>
-                            ` : ''}
-                          </div>
-                        `;
-                      })
-                      .join('')}
-                  </div>
-                </div>
-              `;
-            })
-            .join('')}
-        </div>
-      </div>
-    `;
-  }
+  const seasonsHtml = isSeries
+    ? renderSeasonsSectionHtml({ item, safeItemId, comp, epMap, liveEpMeta })
+    : '';
 
   const safeImdbId = item.imdbId ? encodeURIComponent(item.imdbId) : '';
   const externalLinksHtml = `
@@ -660,15 +673,18 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
   `;
 }
 
+const SYNC_BADGE_BASE_CLASS =
+  'inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 text-[11px] font-medium px-2.5 py-0.5 rounded-full border';
+
 export function updateSyncBadge(text, color) {
   const badge = document.getElementById('syncBadge');
   if (!badge) return;
-  const safeText = escapeHtml(text);
-  if (color === 'emerald') {
-    badge.className = 'inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25';
-    badge.innerHTML = `<i class="fa-solid fa-circle-check text-[10px]" aria-hidden="true"></i><span>${safeText}</span>`;
-  } else {
-    badge.className = 'inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/25';
-    badge.innerHTML = `<i class="fa-solid fa-floppy-disk text-[10px]" aria-hidden="true"></i><span>${safeText}</span>`;
-  }
+  const isEmerald = color === 'emerald';
+  const themeClass = isEmerald
+    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+    : 'bg-amber-500/10 text-amber-300 border-amber-500/25';
+  const iconClass = isEmerald ? 'fa-circle-check' : 'fa-floppy-disk';
+
+  badge.className = `${SYNC_BADGE_BASE_CLASS} ${themeClass}`;
+  badge.innerHTML = `<i class="fa-solid ${iconClass} text-[10px]" aria-hidden="true"></i><span>${escapeHtml(text)}</span>`;
 }
