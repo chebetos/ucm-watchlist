@@ -33,26 +33,43 @@
                   class="fa-solid fa-list-check text-emerald-400 text-xs sm:text-sm"
                   aria-hidden="true"
                 ></i>
-                <span>UCM</span>
+                <span data-i18n="header.brand">UCM</span>
               </div>
               <div class="min-w-0">
                 <h1
+                  data-i18n="header.title"
                   class="font-extrabold text-sm sm:text-lg tracking-tight text-white leading-tight truncate"
                 >
                   Checklist Maestro UCM &amp; Multiverso
                 </h1>
                 <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
-                  <p class="text-[11px] sm:text-xs text-gray-400 truncate hidden sm:block">
+                  <p
+                    data-i18n="header.subtitle"
+                    class="text-[11px] sm:text-xs text-gray-400 truncate hidden sm:block"
+                  >
                     Guía fan no oficial: películas, series y cómics
                   </p>
                   <span
                     id="syncBadge"
+                    data-i18n-title="header.savedLocalTitle"
                     title="Tu progreso se guarda automáticamente en este navegador"
                     class="inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25"
                   >
                     <i class="fa-solid fa-circle-check text-[10px]" aria-hidden="true"></i
-                    ><span>Guardado local</span>
+                    ><span data-i18n="header.savedLocal">Guardado local</span>
                   </span>
+                  <button
+                    type="button"
+                    id="btnToggleLang"
+                    aria-label="Cambiar idioma a inglés"
+                    title="Switch to English"
+                    class="inline-flex items-center gap-1 whitespace-nowrap shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full bg-marvel-card hover:bg-gray-800 border border-marvel-border text-gray-300 transition cursor-pointer"
+                  >
+                    <i class="fa-solid fa-globe text-[10px] text-sky-400" aria-hidden="true"></i>
+                    <span id="langPillEs" class="text-white font-bold">ES</span>
+                    <span class="text-gray-600" aria-hidden="true">/</span>
+                    <span id="langPillEn" class="text-gray-500">EN</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -61,6 +78,8 @@
               <button
                 type="button"
                 data-open-modal="pwaModal"
+                data-i18n-aria="header.pwaInstall"
+                data-i18n-title="header.pwaInstall"
                 aria-label="Instalar App (PWA)"
                 class="p-1.5 sm:p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300"
                 title="Instalar App (PWA)"
@@ -70,6 +89,8 @@
               <button
                 type="button"
                 data-action="toggle-planner"
+                data-i18n-aria="header.planner"
+                data-i18n-title="header.planner"
                 aria-label="Planificador Maratón"
                 class="p-1.5 sm:p-2 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-300"
                 title="Planificador Maratón"
@@ -79,6 +100,8 @@
               <button
                 type="button"
                 data-open-modal="syncModal"
+                data-i18n-aria="header.sync"
+                data-i18n-title="header.sync"
                 aria-label="Exportar o importar progreso"
                 class="p-1.5 sm:p-2 rounded-lg bg-marvel-card border border-marvel-border text-gray-200 hover:text-white"
                 title="Exportar / Importar"
@@ -88,6 +111,8 @@
               <button
                 type="button"
                 data-open-modal="imageApiModal"
+                data-i18n-aria="header.posters"
+                data-i18n-title="header.posters"
                 aria-label="Configurar portadas IMDb y TV"
                 class="p-1.5 sm:p-2 rounded-lg bg-blue-600/20 border border-blue-500/40 text-blue-300"
                 title="Portadas IMDb / TV"
@@ -132,10 +157,11 @@
                 type="button"
                 data-open-modal="pwaModal"
                 class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs font-semibold text-emerald-300 transition"
+                data-i18n-title="header.pwaInstall"
                 title="Instalar aplicación PWA en móvil o escritorio"
               >
                 <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
-                <span id="pwaHeaderBtnText">Instalar App (PWA)</span>
+                <span id="pwaHeaderBtnText" data-i18n="header.pwaInstall">Instalar App (PWA)</span>
               </button>
               <button
                 type="button"
@@ -143,16 +169,17 @@
                 class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-semibold text-amber-300 transition"
               >
                 <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
-                Planificador Maratón
+                <span data-i18n="header.planner">Planificador Maratón</span>
               </button>
               <button
                 type="button"
                 data-open-modal="imageApiModal"
                 class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-xs font-semibold text-blue-300 transition"
+                data-i18n-title="header.posters"
                 title="Fuentes de imágenes IMDb / TVMaze / Cómics"
               >
                 <i class="fa-solid fa-image" aria-hidden="true"></i>
-                Portadas IMDb / TV
+                <span data-i18n="header.posters">Portadas IMDb / TV</span>
               </button>
               <button
                 type="button"
@@ -160,7 +187,7 @@
                 class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-marvel-card hover:bg-gray-800 border border-marvel-border text-xs font-semibold text-gray-200 transition"
               >
                 <i class="fa-solid fa-arrows-rotate text-marvel-red" aria-hidden="true"></i>
-                Exportar / Importar
+                <span data-i18n="header.sync">Exportar / Importar</span>
               </button>
             </div>
           </div>
@@ -179,17 +206,17 @@
               <span
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold uppercase tracking-wider"
               >
-                <i class="fa-solid fa-stopwatch" aria-hidden="true"></i>Planificador por Fecha
-                Objetivo
+                <i class="fa-solid fa-stopwatch" aria-hidden="true"></i
+                ><span data-i18n="planner.badge">Planificador por Fecha Objetivo</span>
               </span>
               <span id="plannerDaysLeftBadge" class="text-xs font-bold text-emerald-400"></span>
             </div>
-            <h2 class="text-sm sm:text-base font-extrabold text-white">
+            <h2 data-i18n="planner.heading" class="text-sm sm:text-base font-extrabold text-white">
               Calcula tu ritmo diario y semanal para llegar a tiempo
             </h2>
-            <p class="text-xs text-gray-400">
+            <p data-i18n="planner.desc" class="text-xs text-gray-400">
               El cálculo se adapta automáticamente a los contenidos pendientes de tu vista actual
-              (puedes filtrar por <em>Ruta Esencial Doomsday</em> o ver todo el catálogo).
+              (puedes filtrar por Ruta Esencial Doomsday o ver todo el catálogo).
             </p>
           </div>
 
@@ -200,6 +227,7 @@
             <div class="bg-[#0B0E14] border border-marvel-border rounded-xl px-3 py-1.5 min-w-0">
               <label
                 for="targetDateInput"
+                data-i18n="planner.targetDate"
                 class="block text-[10px] text-gray-400 font-semibold uppercase"
                 >Fecha Objetivo</label
               >
@@ -214,6 +242,7 @@
             <div class="bg-[#0B0E14] border border-marvel-border rounded-xl px-3 py-1.5 min-w-0">
               <label
                 for="plannerScopeSelect"
+                data-i18n="planner.scope"
                 class="block text-[10px] text-gray-400 font-semibold uppercase"
                 >Alcance del Plan</label
               >
@@ -221,9 +250,13 @@
                 id="plannerScopeSelect"
                 class="w-full sm:w-auto bg-[#0B0E14] text-xs font-bold text-amber-300 focus:outline-none cursor-pointer"
               >
-                <option value="filtered">Según filtros activos</option>
-                <option value="doomsday">Solo Ruta Esencial Doomsday</option>
-                <option value="all">Todo el catálogo completo</option>
+                <option value="filtered" data-i18n="planner.scopeFiltered">
+                  Según filtros activos
+                </option>
+                <option value="doomsday" data-i18n="planner.scopeDoomsday">
+                  Solo Ruta Esencial Doomsday
+                </option>
+                <option value="all" data-i18n="planner.scopeAll">Todo el catálogo completo</option>
               </select>
             </div>
           </div>
@@ -234,7 +267,9 @@
           class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 mt-3.5 pt-3 border-t border-marvel-border/70"
         >
           <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5 min-w-0">
-            <span class="text-[10px] text-gray-400 uppercase font-semibold block"
+            <span
+              data-i18n="planner.pendingTitle"
+              class="text-[10px] text-gray-400 uppercase font-semibold block"
               >Pendiente en tu plan</span
             >
             <span id="planPendingHours" class="text-sm sm:text-base font-black text-white"
@@ -245,7 +280,9 @@
             >
           </div>
           <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5 min-w-0">
-            <span class="text-[10px] text-gray-400 uppercase font-semibold block"
+            <span
+              data-i18n="planner.dailyPace"
+              class="text-[10px] text-gray-400 uppercase font-semibold block"
               >Ritmo Diario Necesario</span
             >
             <span id="planDailyPace" class="text-sm sm:text-base font-black text-amber-400"
@@ -256,7 +293,9 @@
             >
           </div>
           <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5 min-w-0">
-            <span class="text-[10px] text-gray-400 uppercase font-semibold block"
+            <span
+              data-i18n="planner.weeklyPace"
+              class="text-[10px] text-gray-400 uppercase font-semibold block"
               >Ritmo Semanal</span
             >
             <span id="planWeeklyPace" class="text-sm sm:text-base font-black text-emerald-400"
@@ -267,7 +306,9 @@
             >
           </div>
           <div class="bg-[#0B0E14]/90 border border-marvel-border rounded-xl p-2.5 min-w-0">
-            <span class="text-[10px] text-gray-400 uppercase font-semibold block"
+            <span
+              data-i18n="planner.nextRecommended"
+              class="text-[10px] text-gray-400 uppercase font-semibold block"
               >Próximo Recomendado</span
             >
             <span id="planNextItem" class="text-xs font-bold text-white line-clamp-1">—</span>
@@ -295,6 +336,8 @@
             <input
               id="searchInput"
               type="text"
+              data-i18n-aria="filters.searchAria"
+              data-i18n-placeholder="filters.searchPlaceholder"
               aria-label="Buscar en el catálogo"
               placeholder="Buscar película, serie, personaje, año..."
               class="w-full pl-9 pr-8 py-2 sm:py-2.5 bg-[#0B0E14] border border-marvel-border rounded-xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-marvel-red"
@@ -302,6 +345,7 @@
             <button
               type="button"
               id="clearSearchBtn"
+              data-i18n-aria="filters.clearSearchAria"
               aria-label="Limpiar búsqueda"
               class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
             >
@@ -318,7 +362,7 @@
             class="shrink-0 inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl bg-[#0B0E14] hover:bg-gray-900 border border-marvel-border text-xs font-semibold text-gray-200 transition"
           >
             <i class="fa-solid fa-sliders text-marvel-red" aria-hidden="true"></i>
-            <span>Filtros</span>
+            <span data-i18n="filters.button">Filtros</span>
             <span
               id="activeFiltersCountBadge"
               class="hidden px-1.5 py-0.2 rounded-full bg-marvel-red text-white text-[10px] font-bold leading-tight"
@@ -349,7 +393,7 @@
                 class="py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-center leading-tight bg-marvel-red text-white shadow"
               >
                 <i class="fa-solid fa-calendar-days shrink-0" aria-hidden="true"></i>
-                <span>1. Publicación</span>
+                <span data-i18n="filters.orderRelease">1. Publicación</span>
               </button>
               <button
                 type="button"
@@ -357,7 +401,7 @@
                 class="py-2 px-2 sm:px-3 rounded-lg text-[11px] sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 text-center leading-tight text-gray-400 hover:text-white"
               >
                 <i class="fa-solid fa-clock-rotate-left shrink-0" aria-hidden="true"></i>
-                <span>2. Cronológico</span>
+                <span data-i18n="filters.orderChrono">2. Cronológico</span>
               </button>
             </div>
 
@@ -370,7 +414,7 @@
                 class="w-full h-full py-2.5 px-3 rounded-xl border border-marvel-border bg-[#0B0E14] hover:border-emerald-500/50 text-xs sm:text-sm font-semibold text-gray-300 flex items-center justify-center gap-2 transition"
               >
                 <i class="fa-solid fa-bolt text-emerald-400" aria-hidden="true"></i>
-                <span>Ruta Esencial Doomsday</span>
+                <span data-i18n="filters.doomsday">Ruta Esencial Doomsday</span>
               </button>
             </div>
           </div>
@@ -388,37 +432,39 @@
                 data-cat="all"
                 class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-gray-900"
               >
-                Todo (<span id="count-all">0</span>)
+                <span data-i18n="filters.catAll">Todo</span> (<span id="count-all">0</span>)
               </button>
               <button
                 type="button"
                 data-cat="Película UCM"
                 class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border"
               >
-                <i class="fa-solid fa-film text-red-400 mr-1" aria-hidden="true"></i>Películas UCM
+                <i class="fa-solid fa-film text-red-400 mr-1" aria-hidden="true"></i
+                ><span data-i18n="filters.catMovie">Películas UCM</span>
               </button>
               <button
                 type="button"
                 data-cat="Serie Disney+"
                 class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border"
               >
-                <i class="fa-solid fa-tv text-blue-400 mr-1" aria-hidden="true"></i>Series Disney+
+                <i class="fa-solid fa-tv text-blue-400 mr-1" aria-hidden="true"></i
+                ><span data-i18n="filters.catDisneyPlus">Series Disney+</span>
               </button>
               <button
                 type="button"
                 data-cat="Serie Netflix"
                 class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border"
               >
-                <i class="fa-solid fa-mask text-rose-500 mr-1" aria-hidden="true"></i>Netflix
-                (Defenders)
+                <i class="fa-solid fa-mask text-rose-500 mr-1" aria-hidden="true"></i
+                ><span data-i18n="filters.catNetflix">Netflix (Defenders)</span>
               </button>
               <button
                 type="button"
                 data-cat="Serie ABC"
                 class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border"
               >
-                <i class="fa-solid fa-shield-halved text-sky-400 mr-1" aria-hidden="true"></i>ABC
-                (S.H.I.E.L.D. / Carter)
+                <i class="fa-solid fa-shield-halved text-sky-400 mr-1" aria-hidden="true"></i
+                ><span data-i18n="filters.catAbc">ABC (S.H.I.E.L.D. / Carter)</span>
               </button>
               <button
                 type="button"
@@ -426,38 +472,39 @@
                 class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border"
               >
                 <i class="fa-solid fa-bolt-lightning text-pink-400 mr-1" aria-hidden="true"></i
-                >Juvenil / Hulu (Runaways / C&amp;D)
+                ><span data-i18n="filters.catHulu">Juvenil / Hulu (Runaways / C&amp;D)</span>
               </button>
               <button
                 type="button"
                 data-cat="Legado Fox / Multiverso"
                 class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border"
               >
-                <i class="fa-solid fa-dna text-amber-400 mr-1" aria-hidden="true"></i>Fox (X-Men /
-                4F / Deadpool)
+                <i class="fa-solid fa-dna text-amber-400 mr-1" aria-hidden="true"></i
+                ><span data-i18n="filters.catFox">Fox (X-Men / 4F / Deadpool)</span>
               </button>
               <button
                 type="button"
                 data-cat="Universo Sony / Spider-Verse"
                 class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border"
               >
-                <i class="fa-solid fa-spider text-indigo-400 mr-1" aria-hidden="true"></i>Sony &amp;
-                Spider-Verse
+                <i class="fa-solid fa-spider text-indigo-400 mr-1" aria-hidden="true"></i
+                ><span data-i18n="filters.catSony">Sony &amp; Spider-Verse</span>
               </button>
               <button
                 type="button"
                 data-cat="Cómic Canon"
                 class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border"
               >
-                <i class="fa-solid fa-book-open text-purple-400 mr-1" aria-hidden="true"></i>Cómics
-                Canon
+                <i class="fa-solid fa-book-open text-purple-400 mr-1" aria-hidden="true"></i
+                ><span data-i18n="filters.catComic">Cómics Canon</span>
               </button>
               <button
                 type="button"
                 data-cat="Especial / Corto"
                 class="cat-pill shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0B0E14] text-gray-300 hover:text-white border border-marvel-border"
               >
-                <i class="fa-solid fa-star text-teal-400 mr-1" aria-hidden="true"></i>Especiales
+                <i class="fa-solid fa-star text-teal-400 mr-1" aria-hidden="true"></i
+                ><span data-i18n="filters.catSpecial">Especiales</span>
               </button>
             </div>
 
@@ -470,15 +517,19 @@
                 aria-label="Filtrar por fase o era"
                 class="w-full sm:w-auto min-w-0 bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-marvel-red"
               >
-                <option value="all">Todas las Fases / Eras</option>
-                <option value="Fase 1">Fase 1 (2008-2012)</option>
-                <option value="Fase 2">Fase 2 (2013-2015)</option>
-                <option value="Fase 3">Fase 3 (2016-2019)</option>
-                <option value="Fase 4">Fase 4 (2021-2022)</option>
-                <option value="Fase 5">Fase 5 (2023-2025)</option>
-                <option value="Fase 6">Fase 6 (2025-2027)</option>
-                <option value="Era Multiversal Fox/Sony">Era Fox &amp; Sony Multiverso</option>
-                <option value="Era Marvel Television">Era ABC, Netflix &amp; Hulu</option>
+                <option value="all" data-i18n="filters.phaseAll">Todas las Fases / Eras</option>
+                <option value="Fase 1" data-i18n="filters.phase1">Fase 1 (2008-2012)</option>
+                <option value="Fase 2" data-i18n="filters.phase2">Fase 2 (2013-2015)</option>
+                <option value="Fase 3" data-i18n="filters.phase3">Fase 3 (2016-2019)</option>
+                <option value="Fase 4" data-i18n="filters.phase4">Fase 4 (2021-2022)</option>
+                <option value="Fase 5" data-i18n="filters.phase5">Fase 5 (2023-2025)</option>
+                <option value="Fase 6" data-i18n="filters.phase6">Fase 6 (2025-2027)</option>
+                <option value="Era Multiversal Fox/Sony" data-i18n="filters.phaseFoxSony">
+                  Era Fox &amp; Sony Multiverso
+                </option>
+                <option value="Era Marvel Television" data-i18n="filters.phaseMarvelTv">
+                  Era ABC, Netflix &amp; Hulu
+                </option>
               </select>
 
               <select
@@ -486,10 +537,14 @@
                 aria-label="Filtrar por estado"
                 class="w-full sm:w-auto min-w-0 bg-[#0B0E14] border border-marvel-border rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-marvel-red"
               >
-                <option value="all">Todos los estados</option>
-                <option value="pending">Pendientes por ver</option>
-                <option value="in_progress">En progreso (Temporadas)</option>
-                <option value="completed">Completados</option>
+                <option value="all" data-i18n="filters.statusAll">Todos los estados</option>
+                <option value="pending" data-i18n="filters.statusPending">
+                  Pendientes por ver
+                </option>
+                <option value="in_progress" data-i18n="filters.statusInProgress">
+                  En progreso (Temporadas)
+                </option>
+                <option value="completed" data-i18n="filters.statusCompleted">Completados</option>
               </select>
             </div>
           </div>
@@ -518,16 +573,25 @@
               class="fa-solid fa-layer-group text-marvel-red text-xs shrink-0"
               aria-hidden="true"
             ></i>
-            <label for="groupModeSelect" class="text-[11px] text-gray-400 font-semibold shrink-0"
+            <label
+              for="groupModeSelect"
+              data-i18n="toolbar.groupLabel"
+              class="text-[11px] text-gray-400 font-semibold shrink-0"
               >Agrupar:</label
             >
             <select
               id="groupModeSelect"
               class="flex-1 min-w-0 bg-[#0B0E14] text-xs font-bold text-white focus:outline-none cursor-pointer"
             >
-              <option value="interleaved_sagas">Sagas, Fases y Eras (Intercalado)</option>
-              <option value="strict_phases">Por Fase / Era Oficial Separada</option>
-              <option value="none">Sin agrupar (Lista continua)</option>
+              <option value="interleaved_sagas" data-i18n="toolbar.groupInterleaved">
+                Sagas, Fases y Eras (Intercalado)
+              </option>
+              <option value="strict_phases" data-i18n="toolbar.groupStrict">
+                Por Fase / Era Oficial Separada
+              </option>
+              <option value="none" data-i18n="toolbar.groupNone">
+                Sin agrupar (Lista continua)
+              </option>
             </select>
           </div>
           <button
@@ -536,7 +600,7 @@
             class="px-2.5 py-1 rounded-lg bg-[#0B0E14] hover:bg-gray-800 border border-marvel-border text-[11px] font-semibold text-gray-300 transition flex items-center gap-1 shrink-0"
           >
             <i class="fa-solid fa-angles-up" aria-hidden="true"></i>
-            <span>Plegar bloques</span>
+            <span data-i18n="toolbar.collapseBlocks">Plegar bloques</span>
           </button>
         </div>
         <div
@@ -548,7 +612,7 @@
             class="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition flex items-center gap-1.5"
           >
             <i class="fa-solid fa-check-double" aria-hidden="true"></i>
-            Marcar visibles como vistos
+            <span data-i18n="toolbar.markVisible">Marcar visibles como vistos</span>
           </button>
           <button
             type="button"
@@ -556,7 +620,7 @@
             class="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-semibold transition flex items-center gap-1.5"
           >
             <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-            Reiniciar
+            <span data-i18n="toolbar.reset">Reiniciar</span>
           </button>
         </div>
       </div>
@@ -574,13 +638,16 @@
         >
           <i class="fa-solid fa-filter-circle-xmark text-xl" aria-hidden="true"></i>
         </div>
-        <h3 class="text-base font-bold text-white mb-1">No hay contenidos con estos filtros</h3>
-        <p class="text-xs text-gray-400 mb-4">
+        <h3 data-i18n="empty.title" class="text-base font-bold text-white mb-1">
+          No hay contenidos con estos filtros
+        </h3>
+        <p data-i18n="empty.desc" class="text-xs text-gray-400 mb-4">
           Prueba a cambiar la fase, el estado o limpiar el buscador.
         </p>
         <button
           type="button"
           id="btnResetFilters"
+          data-i18n="empty.resetBtn"
           class="px-4 py-2 rounded-xl bg-marvel-red hover:bg-red-700 text-white text-xs font-bold transition"
         >
           Restablecer filtros
@@ -593,7 +660,7 @@
       <div
         class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-gray-400"
       >
-        <p class="text-center sm:text-left">
+        <p data-i18n="footer.disclaimer" class="text-center sm:text-left">
           Proyecto fan independiente, no oficial y sin ánimo de lucro. No afiliado ni respaldado por
           The Walt Disney Company, Marvel, Sony Pictures ni 20th Century Studios.
         </p>
@@ -601,6 +668,7 @@
           <button
             type="button"
             data-open-modal="legalModal"
+            data-i18n="footer.legalBtn"
             class="text-gray-300 hover:text-white underline underline-offset-2 transition"
           >
             Aviso Legal, Privacidad y Créditos
@@ -608,6 +676,7 @@
           <span aria-hidden="true" class="text-gray-600">•</span>
           <a
             href="mailto:rice-shape-margin@duck.com"
+            data-i18n="footer.contact"
             class="text-gray-300 hover:text-white transition"
           >
             Contacto / DMCA
@@ -632,11 +701,12 @@
         >
           <h3 id="pwaModalTitle" class="font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-mobile-screen-button text-emerald-400" aria-hidden="true"></i>
-            Instalar como Aplicación (PWA)
+            <span data-i18n="pwa.title">Instalar como Aplicación (PWA)</span>
           </h3>
           <button
             type="button"
             data-close-modal="pwaModal"
+            data-i18n-aria="modal.close"
             aria-label="Cerrar ventana"
             class="text-gray-400 hover:text-white p-1"
           >
@@ -652,10 +722,10 @@
               aria-hidden="true"
             ></i>
             <div>
-              <div class="font-bold text-white">
+              <div data-i18n="pwa.badgeTitle" class="font-bold text-white">
                 PWA Lista con Manifiesto, Icono y Caché Offline
               </div>
-              <p class="text-[11px] text-emerald-200/90 mt-0.5">
+              <p data-i18n="pwa.intro" class="text-[11px] text-emerald-200/90 mt-0.5">
                 Esta aplicación incluye Web App Manifest, Service Worker real y almacenamiento
                 persistente en LocalStorage para funcionar a pantalla completa como una app nativa.
               </p>
@@ -667,7 +737,7 @@
             id="nativePwaInstallBox"
             class="hidden bg-[#0B0E14] border border-emerald-500/40 rounded-xl p-4 text-center space-y-2"
           >
-            <p class="text-white font-bold">
+            <p data-i18n="pwa.nativeReadyTitle" class="text-white font-bold">
               Tu navegador permite instalación directa con un clic:
             </p>
             <button
@@ -675,33 +745,32 @@
               id="btnNativePwaInstall"
               class="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-gray-950 font-extrabold transition flex items-center justify-center gap-2"
             >
-              <i class="fa-solid fa-download" aria-hidden="true"></i> Instalar App Ahora
+              <i class="fa-solid fa-download" aria-hidden="true"></i>
+              <span data-i18n="pwa.nativeInstallBtn">Instalar App Ahora</span>
             </button>
           </div>
 
           <!-- Instrucciones por sistema -->
           <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2">
-            <div class="font-bold text-white">
+            <div data-i18n="pwa.howtoTitle" class="font-bold text-white">
               Añadir a la pantalla de inicio desde el navegador
             </div>
             <ul class="space-y-1.5 text-gray-300">
               <li>
-                <i class="fa-brands fa-android text-emerald-400 mr-1.5" aria-hidden="true"></i
-                ><strong>Android (Chrome):</strong> Toca el menú <strong>⋮</strong> (arriba a la
-                derecha) y selecciona <em>"Instalar aplicación"</em> o
-                <em>"Añadir a pantalla de inicio"</em>.
-              </li>
-              <li>
-                <i class="fa-brands fa-apple text-gray-200 mr-1.5" aria-hidden="true"></i
-                ><strong>iPhone / iPad (Safari):</strong> Toca el botón <strong>Compartir</strong>
-                <i class="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"></i> y elige
-                <em>"Añadir a pantalla de inicio"</em>.
+                <i class="fa-solid fa-mobile-screen text-emerald-400 mr-1.5" aria-hidden="true"></i
+                ><strong data-i18n="pwa.step1Title">En móvil (iOS Safari / Android Chrome)</strong>:
+                <span data-i18n="pwa.step1Desc"
+                  >Abre esta web desde un enlace HTTPS, pulsa Compartir / Menú (⋮) → Añadir a
+                  pantalla de inicio.</span
+                >
               </li>
               <li>
                 <i class="fa-solid fa-desktop text-sky-400 mr-1.5" aria-hidden="true"></i
-                ><strong>PC / Mac (Chrome o Edge):</strong> Haz clic en el icono de instalación
-                <i class="fa-solid fa-download" aria-hidden="true"></i> situado a la derecha de la
-                barra de direcciones.
+                ><strong data-i18n="pwa.step2Title">En ordenador (Chrome / Edge)</strong>:
+                <span data-i18n="pwa.step2Desc"
+                  >Haz clic en el icono de instalar en la barra de direcciones para abrirla como
+                  aplicación independiente.</span
+                >
               </li>
             </ul>
           </div>
@@ -710,9 +779,9 @@
           <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2.5">
             <div class="font-bold text-white flex items-center gap-1.5">
               <i class="fa-solid fa-arrows-rotate text-amber-400" aria-hidden="true"></i>
-              ¿Quieres mover tu progreso a otro dispositivo?
+              <span data-i18n="pwa.moveTitle">¿Quieres mover tu progreso a otro dispositivo?</span>
             </div>
-            <p class="text-gray-400">
+            <p data-i18n="pwa.backupNote" class="text-gray-400">
               Usa el código de sincronización o descarga una copia de seguridad en formato JSON para
               restaurar tu checklist en cualquier navegador.
             </p>
@@ -721,8 +790,8 @@
               id="btnOpenSyncFromPwa"
               class="w-full py-2 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 border border-marvel-border text-white font-bold transition flex items-center justify-center gap-2"
             >
-              <i class="fa-solid fa-share-nodes text-marvel-red" aria-hidden="true"></i> Abrir
-              Exportar / Importar
+              <i class="fa-solid fa-share-nodes text-marvel-red" aria-hidden="true"></i>
+              <span data-i18n="pwa.openSyncBtn">Abrir Exportar / Importar</span>
             </button>
           </div>
         </div>
@@ -730,6 +799,7 @@
           <button
             type="button"
             data-close-modal="pwaModal"
+            data-i18n="modal.close"
             class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold transition"
           >
             Cerrar
@@ -767,6 +837,7 @@
             <button
               type="button"
               data-close-modal="detailModal"
+              data-i18n-aria="modal.close"
               aria-label="Cerrar detalle"
               class="text-gray-400 hover:text-white p-1"
             >
@@ -779,6 +850,7 @@
           <button
             type="button"
             data-close-modal="detailModal"
+            data-i18n="detail.close"
             class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold transition"
           >
             Cerrar
@@ -803,7 +875,7 @@
         >
           <h3 id="syncModalTitle" class="font-bold text-white flex flex-wrap items-center gap-2">
             <i class="fa-solid fa-arrows-rotate text-marvel-red" aria-hidden="true"></i>
-            <span>Exportar e Importar Progreso entre Dispositivos</span>
+            <span data-i18n="sync.title">Exportar e Importar Progreso entre Dispositivos</span>
             <span
               id="syncSchemaVersionBadge"
               class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/25"
@@ -813,6 +885,7 @@
           <button
             type="button"
             data-close-modal="syncModal"
+            data-i18n-aria="modal.close"
             aria-label="Cerrar ventana"
             class="text-gray-400 hover:text-white p-1"
           >
@@ -821,10 +894,14 @@
         </div>
         <div class="p-5 overflow-y-auto space-y-4 text-xs text-gray-300">
           <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2.5">
-            <label for="syncCodeTextarea" class="font-bold text-white block">
+            <label
+              for="syncCodeTextarea"
+              data-i18n="sync.quickCodeLabel"
+              class="font-bold text-white block"
+            >
               1. Código Rápido (Copiar y Pegar por WhatsApp, Telegram o Notas)
             </label>
-            <p class="text-gray-400">
+            <p data-i18n="sync.quickCodeDesc" class="text-gray-400">
               Copia este código para llevar todo tu progreso (películas, capítulos vistos y notas) a
               otro móvil u ordenador sin servidor (nunca incluye tu clave privada de OMDb):
             </p>
@@ -839,20 +916,22 @@
                 id="btnCopySyncCode"
                 class="flex-1 py-2 px-3 rounded-xl bg-marvel-red hover:bg-red-700 text-white font-bold transition flex items-center justify-center gap-1.5"
               >
-                <i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar mi código
+                <i class="fa-solid fa-copy" aria-hidden="true"></i>
+                <span data-i18n="sync.copyBtn">Copiar mi código</span>
               </button>
               <button
                 type="button"
                 id="btnImportSyncCode"
                 class="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center justify-center gap-1.5"
               >
-                <i class="fa-solid fa-file-import" aria-hidden="true"></i> Importar código pegado
+                <i class="fa-solid fa-file-import" aria-hidden="true"></i>
+                <span data-i18n="sync.importBtn">Importar código pegado</span>
               </button>
             </div>
           </div>
 
           <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2.5">
-            <span class="font-bold text-white block">
+            <span data-i18n="sync.jsonLabel" class="font-bold text-white block">
               2. Copia de Seguridad en Archivo (.JSON)
             </span>
             <div class="flex flex-wrap gap-2">
@@ -861,14 +940,14 @@
                 id="btnDownloadJson"
                 class="flex-1 py-2 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 border border-marvel-border text-white font-bold transition flex items-center justify-center gap-1.5"
               >
-                <i class="fa-solid fa-download text-sky-400" aria-hidden="true"></i> Descargar
-                archivo .JSON
+                <i class="fa-solid fa-download text-sky-400" aria-hidden="true"></i>
+                <span data-i18n="sync.downloadJson">Descargar archivo .JSON</span>
               </button>
               <label
                 class="flex-1 py-2 px-3 rounded-xl bg-gray-800 hover:bg-gray-700 border border-marvel-border text-white font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <i class="fa-solid fa-upload text-amber-400" aria-hidden="true"></i> Subir archivo
-                .JSON
+                <i class="fa-solid fa-upload text-amber-400" aria-hidden="true"></i>
+                <span data-i18n="sync.uploadJson">Subir archivo .JSON</span>
                 <input id="uploadJsonInput" type="file" accept=".json" class="hidden" />
               </label>
             </div>
@@ -878,6 +957,7 @@
           <button
             type="button"
             data-close-modal="syncModal"
+            data-i18n="modal.close"
             class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold transition"
           >
             Cerrar
@@ -902,11 +982,14 @@
         >
           <h3 id="imageApiModalTitle" class="font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-image text-blue-400" aria-hidden="true"></i>
-            Conexión de Imágenes: IMDb / TVMaze / Wikipedia / Cómics
+            <span data-i18n="imageApi.title"
+              >Conexión de Imágenes: IMDb / TVMaze / Wikipedia / Cómics</span
+            >
           </h3>
           <button
             type="button"
             data-close-modal="imageApiModal"
+            data-i18n-aria="modal.close"
             aria-label="Cerrar ventana"
             class="text-gray-400 hover:text-white p-1"
           >
@@ -920,11 +1003,13 @@
               <div>
                 <div class="font-bold text-white flex items-center gap-1.5">
                   <i class="fa-solid fa-shield-halved text-emerald-400" aria-hidden="true"></i>
-                  Cargar portadas y fotogramas desde APIs externas (Opcional)
+                  <span data-i18n="imageApi.optInTitle"
+                    >Cargar portadas y fotogramas desde APIs externas (Opcional)</span
+                  >
                 </div>
-                <p class="text-xs text-gray-400 mt-1">
-                  Por defecto está <strong>desactivado</strong> para proteger tu privacidad: la app
-                  usa pósters estilizados propios sin conectarse a ningún servidor externo.
+                <p data-i18n="imageApi.optInDesc" class="text-xs text-gray-400 mt-1">
+                  Por defecto está desactivado para proteger tu privacidad: la app usa pósters
+                  estilizados propios sin conectarse a ningún servidor externo.
                 </p>
               </div>
               <button
@@ -932,6 +1017,7 @@
                 id="btnToggleExternalMedia"
                 role="switch"
                 aria-checked="false"
+                data-i18n-aria="imageApi.optInTitle"
                 aria-label="Activar carga de portadas desde APIs externas"
                 class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-marvel-card hover:bg-gray-900 border border-marvel-border cursor-pointer shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
               >
@@ -953,12 +1039,10 @@
             <div
               class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-blue-200 text-xs space-y-1"
             >
-              <p>
-                Si activas esta opción, tu navegador realizará peticiones directas a
-                <strong>TVMaze</strong>, <strong>Wikipedia / Wikimedia</strong> y
-                <strong>Open Library</strong> (y a <strong>OMDb</strong> si añades tu clave), lo que
-                implica que esos servicios recibirán tu dirección IP conforme a sus políticas de
-                privacidad.
+              <p data-i18n="imageApi.privacyNotice">
+                Si activas esta opción, tu navegador realizará peticiones directas a TVMaze,
+                Wikipedia / Wikimedia y Open Library (y a OMDb si añades tu clave), lo que implica
+                que esos servicios recibirán tu dirección IP conforme a sus políticas de privacidad.
               </p>
             </div>
           </div>
@@ -973,9 +1057,11 @@
                 class="fa-brands fa-imdb text-amber-400 text-base mr-1 align-middle"
                 aria-hidden="true"
               ></i>
-              Opcional: Clave gratuita de OMDb API (Datos directos de IMDb)
+              <span data-i18n="imageApi.omdbLabel"
+                >Opcional: Clave gratuita de OMDb API (Datos directos de IMDb)</span
+              >
             </label>
-            <p class="text-xs text-gray-400">
+            <p data-i18n="imageApi.omdbDesc" class="text-xs text-gray-400">
               Solo se utiliza si activas la carga de portadas externas arriba. Se guarda localmente
               en este navegador y nunca se incluye en tus códigos de sincronización ni copias JSON.
             </p>
@@ -985,12 +1071,14 @@
                 type="password"
                 autocomplete="off"
                 spellcheck="false"
+                data-i18n-placeholder="imageApi.omdbPlaceholder"
                 placeholder="Ej: a1b2c3d4 (Opcional)"
                 class="flex-1 bg-marvel-card border border-marvel-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
               />
               <button
                 type="button"
                 id="btnSaveOmdbKey"
+                data-i18n="imageApi.omdbSaveBtn"
                 class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 text-xs font-bold transition"
               >
                 Guardar y Recargar
@@ -1002,6 +1090,7 @@
           <button
             type="button"
             data-close-modal="imageApiModal"
+            data-i18n="modal.close"
             class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold transition"
           >
             Cerrar
@@ -1026,9 +1115,9 @@
           class="font-bold text-white text-base flex items-center gap-2"
         >
           <i class="fa-solid fa-triangle-exclamation text-red-500" aria-hidden="true"></i>
-          ¿Reiniciar todo el progreso?
+          <span data-i18n="reset.title">¿Reiniciar todo el progreso?</span>
         </h3>
-        <p class="text-xs text-gray-300 leading-relaxed">
+        <p data-i18n="reset.desc" class="text-xs text-gray-300 leading-relaxed">
           Se desmarcarán todas las películas, temporadas, episodios y notas guardadas. Tu fecha
           objetivo y tu clave OMDb se conservarán. Te recomendamos exportar antes una copia en JSON
           si quieres conservar tu estado actual.
@@ -1037,6 +1126,7 @@
           <button
             type="button"
             data-close-modal="confirmResetModal"
+            data-i18n="modal.cancel"
             class="px-4 py-2 rounded-xl bg-gray-800 text-gray-300 text-xs font-bold"
           >
             Cancelar
@@ -1044,6 +1134,7 @@
           <button
             type="button"
             id="btnConfirmReset"
+            data-i18n="reset.confirmBtn"
             class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold"
           >
             Sí, reiniciar todo
@@ -1068,11 +1159,12 @@
         >
           <h3 id="legalModalTitle" class="font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-scale-balanced text-emerald-400" aria-hidden="true"></i>
-            Aviso Legal, Privacidad y Créditos
+            <span data-i18n="legal.title">Aviso Legal, Privacidad y Créditos</span>
           </h3>
           <button
             type="button"
             data-close-modal="legalModal"
+            data-i18n-aria="modal.close"
             aria-label="Cerrar aviso legal"
             class="text-gray-400 hover:text-white p-1"
           >
@@ -1081,147 +1173,157 @@
         </div>
         <div class="p-5 overflow-y-auto space-y-4 text-xs text-gray-300 leading-relaxed">
           <section class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2">
-            <h4 class="font-bold text-white text-sm">
+            <h4 data-i18n="legal.s1Title" class="font-bold text-white text-sm">
               1. Propiedad Intelectual, No Afiliación y Retirada (DMCA)
             </h4>
-            <p>
-              Esta web es un
-              <strong>proyecto personal, fan, no oficial y estrictamente sin ánimo de lucro</strong>
+            <p data-i18n="legal.s1p1">
+              Esta web es un proyecto personal, fan, no oficial y estrictamente sin ánimo de lucro
               (sin publicidad, afiliados ni monetización). No está afiliada, patrocinada, autorizada
-              ni relacionada oficialmente con <strong>The Walt Disney Company</strong>,
-              <strong>Marvel Characters, Inc.</strong>, <strong>Marvel Studios</strong>,
-              <strong>Sony Pictures Entertainment</strong> ni <strong>20th Century Studios</strong>.
+              ni relacionada oficialmente con The Walt Disney Company, Marvel Characters, Inc.,
+              Marvel Studios, Sony Pictures Entertainment ni 20th Century Studios.
             </p>
-            <p>
+            <p data-i18n="legal.s1p2">
               Todos los personajes, nombres, títulos, marcas registradas, pósters y fotogramas
-              pertenecen a sus respectivos titulares de derechos. Esta aplicación
-              <strong>no aloja ni distribuye</strong> películas, series ni cómics; únicamente
-              proporciona un listado informativo y una herramienta de seguimiento personal.
+              pertenecen a sus respectivos titulares de derechos. Esta aplicación no aloja ni
+              distribuye películas, series ni cómics; únicamente proporciona un listado informativo
+              y una herramienta de seguimiento personal.
             </p>
             <p>
-              Si eres titular de derechos y consideras que algún contenido debe retirarse, escribe a
+              <span data-i18n="legal.s1p3"
+                >Si eres titular de derechos y consideras que algún contenido debe retirarse,
+                escribe a</span
+              >
               <a href="mailto:rice-shape-margin@duck.com" class="text-emerald-400 underline"
                 >rice-shape-margin@duck.com</a
               >
-              y se retirará de forma inmediata.
+              <span data-i18n="legal.s1p3End">y se retirará de forma inmediata.</span>
             </p>
           </section>
 
           <section class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2">
-            <h4 class="font-bold text-white text-sm">
+            <h4 data-i18n="legal.s2Title" class="font-bold text-white text-sm">
               2. Privacidad y Almacenamiento Local (RGPD / LSSI-CE)
             </h4>
-            <p>
-              Esta web
-              <strong>no utiliza cookies de seguimiento ni herramientas de analítica</strong> y no
-              recopila ni envía tus datos personales a ningún servidor propio.
+            <p data-i18n="legal.s2p1">
+              Esta web no utiliza cookies de seguimiento ni herramientas de analítica y no recopila
+              ni envía tus datos personales a ningún servidor propio.
             </p>
-            <p>
+            <p data-i18n="legal.s2p2">
               Para recordar tu progreso y ajustes de forma local en tu dispositivo se utiliza
-              exclusivamente almacenamiento técnico en <code>localStorage</code> (exento de banner
-              de consentimiento conforme al art. 22.2 de la LSSI-CE):
+              exclusivamente almacenamiento técnico en localStorage (exento de banner de
+              consentimiento conforme al art. 22.2 de la LSSI-CE):
             </p>
             <ul class="list-disc pl-5 space-y-1 text-gray-400">
               <li>
-                <code>mcu_multiverse_master_progress_v2</code>: títulos y episodios marcados,
-                valoraciones, notas personales y fecha objetivo.
+                <code>mcu_multiverse_master_progress_v2</code>:
+                <span data-i18n="legal.s2li1"
+                  >títulos y episodios marcados, valoraciones, notas personales y fecha
+                  objetivo.</span
+                >
               </li>
               <li>
-                <code>mcu_multiverse_external_media_v1</code>: preferencia opcional (opt-in) sobre
-                la carga de portadas desde APIs externas.
+                <code>mcu_multiverse_external_media_v1</code>:
+                <span data-i18n="legal.s2li2"
+                  >preferencia opcional (opt-in) sobre la carga de portadas desde APIs
+                  externas.</span
+                >
               </li>
               <li>
-                <code>mcu_multiverse_omdb_key_v1</code>: clave personal opcional de OMDb API (nunca
-                se incluye al exportar progreso).
+                <code>mcu_multiverse_omdb_key_v1</code>:
+                <span data-i18n="legal.s2li3"
+                  >clave personal opcional de OMDb API (nunca se incluye al exportar
+                  progreso).</span
+                >
+              </li>
+              <li>
+                <code>mcu_multiverse_lang_v1</code>:
+                <span data-i18n="legal.s2li4">preferencia de idioma de la interfaz (es / en).</span>
               </li>
             </ul>
-            <p>
-              Puedes borrar estos datos en cualquier momento desde el botón <em>Reiniciar</em> o
-              desde la configuración de tu navegador. Por defecto la aplicación realiza
-              <strong>cero peticiones a servidores externos</strong>; únicamente si activas
-              manualmente la carga opcional de portadas en <em>Portadas IMDb / TV</em>, tu navegador
-              consultará a TVMaze, Wikipedia, Open Library (y OMDb si añades tu clave), compartiendo
-              tu dirección IP con dichos terceros conforme a sus respectivas políticas de
-              privacidad.
+            <p data-i18n="legal.s2p3">
+              Puedes borrar estos datos en cualquier momento desde el botón Reiniciar o desde la
+              configuración de tu navegador. Por defecto la aplicación realiza cero peticiones a
+              servidores externos; únicamente si activas manualmente la carga opcional de portadas
+              en Portadas IMDb / TV, tu navegador consultará a TVMaze, Wikipedia, Open Library (y
+              OMDb si añades tu clave), compartiendo tu dirección IP con dichos terceros conforme a
+              sus respectivas políticas de privacidad.
             </p>
-            <p>
+            <p data-i18n="legal.s2p4">
               El alojamiento estático y la protección de red/DDoS de esta web se prestan a través de
-              <strong>Cloudflare</strong>, que puede procesar la dirección IP del visitante a nivel
-              técnico de infraestructura conforme a su propia política de privacidad.
+              Cloudflare, que puede procesar la dirección IP del visitante a nivel técnico de
+              infraestructura conforme a su propia política de privacidad.
             </p>
           </section>
 
           <section class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2">
-            <h4 class="font-bold text-white text-sm">3. Créditos y Licencias de Terceros</h4>
+            <h4 data-i18n="legal.s3Title" class="font-bold text-white text-sm">
+              3. Créditos y Licencias de Terceros
+            </h4>
             <ul class="list-disc pl-5 space-y-1 text-gray-300">
               <li>
-                <strong>TVmaze API:</strong> metadatos y fotogramas de episodios bajo licencia
+                <strong>TVmaze API:</strong>
                 <a
                   href="https://www.tvmaze.com/api"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="text-sky-400 underline"
                   >CC BY-SA 4.0</a
-                >.
+                >
               </li>
               <li>
-                <strong>Wikipedia / Wikimedia REST API:</strong> resúmenes y miniaturas bajo
-                licencia
+                <strong>Wikipedia / Wikimedia REST API:</strong>
                 <a
                   href="https://creativecommons.org/licenses/by-sa/4.0/"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="text-sky-400 underline"
                   >CC BY-SA 4.0</a
-                >.
+                >
               </li>
               <li>
-                <strong>Open Library (Internet Archive):</strong> portadas de cómics vía
+                <strong>Open Library (Internet Archive):</strong>
                 <a
                   href="https://openlibrary.org/"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="text-sky-400 underline"
                   >Open Library Covers API</a
-                >.
+                >
               </li>
               <li>
-                <strong>OMDb API:</strong> proveedor opcional de pósters vía
+                <strong>OMDb API:</strong>
                 <a
                   href="https://www.omdbapi.com/"
                   target="_blank"
                   rel="noopener noreferrer"
                   class="text-sky-400 underline"
                   >omdbapi.com</a
-                >.
+                >
               </li>
+              <li><strong>Font Awesome Free:</strong> CC BY 4.0 / SIL OFL / MIT (local)</li>
               <li>
-                <strong>Font Awesome Free:</strong> iconos empaquetados localmente (CC BY 4.0 / SIL
-                OFL / MIT).
-              </li>
-              <li>
-                <strong>Tipografía Inter:</strong> autoalojada mediante
-                <code>@fontsource-variable/inter</code> (licencia SIL OFL 1.1).
+                <strong>Inter Font:</strong>
+                <code>@fontsource-variable/inter</code> (SIL OFL 1.1)
               </li>
             </ul>
           </section>
 
           <section class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2">
-            <h4 class="font-bold text-white text-sm">
+            <h4 data-i18n="legal.s4Title" class="font-bold text-white text-sm">
               4. Aviso Legal y Limitación de Responsabilidad
             </h4>
             <p>
-              <strong>Responsable:</strong> Cesar D. — <strong>Contacto:</strong>
+              <span data-i18n="legal.s4p1">Responsable: Cesar D. — Contacto:</span>
               <a href="mailto:rice-shape-margin@duck.com" class="text-emerald-400 underline"
                 >rice-shape-margin@duck.com</a
               >.
             </p>
-            <p>
-              Esta herramienta se ofrece «tal cual» (<em>as-is</em>), sin garantía de disponibilidad
+            <p data-i18n="legal.s4p2">
+              Esta herramienta se ofrece «tal cual» (as-is), sin garantía de disponibilidad
               ininterrumpida ni exactitud absoluta de fechas de estreno futuras. El responsable no
               se hace cargo de la pérdida del progreso guardado localmente si borras la caché o
               cambias de dispositivo; se recomienda utilizar periódicamente la exportación en
-              archivo <code>.JSON</code>.
+              archivo .JSON.
             </p>
           </section>
         </div>
@@ -1229,6 +1331,7 @@
           <button
             type="button"
             data-close-modal="legalModal"
+            data-i18n="modal.close"
             class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold transition"
           >
             Cerrar

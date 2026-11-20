@@ -1,95 +1,104 @@
-# UCM & Multiverso — Checklist No Oficial
+# MCU & Multiverse — Unofficial Watchlist Tracker
 
-Aplicación web estática (PWA) y sin ánimo de lucro para llevar el seguimiento completo de películas, series, especiales y cómics canon del Universo Cinematográfico de Marvel y el Multiverso.
+> [Leer en español](./README.es.md)
 
-Incluye **124 títulos**, **50 temporadas** y **543 episodios** con reseñas/sinopsis originales en español **100 % offline**.
+A non-profit, fan-made static web app (PWA) to track movies, TV series, specials, and canon comics across the Marvel Cinematic Universe and the Multiverse.
 
----
-
-## Características principales
-
-- **Doble orden de visionado:** alterna al instante entre **Orden de Publicación** y **Orden Cronológico por Año**.
-- **Agrupación flexible:** organiza por _Sagas, Fases y Eras (intercalado)_, _Por Fase / Era separada_ o _Lista continua_, con bloques plegables y progreso por fase.
-- **Ruta Esencial Doomsday:** filtro rápido con los títulos imprescindibles para llegar preparado a _Avengers: Doomsday_.
-- **Planificador de maratón por fecha objetivo:** calcula horas pendientes, ritmo diario y semanal, y el próximo título recomendado según el alcance elegido.
-- **Seguimiento episodio a episodio con reseñas offline:** los 543 capítulos cuentan con sinopsis en español abiertas por defecto, desplegables de forma independiente al switch de visto.
-- **Valoraciones y notas personales:** puntuación de 1 a 5 estrellas y notas privadas por título.
-- **100 % local y portable (PWA):**
-  - Progreso guardado automáticamente en `localStorage`.
-  - Exportación e importación mediante archivo `.JSON` o código rápido (sin incluir claves privadas de OMDb).
-  - Instalable como aplicación (Web App Manifest + Service Worker).
-- **Diseño responsive _above the fold_:** en móviles y pantallas compactas, el planificador y los filtros avanzados arrancan colapsados para mostrar el primer bloque del catálogo nada más abrir la web.
+Includes **124 titles**, **50 seasons**, and **543 episodes** with original synopses in English and Spanish **100% offline**.
 
 ---
 
-## Privacidad (RGPD / LSSI-CE)
+## Key Features
 
-- **Cero peticiones externas por defecto:** la tipografía (`@fontsource-variable/inter`) y los iconos (`@fortawesome/fontawesome-free`) están empaquetados localmente. No se cargan CDNs ni herramientas de analítica ni cookies de seguimiento.
-- **Portadas externas estrictamente _opt-in_:** la consulta a APIs externas (**TVmaze**, **Wikipedia**, **Open Library** y **OMDb** opcional) permanece desactivada por defecto; solo se activa si el usuario la habilita manualmente desde _Portadas IMDb / TV_.
+- **Bilingual UI (`EN` / `ES`):** instant language toggle in the header with browser language auto-detection and 100% offline translations (UI, legal notice, all 124 catalog synopses, and all 543 episode synopses).
+- **Dual Watch Order:** switch instantly between **Release Order** and **Chronological Order (by Year)**.
+- **Flexible Grouping:** organize by _Sagas, Phases & Eras (Interleaved)_, _Separate Official Phase / Era_, or _Continuous List_, with collapsible blocks and per-phase progress.
+- **Doomsday Essential Route:** quick filter highlighting the essential titles to prepare for _Avengers: Doomsday_.
+- **Target-Date Marathon Planner:** calculates pending hours, required daily and weekly pace, and the next recommended title based on your selected scope.
+- **Episode-by-Episode Tracking with Offline Reviews:** all 543 episodes include synopses expanded by default, collapsible independently from the watched switch.
+- **Personal Ratings & Notes:** 1-to-5 star ratings and private notes per title.
+- **100% Local & Portable (PWA):**
+  - Progress saved automatically in `localStorage`.
+  - Export and import via `.JSON` file or quick sync code with a SemVer-versioned JSON Schema (`schemas/progress.schema.json`), never including private OMDb API keys.
+  - Installable as a Progressive Web App (Web App Manifest + Service Worker).
+- **Above-the-Fold Responsive Layout:** on mobile and compact viewports, the marathon planner and advanced filters start collapsed so the first catalog block is immediately visible without scrolling.
 
 ---
 
-## Stack técnico y estructura
+## Privacy (GDPR / LSSI-CE)
 
-- **Runtime & Bundler:** [Bun](https://bun.sh/) (`Bun.build` + `bun test`)
-- **Estilos:** [Tailwind CSS v4](https://tailwindcss.com/) (`bun-plugin-tailwind`)
-- **Alojamiento:** Cloudflare Workers Static Assets (`wrangler.jsonc` + Workers Builds)
+- **Zero External Requests by Default:** typography (`@fontsource-variable/inter`) and icons (`@fortawesome/fontawesome-free`) are bundled locally. No CDNs, analytics, or tracking cookies are loaded.
+- **Strictly Opt-In External Artwork:** queries to external APIs (**TVmaze**, **Wikipedia**, **Open Library**, and optional **OMDb**) remain disabled by default; they are only enabled if the user manually opts in under _IMDb / TV Posters_.
+
+---
+
+## Tech Stack & Project Structure
+
+- **Runtime, Bundler, Formatter, Typechecker & Test Runner:** [Bun](https://bun.sh/) (`bun fmt`, `bun check`, `bun test`, `Bun.build`)
+- **Linting:** [Oxlint](https://oxc.rs/) (Oxc)
+- **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) (`bun-plugin-tailwind`)
+- **Git Hooks & Releases:** [Lefthook](https://lefthook.dev/), `commitlint` (Conventional Commits), and `semantic-release`
+- **Hosting:** Cloudflare Workers Static Assets (`wrangler.jsonc` + Workers Builds)
 
 ```text
 .
-├── build.ts                     # Build de producción con Bun + Tailwind v4
-├── preview.ts                   # Servidor estático local para previsualizar ./dist
-├── wrangler.jsonc               # Configuración de Cloudflare Workers Static Assets
+├── build.ts                     # Production build with Bun + Tailwind v4
+├── preview.ts                   # Local static server to preview ./dist
+├── wrangler.jsonc               # Cloudflare Workers Static Assets configuration
+├── schemas/
+│   └── progress.schema.json     # SemVer-versioned JSON Schema for backups
 ├── public/
-│   ├── _headers                 # Cabeceras HTTP de seguridad y caché
-│   ├── .assetsignore            # Exclusiones de subida (*.map, .DS_Store)
-│   ├── icon.svg                 # Icono PWA
-│   ├── manifest.webmanifest     # Manifiesto PWA
+│   ├── _headers                 # HTTP security (CSP, HSTS) and caching headers
+│   ├── .assetsignore            # Upload exclusions (*.map, .DS_Store)
+│   ├── icon.svg                 # PWA icon
+│   ├── manifest.webmanifest     # PWA manifest
 │   └── sw.js                    # Service Worker
 ├── src/
-│   ├── index.html               # Marcado semántico y modales accesibles
-│   ├── styles.css               # Tailwind v4 + fuentes e iconos locales
-│   ├── main.js                  # Estado, eventos, filtros y coordinación de UI
-│   ├── ui.js                    # Renderizado seguro (XSS-safe) de catálogo y modales
-│   ├── logic.js                 # Cálculos de progreso, filtros y planificador
-│   ├── store.js                 # Persistencia local, validación y exportación/importación
-│   ├── mediaApi.js              # Integración opt-in con TVmaze, Wikipedia, Open Library y OMDb
-│   ├── pwa.js                   # Registro del Service Worker e instalación PWA
-│   ├── utils.js                 # Utilidades (escapeHtml, sanitizeImageUrl, debounce, clipboard)
-│   ├── catalog.js               # Catálogo maestro (124 entradas / 50 temporadas / 543 episodios)
-│   └── data/episodes/           # Sinopsis originales en español (100 % offline)
-│       ├── index.js             # Cargador modular por plataforma
-│       ├── disneyPlus.js
-│       ├── netflix.js
-│       ├── abc.js
-│       └── hulu.js
-└── tests/                       # Suite de pruebas unitarias (bun test)
+│   ├── index.html               # Semantic markup and accessible modals
+│   ├── styles.css               # Tailwind v4 + locally bundled fonts and icons
+│   ├── i18n.js                  # EN / ES dictionary and language management
+│   ├── main.js                  # State, events, filters, and UI coordination
+│   ├── ui.js                    # XSS-safe rendering for catalog and modals
+│   ├── logic.js                 # Progress calculations, filtering, and planner
+│   ├── store.js                 # Local persistence, SemVer checks, and export/import
+│   ├── mediaApi.js              # Opt-in integration with TVmaze, Wikipedia, Open Library, and OMDb
+│   ├── pwa.js                   # Service Worker registration and PWA installation
+│   ├── utils.js                 # Utilities (escapeHtml, sanitizeImageUrl, debounce, clipboard)
+│   ├── catalog.js               # Master catalog (124 entries / 50 seasons / 543 episodes)
+│   └── data/
+│       ├── catalogEn.js         # Lazy-loaded English catalog synopses
+│       └── episodes/            # Offline ES & EN episode synopses (lazy-loaded)
+└── tests/                       # Unit test suite (bun test)
 ```
 
 ---
 
-## Desarrollo local
+## Local Development
 
-Requisitos: [Bun](https://bun.sh/) `>= 1.4`.
+Requirements: [Bun](https://bun.sh/) `>= 1.4.5`.
 
 ```bash
-# Instalar dependencias
+# Install dependencies and Git hooks (lefthook)
 bun install
 
-# Desarrollo con recarga en caliente
+# Start dev server with hot reload
 bun run dev
 
-# Ejecutar tests unitarios (incluye cobertura 543/543 de sinopsis)
+# Format, lint (oxlint), and typecheck (bun check)
+bun run format
+bun run verify
+
+# Run unit tests
 bun test
 
-# Compilar build de producción en ./dist (sin sourcemaps)
+# Build production bundle into ./dist (without sourcemaps)
 bun run build
 
-# Previsualizar ./dist en http://localhost:4173
+# Preview ./dist at http://localhost:4173
 bun run preview
 ```
 
-Para generar sourcemaps puntualmente en local:
+To emit sourcemaps on demand locally:
 
 ```bash
 SOURCEMAP=1 bun run build
@@ -97,22 +106,22 @@ SOURCEMAP=1 bun run build
 
 ---
 
-## Despliegue en Cloudflare Workers Builds
+## Deployment on Cloudflare Workers Builds
 
-El repositorio está preparado para **Cloudflare Workers + Static Assets** (_assets-only Worker_, sin script de servidor):
+This repository is configured for **Cloudflare Workers + Static Assets** (assets-only Worker, no server script):
 
 - **Build command:** `bun run build`
 - **Deploy command:** `npx wrangler deploy`
 - **Production branch:** `main`
-- **Directorio de salida:** `./dist` (configurado en `wrangler.jsonc`)
+- **Output directory:** `./dist` (configured in `wrangler.jsonc`)
 
 ---
 
-## Aviso legal y propiedad intelectual
+## Legal Notice & Intellectual Property
 
-Este es un **proyecto personal, fan, no oficial y sin ánimo de lucro**. No está afiliado, patrocinado ni autorizado por **The Walt Disney Company**, **Marvel Characters, Inc.**, **Marvel Studios**, **Sony Pictures Entertainment** ni **20th Century Studios**. Todos los personajes, títulos y marcas pertenecen a sus respectivos titulares. Esta aplicación no aloja ni distribuye material audiovisual protegido.
+This is a **personal, fan-made, unofficial, non-profit project**. It is not affiliated with, sponsored by, or authorized by **The Walt Disney Company**, **Marvel Characters, Inc.**, **Marvel Studios**, **Sony Pictures Entertainment**, or **20th Century Studios**. All characters, titles, and trademarks belong to their respective owners. This application does not host or distribute any copyrighted audiovisual content.
 
-### Licencias de terceros
+### Third-Party Licenses
 
 - **Inter (`@fontsource-variable/inter`):** SIL OFL 1.1.
 - **Font Awesome Free (`@fortawesome/fontawesome-free`):** CC BY 4.0 / SIL OFL / MIT.
@@ -120,6 +129,6 @@ Este es un **proyecto personal, fan, no oficial y sin ánimo de lucro**. No est�
 
 ---
 
-## Licencia
+## License
 
-Distribuido bajo la licencia **Apache License 2.0**. Consulta el archivo [LICENSE](./LICENSE) para más detalles.
+Distributed under the **Apache License 2.0**. See [LICENSE](./LICENSE) for more details.
