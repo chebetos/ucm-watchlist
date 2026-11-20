@@ -4,7 +4,9 @@ export function initPWA() {
   try {
     if (
       'serviceWorker' in navigator &&
-      (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      (window.location.protocol === 'https:' ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1')
     ) {
       navigator.serviceWorker.register('./sw.js').catch((err) => {
         console.warn('No se pudo registrar el Service Worker:', err);

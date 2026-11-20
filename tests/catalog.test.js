@@ -11,8 +11,8 @@ describe('Integridad de MCU_CATALOG', () => {
 
   test('asigna releaseOrder y chronoOrder consecutivos del 1 al N', () => {
     const n = MCU_CATALOG.length;
-    const releaseOrders = MCU_CATALOG.map((i) => i.releaseOrder).sort((a, b) => a - b);
-    const chronoOrders = MCU_CATALOG.map((i) => i.chronoOrder).sort((a, b) => a - b);
+    const releaseOrders = MCU_CATALOG.map((i) => i.releaseOrder).toSorted((a, b) => a - b);
+    const chronoOrders = MCU_CATALOG.map((i) => i.chronoOrder).toSorted((a, b) => a - b);
 
     expect(releaseOrders[0]).toBe(1);
     expect(releaseOrders[n - 1]).toBe(n);

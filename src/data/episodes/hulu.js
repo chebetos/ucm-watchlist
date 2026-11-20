@@ -2,26 +2,28 @@ export const HULU_EPISODE_SYNOPSES = {
   ya_cloak_dagger_s1: {
     S1E1: 'La explosión de una plataforma de Roxxon une los destinos de Tandy y Tyrone. Años después, un reencuentro fortuito en Nueva Orleans despierta sus poderes de luz y oscuridad.',
     S1E2: 'Tandy intenta huir de la ciudad tras herir a un atacante con sus dagas de luz, mientras Tyrone descubre su teletransporte y busca al policía Connors, asesino de su hermano.',
-    S1E3: 'Tyrone acude a una sacerdotisa vudú buscando respuestas sobre sus visiones y la fuerza oscura. Tandy se cruza con la detective O\'Reilly mientras escapa de recuerdos que la atormentan.',
+    S1E3: "Tyrone acude a una sacerdotisa vudú buscando respuestas sobre sus visiones y la fuerza oscura. Tandy se cruza con la detective O'Reilly mientras escapa de recuerdos que la atormentan.",
     S1E4: 'Tandy y Tyrone se reúnen en una iglesia abandonada para comparar sus habilidades y traumas. Juntos empiezan a comprender que sus poderes están entrelazados de formas inesperadas.',
     S1E5: 'Tandy investiga los secretos de Roxxon ligados a la muerte de su padre, mientras Tyrone se enfoca en el campeonato estatal de baloncesto lidiando con el peso de su pasado.',
-    S1E6: 'Tyrone se infiltra en el entorno del detective Connors con ayuda de O\'Reilly, mientras Tandy entra como becaria en Roxxon para acercarse a Mina Hess y descubrir la verdad.',
+    S1E6: "Tyrone se infiltra en el entorno del detective Connors con ayuda de O'Reilly, mientras Tandy entra como becaria en Roxxon para acercarse a Mina Hess y descubrir la verdad.",
     S1E7: 'Tandy y Tyrone ingresan juntos en la mente catatónica de Ivan Hess, atrapado en un bucle del día de la explosión en la plataforma, para desentrañar qué provocó la tragedia.',
     S1E8: 'En el octavo aniversario del accidente que cambió sus vidas, Tandy recuerda a su padre junto a su madre mientras Tyrone ejecuta un plan audaz para hacer confesar a Connors.',
     S1E9: 'Golpeados por duros reveses, Tandy recae en viejos hábitos y Tyrone pierde el control de su ira. Mientras tanto, la ambición de Scarborough en Roxxon amenaza con desatar el caos.',
-    S1E10: 'Una fuga de energía oscura de Roxxon sume Nueva Orleans en la locura colectiva. Tandy y Tyrone deben unir sus poderes como el Par Divino para detener la catástrofe y salvar la ciudad.',
+    S1E10:
+      'Una fuga de energía oscura de Roxxon sume Nueva Orleans en la locura colectiva. Tandy y Tyrone deben unir sus poderes como el Par Divino para detener la catástrofe y salvar la ciudad.',
   },
   ya_cloak_dagger_s2: {
-    S2E1: 'Meses después de salvar Nueva Orleans, Tandy intenta rehacer su vida junto a su madre y Tyrone vive oculto, mientras una versión implacable de O\'Reilly surge bajo el nombre de Mayhem.',
-    S2E2: 'Tandy y Tyrone investigan una red de trata de jóvenes tras un ataque en un grupo de apoyo. Al mismo tiempo, descubren que la detective O\'Reilly se ha dividido en dos personas.',
+    S2E1: "Meses después de salvar Nueva Orleans, Tandy intenta rehacer su vida junto a su madre y Tyrone vive oculto, mientras una versión implacable de O'Reilly surge bajo el nombre de Mayhem.",
+    S2E2: "Tandy y Tyrone investigan una red de trata de jóvenes tras un ataque en un grupo de apoyo. Al mismo tiempo, descubren que la detective O'Reilly se ha dividido en dos personas.",
     S2E3: 'Mientras Mayhem imparte justicia letal contra los criminales de la ciudad, Tandy y Tyrone siguen el rastro de una joven desaparecida hasta el peligroso entorno del motel Viking.',
     S2E4: 'Tandy entra en la Dimensión Oscura a través de Tyrone para rastrear un objetivo inesperado y averiguar qué fue de Connors, enfrentándose a los miedos más profundos de ambos.',
     S2E5: 'Tandy busca pistas sobre la red de tráfico infiltrándose en la vida de Andre Deschaine, un enigmático líder comunitario, mientras Tyrone afronta una dura decisión sobre Connors.',
     S2E6: 'Atrapada en una ilusión creada por Andre Deschaine, Tandy revive versiones alternativas de su vida donde la plataforma nunca explotó, poniendo a prueba su identidad y voluntad.',
     S2E7: 'Tyrone intenta rescatar a Tandy del motel Viking, pero acaba atrapado en la Dimensión Oscura, donde una singular tienda de discos revela el pasado oculto de Andre Deschaine.',
     S2E8: 'Con Tandy cautiva en el motel y Tyrone debilitado, Evita y Brigid recurren a un antiguo ritual vudú para adentrarse en la mente de los héroes y ayudarlos a escapar de la desesperación.',
-    S2E9: 'Andre absorbe la desesperación de Nueva Orleans para convertirse en D\'Spayre y ascender como loa. Tandy y Tyrone descubren que el pasado de Andre con Roxxon es clave para frenarlo.',
-    S2E10: 'Con la ciudad sumida en trance por D\'Spayre, Tandy y Tyrone libran la batalla final en el plano espiritual junto a Evita y Mayhem, antes de partir hacia nuevos horizontes.',
+    S2E9: "Andre absorbe la desesperación de Nueva Orleans para convertirse en D'Spayre y ascender como loa. Tandy y Tyrone descubren que el pasado de Andre con Roxxon es clave para frenarlo.",
+    S2E10:
+      "Con la ciudad sumida en trance por D'Spayre, Tandy y Tyrone libran la batalla final en el plano espiritual junto a Evita y Mayhem, antes de partir hacia nuevos horizontes.",
   },
   ya_runaways_s1: {
     S1E1: 'Distanciados desde la muerte de Amy, Alex reúne a Nico, Karolina, Gert, Chase y Molly en su casa. Al explorar el sótano, los seis presencian horrorizados un ritual secreto de sus padres.',
@@ -33,7 +35,8 @@ export const HULU_EPISODE_SYNOPSES = {
     S1E7: 'La presencia de Jonah desestabiliza a los padres, en especial a Victor Stein, cuya conducta se vuelve peligrosa. Los chicos revisan las pruebas y destapan nuevos secretos.',
     S1E8: 'Tras un violento incidente en la casa Stein, el Orgullo intenta encubrir lo ocurrido y salvar a Victor con ayuda de Jonah, mientras los chicos se acercan a la verdad sobre Amy.',
     S1E9: 'Molly regresa con un mensaje de sus padres biológicos que revela el verdadero plan del Orgullo en la excavación de Los Ángeles. Sin tiempo que perder, el grupo decide intervenir.',
-    S1E10: 'Los seis jóvenes enfrentan a sus padres en la excavación para frustrar los planes de Jonah, pero la confrontación los deja incriminados por asesinato y obligados a huir juntos.',
+    S1E10:
+      'Los seis jóvenes enfrentan a sus padres en la excavación para frustrar los planes de Jonah, pero la confrontación los deja incriminados por asesinato y obligados a huir juntos.',
   },
   ya_runaways_s2: {
     S2E1: 'Fugitivos y sin dinero en Los Ángeles, los chicos encuentran refugio en una mansión subterránea abandonada llamada el Albergue, buscando cómo sobrevivir sin ser localizados.',
@@ -45,10 +48,14 @@ export const HULU_EPISODE_SYNOPSES = {
     S2E7: 'Los chicos descubren el plan de Jonah en la excavación y se alían brevemente con varios padres para detener la nave, pero una explosión altera por completo el equilibrio de poder.',
     S2E8: 'Un recorrido por el pasado revela cómo Jonah conoció a los padres décadas atrás y fundó el Orgullo, explicando el pacto que marcó a las familias y el origen de Karolina.',
     S2E9: 'Una cazadora de recompensas contratada por el Orgullo ataca el Albergue, obligando a los chicos a defender su hogar y afrontar el costo del uso del Báculo del Uno por Nico.',
-    S2E10: 'El Orgullo despliega armamento avanzado de los Stein para capturar a los jóvenes, forzando una tensa negociación en el Albergue que fractura la confianza dentro del equipo.',
-    S2E11: 'Chase sorprende al grupo con una decisión drástica que los expone ante sus padres, mientras la familia alienígena de Jonah comienza a manifestarse en nuevos anfitriones humanos.',
-    S2E12: 'Karolina es capturada por la Iglesia de Gibborim, donde descubre la verdad sobre el Magistrado y los suyos. Los demás chicos organizan un rescate contrarreloj para liberarla.',
-    S2E13: 'Perseguidos por el Orgullo y enfrentados a la familia alienígena infiltrada entre sus padres, los Runaways caen en una emboscada brutal que separa al grupo con graves consecuencias.',
+    S2E10:
+      'El Orgullo despliega armamento avanzado de los Stein para capturar a los jóvenes, forzando una tensa negociación en el Albergue que fractura la confianza dentro del equipo.',
+    S2E11:
+      'Chase sorprende al grupo con una decisión drástica que los expone ante sus padres, mientras la familia alienígena de Jonah comienza a manifestarse en nuevos anfitriones humanos.',
+    S2E12:
+      'Karolina es capturada por la Iglesia de Gibborim, donde descubre la verdad sobre el Magistrado y los suyos. Los demás chicos organizan un rescate contrarreloj para liberarla.',
+    S2E13:
+      'Perseguidos por el Orgullo y enfrentados a la familia alienígena infiltrada entre sus padres, los Runaways caen en una emboscada brutal que separa al grupo con graves consecuencias.',
   },
   ya_runaways_s3: {
     S3E1: 'Tras la captura de Chase, Karolina y Janet en el algoritmo, Alex, Nico, Gert y Molly buscan a sus amigos sin saber quiénes entre sus padres han sido poseídos por los alienígenas.',
@@ -60,7 +67,8 @@ export const HULU_EPISODE_SYNOPSES = {
     S3E7: 'Separados por la magia de Morgan y la desaparición de Alex en la Dimensión Oscura, los chicos buscan cómo rescatarlo y frenar el poder del Darkhold antes de que sea tarde.',
     S3E8: 'Tandy Bowen y Tyrone Johnson (Cloak & Dagger) llegan a Los Ángeles para ayudar a los Runaways a rescatar a Alex de la Dimensión Oscura y enfrentar los miedos más profundos del grupo.',
     S3E9: 'Con el ejército de Morgan le Fay listo para fusionar la Dimensión Oscura con la Tierra, los Runaways y sus padres unen fuerzas en una batalla definitiva que exige un doloroso sacrificio.',
-    S3E10: 'Una versión futura de Alex viaja al pasado con un plan letal contra los suyos. Los Runaways deben alterar el curso del destino para salvar a Gert y proteger el futuro del equipo.',
+    S3E10:
+      'Una versión futura de Alex viaja al pasado con un plan letal contra los suyos. Los Runaways deben alterar el curso del destino para salvar a Gert y proteger el futuro del equipo.',
   },
   ya_helstrom_s1: {
     S1E1: 'Daimon Helstrom, profesor y exorcista, y su hermana Ana, subastadora con doble vida, se reencuentran en Portland cuando una fuga psiquiátrica desata una amenaza demoníaca.',
@@ -72,6 +80,7 @@ export const HULU_EPISODE_SYNOPSES = {
     S1E7: 'Ana enfrenta las consecuencias de su lado más oscuro ante un antiguo peligro, mientras Daimon y Gabriella intentan proteger a Chris Yen y contener a las fuerzas que acechan Saint Teresa.',
     S1E8: 'Un ente demoníaco se infiltra en el refugio y amenaza a Gabriella, obligando a Daimon a recurrir a poderes infernales que juró evitar, mientras Ana y Caretaker buscan una pieza clave.',
     S1E9: 'Con el ritual demoníaco a punto de completarse, Daimon y Ana se infiltran en la guarida enemiga para rescatar a Gabriella e impedir que un nuevo recipiente traiga de vuelta a su padre.',
-    S1E10: 'Los hermanos Helstrom libran la batalla decisiva contra Kthara y su séquito para salvar el alma de Gabriella y frenar el nacimiento de una entidad infernal, sellando su destino.',
+    S1E10:
+      'Los hermanos Helstrom libran la batalla decisiva contra Kthara y su séquito para salvar el alma de Gabriella y frenar el nacimiento de una entidad infernal, sellando su destino.',
   },
 };

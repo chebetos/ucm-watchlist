@@ -45,7 +45,11 @@ describe('normalizeUserProgress', () => {
         corrupt_series: 'not-an-object',
       },
       userRatings: { mcu_iron_man: 5, bad_high: 9, bad_float: 3.5, bad_str: '4' },
-      userNotes: { mcu_iron_man: '  Obra maestra  ', bad_note: { nested: true }, empty_note: '   ' },
+      userNotes: {
+        mcu_iron_man: '  Obra maestra  ',
+        bad_note: { nested: true },
+        empty_note: '   ',
+      },
       targetDate: '2027-05-01',
       omdbApiKey: 'SECRET_KEY_123',
     };
@@ -61,16 +65,20 @@ describe('normalizeUserProgress', () => {
 
   test('preserva targetDate actual si el objeto importado no lo incluye o es inválido', () => {
     const current = createDefaultProgress('2027-01-15');
-    const imported = normalizeUserProgress({ watchedItems: { mcu_iron_man: true }, targetDate: 'invalid' }, current);
+    const imported = normalizeUserProgress(
+      { watchedItems: { mcu_iron_man: true }, targetDate: 'invalid' },
+      current,
+    );
     expect(imported.targetDate).toBe('2027-01-15');
   });
 
   test('previene prototype pollution en claves importadas', () => {
-    const maliciousJson = '{"watchedItems":{"__proto__":{"polluted":true},"constructor":true,"mcu_iron_man":true}}';
+    const maliciousJson =
+      '{"watchedItems":{"__proto__":{"polluted":true},"constructor":true,"mcu_iron_man":true}}';
     const parsed = JSON.parse(maliciousJson);
     const normalized = normalizeUserProgress(parsed);
 
-    expect(({}).polluted).toBeUndefined();
+    expect({}.polluted).toBeUndefined();
     expect(Object.keys(normalized.watchedItems)).toEqual(['mcu_iron_man']);
   });
 
@@ -115,7 +123,10 @@ describe('Aislamiento de omdbApiKey y sincronización', () => {
   test('guarda y migra omdbApiKey en su propia clave de localStorage', () => {
     const storage = createMemoryStorage();
     // Simular almacenamiento antiguo
-    storage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ omdbApiKey: 'legacy_key_99', watchedItems: {} }));
+    storage.setItem(
+      LOCAL_STORAGE_KEY,
+      JSON.stringify({ omdbApiKey: 'legacy_key_99', watchedItems: {} }),
+    );
 
     expect(loadOmdbApiKey(storage)).toBe('legacy_key_99');
     expect(storage.getItem(OMDB_STORAGE_KEY)).toBe('legacy_key_99');
@@ -133,7 +144,9 @@ describe('Aislamiento de omdbApiKey y sincronización', () => {
     expect(isValidIsoDate('2026-02-31')).toBe(false);
     expect(createDefaultProgress('not-a-date').targetDate).toBe(DEFAULT_TARGET_DATE);
     expect(createDefaultProgress('2026-99-99').targetDate).toBe(DEFAULT_TARGET_DATE);
-    expect(normalizeUserProgress({ targetDate: '2026-02-31' }).targetDate).toBe(DEFAULT_TARGET_DATE);
+    expect(normalizeUserProgress({ targetDate: '2026-02-31' }).targetDate).toBe(
+      DEFAULT_TARGET_DATE,
+    );
   });
 
   test('guarda y carga la preferencia opt-in de portadas externas (false por defecto)', () => {
@@ -187,14 +200,38 @@ describe('JSON Schema y compatibilidad SemVer', () => {
   });
 
   test('checkSchemaCompatibility evalúa exact, compatible, newer_minor, legacy, incompatible e invalid', () => {
-    expect(checkSchemaCompatibility('1.0.0', '1.0.0')).toMatchObject({ status: 'exact', compatible: true });
-    expect(checkSchemaCompatibility('1.0.2', '1.0.0')).toMatchObject({ status: 'compatible', compatible: true });
-    expect(checkSchemaCompatibility('1.0.0', '1.2.0')).toMatchObject({ status: 'compatible', compatible: true });
-    expect(checkSchemaCompatibility('1.3.0', '1.0.0')).toMatchObject({ status: 'newer_minor', compatible: true });
-    expect(checkSchemaCompatibility(undefined, '1.0.0')).toMatchObject({ status: 'legacy', compatible: true });
-    expect(checkSchemaCompatibility('2.0.0', '1.0.0')).toMatchObject({ status: 'incompatible', compatible: false });
-    expect(checkSchemaCompatibility('0.9.0', '1.0.0')).toMatchObject({ status: 'incompatible', compatible: false });
-    expect(checkSchemaCompatibility('v1', '1.0.0')).toMatchObject({ status: 'invalid', compatible: false });
+    expect(checkSchemaCompatibility('1.0.0', '1.0.0')).toMatchObject({
+      status: 'exact',
+      compatible: true,
+    });
+    expect(checkSchemaCompatibility('1.0.2', '1.0.0')).toMatchObject({
+      status: 'compatible',
+      compatible: true,
+    });
+    expect(checkSchemaCompatibility('1.0.0', '1.2.0')).toMatchObject({
+      status: 'compatible',
+      compatible: true,
+    });
+    expect(checkSchemaCompatibility('1.3.0', '1.0.0')).toMatchObject({
+      status: 'newer_minor',
+      compatible: true,
+    });
+    expect(checkSchemaCompatibility(undefined, '1.0.0')).toMatchObject({
+      status: 'legacy',
+      compatible: true,
+    });
+    expect(checkSchemaCompatibility('2.0.0', '1.0.0')).toMatchObject({
+      status: 'incompatible',
+      compatible: false,
+    });
+    expect(checkSchemaCompatibility('0.9.0', '1.0.0')).toMatchObject({
+      status: 'incompatible',
+      compatible: false,
+    });
+    expect(checkSchemaCompatibility('v1', '1.0.0')).toMatchObject({
+      status: 'invalid',
+      compatible: false,
+    });
   });
 
   test('importProgressPayload acepta backups legacy y rechaza versiones MAJOR incompatibles o inválidas', () => {
@@ -203,11 +240,11 @@ describe('JSON Schema y compatibilidad SemVer', () => {
     expect(legacy.progress.watchedItems).toEqual({ mcu_iron_man: true });
 
     expect(() =>
-      importProgressPayload({ schemaVersion: '2.0.0', watchedItems: { mcu_iron_man: true } })
+      importProgressPayload({ schemaVersion: '2.0.0', watchedItems: { mcu_iron_man: true } }),
     ).toThrow('Versión de esquema incompatible');
 
-    expect(() =>
-      importProgressPayload({ schemaVersion: 'not-semver', watchedItems: {} })
-    ).toThrow('Versión de esquema no válida');
+    expect(() => importProgressPayload({ schemaVersion: 'not-semver', watchedItems: {} })).toThrow(
+      'Versión de esquema no válida',
+    );
   });
 });

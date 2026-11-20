@@ -54,7 +54,11 @@ export function debounce(fn, delayMs = 200) {
 }
 
 export async function copyToClipboard(text, fallbackInputEl = null) {
-  if (typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+  if (
+    typeof navigator !== 'undefined' &&
+    navigator.clipboard &&
+    typeof navigator.clipboard.writeText === 'function'
+  ) {
     try {
       await navigator.clipboard.writeText(text);
       return true;

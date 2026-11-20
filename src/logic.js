@@ -39,7 +39,8 @@ export function getFilteredAndSortedCatalog(catalog, filterState, userProgress) 
     if (filterState.status !== 'all' && comp.status !== filterState.status) return false;
 
     if (q) {
-      const haystack = `${item.title} ${item.year} ${item.synopsis} ${item.category} ${item.phase} ${item.timelineYear}`.toLowerCase();
+      const haystack =
+        `${item.title} ${item.year} ${item.synopsis} ${item.category} ${item.phase} ${item.timelineYear}`.toLowerCase();
       if (!haystack.includes(q)) return false;
     }
     return true;
@@ -91,7 +92,13 @@ export function computeGlobalStats(catalog, userProgress) {
   };
 }
 
-export function computeMarathonPlan(catalog, filterState, userProgress, scope = 'filtered', now = new Date()) {
+export function computeMarathonPlan(
+  catalog,
+  filterState,
+  userProgress,
+  scope = 'filtered',
+  now = new Date(),
+) {
   const rawTarget = userProgress.targetDate || '2026-12-18';
   const parsedTarget = new Date(`${rawTarget}T23:59:59`);
   const isTargetValid = !Number.isNaN(parsedTarget.getTime());
@@ -110,7 +117,9 @@ export function computeMarathonPlan(catalog, filterState, userProgress, scope = 
   }
 
   pool.sort((a, b) =>
-    filterState.orderMode === 'chrono' ? a.chronoOrder - b.chronoOrder : a.releaseOrder - b.releaseOrder
+    filterState.orderMode === 'chrono'
+      ? a.chronoOrder - b.chronoOrder
+      : a.releaseOrder - b.releaseOrder,
   );
 
   let pendingMinutes = 0;
@@ -160,17 +169,40 @@ export function computeMarathonPlan(catalog, filterState, userProgress, scope = 
 
 export function getCategoryColors(category) {
   const map = {
-    'Película UCM': { label: 'Película UCM', badge: 'bg-red-500/15 text-red-300 border-red-500/30' },
-    'Serie Disney+': { label: 'Serie Disney+', badge: 'bg-blue-500/15 text-blue-300 border-blue-500/30' },
+    'Película UCM': {
+      label: 'Película UCM',
+      badge: 'bg-red-500/15 text-red-300 border-red-500/30',
+    },
+    'Serie Disney+': {
+      label: 'Serie Disney+',
+      badge: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+    },
     'Serie Netflix': { label: 'Netflix', badge: 'bg-rose-500/15 text-rose-300 border-rose-500/30' },
     'Serie ABC': { label: 'Serie ABC', badge: 'bg-sky-500/15 text-sky-300 border-sky-500/30' },
-    'Marvel TV Juvenil / Hulu': { label: 'Juvenil / Hulu', badge: 'bg-pink-500/15 text-pink-300 border-pink-500/30' },
-    'Legado Fox / Multiverso': { label: 'Legado Fox', badge: 'bg-amber-500/15 text-amber-300 border-amber-500/30' },
-    'Universo Sony / Spider-Verse': { label: 'Sony / Spider-Verse', badge: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30' },
-    'Cómic Canon': { label: 'Cómic Canon', badge: 'bg-purple-500/15 text-purple-300 border-purple-500/30' },
-    'Especial / Corto': { label: 'Especial / Corto', badge: 'bg-teal-500/15 text-teal-300 border-teal-500/30' },
+    'Marvel TV Juvenil / Hulu': {
+      label: 'Juvenil / Hulu',
+      badge: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
+    },
+    'Legado Fox / Multiverso': {
+      label: 'Legado Fox',
+      badge: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+    },
+    'Universo Sony / Spider-Verse': {
+      label: 'Sony / Spider-Verse',
+      badge: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
+    },
+    'Cómic Canon': {
+      label: 'Cómic Canon',
+      badge: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+    },
+    'Especial / Corto': {
+      label: 'Especial / Corto',
+      badge: 'bg-teal-500/15 text-teal-300 border-teal-500/30',
+    },
   };
-  return map[category] || { label: category, badge: 'bg-gray-500/15 text-gray-300 border-gray-500/30' };
+  return (
+    map[category] || { label: category, badge: 'bg-gray-500/15 text-gray-300 border-gray-500/30' }
+  );
 }
 
 export function getShortSagaName(phase) {
@@ -217,7 +249,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'strict_era_marvel_tv',
         saga: 'ERA MARVEL TELEVISION',
         title: 'Series de ABC, Netflix (The Defenders) y Hulu / Freeform (2013–2020)',
-        subtitle: 'Agents of S.H.I.E.L.D., Agent Carter, Daredevil, Jessica Jones, Punisher, Runaways y Cloak & Dagger',
+        subtitle:
+          'Agents of S.H.I.E.L.D., Agent Carter, Daredevil, Jessica Jones, Punisher, Runaways y Cloak & Dagger',
         accent: 'from-sky-600/25 via-sky-900/10 to-transparent border-sky-500/40',
         badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
         icon: 'fa-shield-halved',
@@ -227,7 +260,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'strict_era_fox_sony',
         saga: 'LEGADO MULTIVERSAL',
         title: 'Era Fox (X-Men, Deadpool, 4F) y Universo Sony / Spider-Verse (2000–2024)',
-        subtitle: 'Las Tierras paralelas cuyos héroes convergen en No Way Home, Deadpool & Wolverine y Doomsday',
+        subtitle:
+          'Las Tierras paralelas cuyos héroes convergen en No Way Home, Deadpool & Wolverine y Doomsday',
         accent: 'from-indigo-600/25 via-indigo-900/10 to-transparent border-indigo-500/40',
         badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
         icon: 'fa-dna',
@@ -237,7 +271,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'strict_fase_4',
         saga: 'LA SAGA DEL MULTIVERSO',
         title: 'Fase 4: Despertar del Multiverso y Nuevos Legados (2021–2022)',
-        subtitle: 'De WandaVision y Loki T1 a Spider-Man: No Way Home, Multiverse of Madness y Wakanda Forever',
+        subtitle:
+          'De WandaVision y Loki T1 a Spider-Man: No Way Home, Multiverse of Madness y Wakanda Forever',
         accent: 'from-rose-600/25 via-rose-900/10 to-transparent border-rose-500/40',
         badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
         icon: 'fa-wand-magic-sparkles',
@@ -247,7 +282,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'strict_fase_5',
         saga: 'LA SAGA DEL MULTIVERSO',
         title: 'Fase 5: Incursiones, AVT y Nuevos Vengadores (2023–2025)',
-        subtitle: 'De Quantumania y Loki T2 a Deadpool & Wolverine, Daredevil: Born Again y Thunderbolts*',
+        subtitle:
+          'De Quantumania y Loki T2 a Deadpool & Wolverine, Daredevil: Born Again y Thunderbolts*',
         accent: 'from-blue-600/25 via-blue-900/10 to-transparent border-blue-500/40',
         badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
         icon: 'fa-asterisk',
@@ -257,7 +293,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'strict_fase_6',
         saga: 'LA SAGA DEL MULTIVERSO',
         title: 'Fase 6: Colisión Final — Doomsday y Secret Wars (2025–2027)',
-        subtitle: 'The Fantastic Four: First Steps, Spider-Man: Brand New Day, VisionQuest, Doomsday y Secret Wars',
+        subtitle:
+          'The Fantastic Four: First Steps, Spider-Man: Brand New Day, VisionQuest, Doomsday y Secret Wars',
         accent: 'from-emerald-600/25 via-emerald-900/10 to-transparent border-emerald-500/40',
         badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
         icon: 'fa-mask',
@@ -284,7 +321,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'chrono_era_2',
         saga: 'ERA MULTIVERSAL Y CÓSMICA TEMPRANA',
         title: 'Era 2: Años 60 a 90 — Primeros Mutantes, Tierra-828 y Captain Marvel (1962–1995)',
-        subtitle: 'X-Men en los años 60-90, Los 4 Fantásticos en Tierra-828 y el origen de Carol Danvers en 1995',
+        subtitle:
+          'X-Men en los años 60-90, Los 4 Fantásticos en Tierra-828 y el origen de Carol Danvers en 1995',
         accent: 'from-sky-600/25 via-sky-900/10 to-transparent border-sky-500/40',
         badgeColor: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
         icon: 'fa-star-of-life',
@@ -294,7 +332,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'chrono_era_3',
         saga: 'ERA PRE-UCM: LEGADO FOX Y SONY',
         title: 'Era 3: Amanecer de los Héroes del Multiverso (2000–2007)',
-        subtitle: 'Trilogía X-Men original, Trilogía Spider-Man de Sam Raimi, Daredevil (2003) y 4 Fantásticos (2005)',
+        subtitle:
+          'Trilogía X-Men original, Trilogía Spider-Man de Sam Raimi, Daredevil (2003) y 4 Fantásticos (2005)',
         accent: 'from-indigo-600/25 via-indigo-900/10 to-transparent border-indigo-500/40',
         badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
         icon: 'fa-dna',
@@ -304,7 +343,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'chrono_fase_1',
         saga: 'LA SAGA DEL INFINITO • FASE 1',
         title: 'Fase 1 Cronológica: La Iniciativa Vengadores (2008–2012)',
-        subtitle: 'De Iron Man a la Batalla de Nueva York en The Avengers (+ The Amazing Spider-Man)',
+        subtitle:
+          'De Iron Man a la Batalla de Nueva York en The Avengers (+ The Amazing Spider-Man)',
         accent: 'from-red-600/25 via-red-900/10 to-transparent border-red-500/40',
         badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
         icon: 'fa-a',
@@ -314,7 +354,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'chrono_fase_2',
         saga: 'LA SAGA DEL INFINITO • FASE 2 + ABC & NETFLIX',
         title: 'Fase 2 Cronológica: Caída de S.H.I.E.L.D., Defensores y Era de Ultrón (2013–2015)',
-        subtitle: 'Películas de Fase 2 intercaladas con Agents of S.H.I.E.L.D. (T1–T2), Daredevil (T1–T2), Jessica Jones (T1) y Luke Cage (T1)',
+        subtitle:
+          'Películas de Fase 2 intercaladas con Agents of S.H.I.E.L.D. (T1–T2), Daredevil (T1–T2), Jessica Jones (T1) y Luke Cage (T1)',
         accent: 'from-orange-600/25 via-orange-900/10 to-transparent border-orange-500/40',
         badgeColor: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
         icon: 'fa-robot',
@@ -324,7 +365,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'chrono_fase_3',
         saga: 'LA SAGA DEL INFINITO • FASE 3 + MARVEL TV & MULTIVERSO',
         title: 'Fase 3 Cronológica: De Civil War a Avengers: Infinity War (2016–2018)',
-        subtitle: 'Películas de Fase 3 intercaladas con Agents of S.H.I.E.L.D. (T3–T5), The Defenders, Punisher, Runaways, Cloak & Dagger, Deadpool y Venom',
+        subtitle:
+          'Películas de Fase 3 intercaladas con Agents of S.H.I.E.L.D. (T3–T5), The Defenders, Punisher, Runaways, Cloak & Dagger, Deadpool y Venom',
         accent: 'from-purple-600/25 via-purple-900/10 to-transparent border-purple-500/40',
         badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
         icon: 'fa-gem',
@@ -334,7 +376,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'chrono_blip_endgame',
         saga: 'LA SAGA DEL INFINITO • EL BLIP Y CLÍMAX',
         title: 'Fase 3 (Epílogo): Los Años del Blip y Avengers: Endgame (2019–2023)',
-        subtitle: 'Agents of S.H.I.E.L.D. (T6–T7), Helstrom, conexiones del Spider-Verse y la batalla final contra Thanos',
+        subtitle:
+          'Agents of S.H.I.E.L.D. (T6–T7), Helstrom, conexiones del Spider-Verse y la batalla final contra Thanos',
         accent: 'from-violet-600/25 via-violet-900/10 to-transparent border-violet-500/40',
         badgeColor: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
         icon: 'fa-infinity',
@@ -344,7 +387,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'chrono_fase_4',
         saga: 'LA SAGA DEL MULTIVERSO • FASE 4',
         title: 'Fase 4 Cronológica: La AVT y las Primeras Fisuras del Multiverso (2023–2025)',
-        subtitle: 'Loki (T1–T2), WandaVision, No Way Home, Multiverse of Madness, Wakanda Forever y las nuevas series de Disney+',
+        subtitle:
+          'Loki (T1–T2), WandaVision, No Way Home, Multiverse of Madness, Wakanda Forever y las nuevas series de Disney+',
         accent: 'from-rose-600/25 via-rose-900/10 to-transparent border-rose-500/40',
         badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
         icon: 'fa-hourglass-half',
@@ -354,7 +398,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'chrono_fase_5',
         saga: 'LA SAGA DEL MULTIVERSO • FASE 5',
         title: 'Fase 5 Cronológica: Incursiones, Alcalde Fisk y Nuevos Vengadores (2026–2027)',
-        subtitle: 'De Quantumania, Guardians Vol. 3 y The Marvels a Daredevil: Born Again (T1), Brave New World y Thunderbolts*',
+        subtitle:
+          'De Quantumania, Guardians Vol. 3 y The Marvels a Daredevil: Born Again (T1), Brave New World y Thunderbolts*',
         accent: 'from-blue-600/25 via-blue-900/10 to-transparent border-blue-500/40',
         badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
         icon: 'fa-asterisk',
@@ -364,7 +409,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
         id: 'chrono_fase_6',
         saga: 'LA SAGA DEL MULTIVERSO • FASE 6',
         title: 'Fase 6 Cronológica: Rumbo a Avengers: Doomsday y Secret Wars (2027–2029)',
-        subtitle: 'Born Again (T2), Spider-Man: Brand New Day, VisionQuest, Logan, Deadpool & Wolverine, Doomsday y Secret Wars',
+        subtitle:
+          'Born Again (T2), Spider-Man: Brand New Day, VisionQuest, Logan, Deadpool & Wolverine, Doomsday y Secret Wars',
         accent: 'from-emerald-600/25 via-emerald-900/10 to-transparent border-emerald-500/40',
         badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
         icon: 'fa-mask',
@@ -378,7 +424,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
       id: 'rel_era_pre_mcu',
       saga: 'ERA PRE-UCM: LEGADO FOX & SONY',
       title: 'Era Pre-UCM: X-Men, Spider-Man (Raimi), Daredevil y 4 Fantásticos (2000–2007)',
-      subtitle: 'Los clásicos fundacionales cuyos repartos regresan en No Way Home, Deadpool & Wolverine y Doomsday',
+      subtitle:
+        'Los clásicos fundacionales cuyos repartos regresan en No Way Home, Deadpool & Wolverine y Doomsday',
       accent: 'from-indigo-600/25 via-indigo-900/10 to-transparent border-indigo-500/40',
       badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40',
       icon: 'fa-dna',
@@ -388,7 +435,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
       id: 'rel_fase_1',
       saga: 'LA SAGA DEL INFINITO • FASE 1',
       title: 'Fase 1 (2008–2012): De Iron Man a The Avengers',
-      subtitle: 'Películas, cortos One-Shots y cómics preludio de la Fase 1 (+ estrenos multiversales de 2009–2012)',
+      subtitle:
+        'Películas, cortos One-Shots y cómics preludio de la Fase 1 (+ estrenos multiversales de 2009–2012)',
       accent: 'from-red-600/25 via-red-900/10 to-transparent border-red-500/40',
       badgeColor: 'bg-red-500/20 text-red-300 border-red-500/40',
       icon: 'fa-a',
@@ -398,7 +446,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
       id: 'rel_fase_2',
       saga: 'LA SAGA DEL INFINITO • FASE 2 + ERA ABC / NETFLIX',
       title: 'Fase 2 (2013–2015): De Iron Man 3 a Ant-Man + Inicio de S.H.I.E.L.D. y Daredevil',
-      subtitle: 'Películas de Fase 2 intercaladas por fecha de estreno con Agents of S.H.I.E.L.D. (T1–T2), Agent Carter (T1), Daredevil (T1) y Jessica Jones (T1)',
+      subtitle:
+        'Películas de Fase 2 intercaladas por fecha de estreno con Agents of S.H.I.E.L.D. (T1–T2), Agent Carter (T1), Daredevil (T1) y Jessica Jones (T1)',
       accent: 'from-amber-600/25 via-amber-900/10 to-transparent border-amber-500/40',
       badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
       icon: 'fa-robot',
@@ -408,7 +457,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
       id: 'rel_fase_3',
       saga: 'LA SAGA DEL INFINITO • FASE 3 + ERA DEFENDERS / FOX / SONY',
       title: 'Fase 3 (2016–2020): De Civil War a Endgame, Far From Home y Final de S.H.I.E.L.D.',
-      subtitle: 'Clímax de la Saga del Infinito intercalado con The Defenders, Punisher, S.H.I.E.L.D. (T3–T7), Runaways, Cloak & Dagger, Deadpool y Logan',
+      subtitle:
+        'Clímax de la Saga del Infinito intercalado con The Defenders, Punisher, S.H.I.E.L.D. (T3–T7), Runaways, Cloak & Dagger, Deadpool y Logan',
       accent: 'from-purple-600/25 via-purple-900/10 to-transparent border-purple-500/40',
       badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
       icon: 'fa-infinity',
@@ -418,7 +468,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
       id: 'rel_fase_4',
       saga: 'LA SAGA DEL MULTIVERSO • FASE 4',
       title: 'Fase 4 (2021–2022): De WandaVision a Black Panther: Wakanda Forever',
-      subtitle: 'Estreno de las primeras series de Marvel Studios en Disney+ y apertura del Multiverso en cines',
+      subtitle:
+        'Estreno de las primeras series de Marvel Studios en Disney+ y apertura del Multiverso en cines',
       accent: 'from-rose-600/25 via-rose-900/10 to-transparent border-rose-500/40',
       badgeColor: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
       icon: 'fa-wand-magic-sparkles',
@@ -428,7 +479,8 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
       id: 'rel_fase_5',
       saga: 'LA SAGA DEL MULTIVERSO • FASE 5',
       title: 'Fase 5 (2023 – Junio 2025): De Quantumania a Thunderbolts* e Ironheart',
-      subtitle: 'Guardians Vol. 3, Loki T2, The Marvels, Deadpool & Wolverine, Daredevil: Born Again T1, Brave New World y Thunderbolts*',
+      subtitle:
+        'Guardians Vol. 3, Loki T2, The Marvels, Deadpool & Wolverine, Daredevil: Born Again T1, Brave New World y Thunderbolts*',
       accent: 'from-blue-600/25 via-blue-900/10 to-transparent border-blue-500/40',
       badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
       icon: 'fa-asterisk',
@@ -437,8 +489,10 @@ export function getItemSagaMeta(item, orderMode, groupMode) {
     return {
       id: 'rel_fase_6',
       saga: 'LA SAGA DEL MULTIVERSO • FASE 6',
-      title: 'Fase 6 (Julio 2025 – 2027): De The Fantastic Four: First Steps a Doomsday y Secret Wars',
-      subtitle: 'Eyes of Wakanda, Wonder Man, Born Again T2, Spider-Man: Brand New Day, VisionQuest, Doomsday y Secret Wars',
+      title:
+        'Fase 6 (Julio 2025 – 2027): De The Fantastic Four: First Steps a Doomsday y Secret Wars',
+      subtitle:
+        'Eyes of Wakanda, Wonder Man, Born Again T2, Spider-Man: Brand New Day, VisionQuest, Doomsday y Secret Wars',
       accent: 'from-emerald-600/25 via-emerald-900/10 to-transparent border-emerald-500/40',
       badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
       icon: 'fa-mask',

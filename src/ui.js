@@ -14,6 +14,7 @@ export function applyPosterToDom(itemId, url) {
   if (!safeUrl || typeof document === 'undefined') return;
   const selector = `img[data-poster-id="${CSS.escape(itemId)}"]`;
   document.querySelectorAll(selector).forEach((img) => {
+    if (!(img instanceof HTMLImageElement)) return;
     img.src = safeUrl;
     img.classList.remove('opacity-0');
   });
@@ -83,7 +84,9 @@ export function renderWatchSwitchHtml(item, comp) {
     labelColor = 'text-amber-300';
   }
 
-  const actionLabel = isCompleted ? `Desmarcar ${safeTitle} como visto` : `Marcar ${safeTitle} como visto`;
+  const actionLabel = isCompleted
+    ? `Desmarcar ${safeTitle} como visto`
+    : `Marcar ${safeTitle} como visto`;
 
   return `
     <button type="button"
@@ -142,16 +145,24 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/5 text-gray-200 border border-white/10">
                 ${safePhase} • ${safeSaga}
               </span>
-              ${item.doomsdayEssential ? `
+              ${
+                item.doomsdayEssential
+                  ? `
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" title="Imprescindible para Avengers: Doomsday">
                   <i class="fa-solid fa-bolt mr-0.5" aria-hidden="true"></i>Doomsday
                 </span>
-              ` : ''}
-              ${userStars > 0 ? `
+              `
+                  : ''
+              }
+              ${
+                userStars > 0
+                  ? `
                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
                   <i class="fa-solid fa-star mr-0.5" aria-hidden="true"></i>${userStars}/5
                 </span>
-              ` : ''}
+              `
+                  : ''
+              }
             </div>
 
             <h2 class="font-bold text-sm sm:text-base text-white leading-snug line-clamp-2 ${comp.status === 'completed' ? 'line-through decoration-emerald-500/60 text-gray-300' : ''}">
@@ -169,7 +180,9 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
             </p>
           </div>
 
-          ${isSeries ? `
+          ${
+            isSeries
+              ? `
             <div class="mt-2.5 pt-2 border-t border-marvel-border/60">
               <div class="flex justify-between text-[11px] mb-1">
                 <span class="text-blue-300 font-semibold">
@@ -181,7 +194,9 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
                 <div class="h-full bg-blue-500 transition-all duration-300" style="width: ${comp.percent}%"></div>
               </div>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       </div>
 
@@ -195,14 +210,18 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
             ${isSeries ? 'Capítulos' : 'Reseña'}
             ${hasNote ? '<i class="fa-solid fa-comment-dots text-amber-400 ml-1" title="Tienes una nota guardada" aria-label="Tienes una nota guardada"></i>' : ''}
           </button>
-          ${safeImdbId ? `
+          ${
+            safeImdbId
+              ? `
             <a href="https://www.imdb.com/title/${safeImdbId}/" target="_blank" rel="noopener noreferrer"
                data-stop-card="true"
                class="px-2 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 text-xs font-bold transition"
                title="Ver ficha en IMDb">
               IMDb
             </a>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
 
         ${renderWatchSwitchHtml(item, comp)}
@@ -220,46 +239,61 @@ export function renderGlobalStats(catalog, userProgress) {
   const timeRemaining = document.getElementById('timeRemaining');
   const countAll = document.getElementById('count-all');
 
-  if (progressLabel) progressLabel.textContent = `${stats.completedItems} / ${stats.totalItems} títulos vistos`;
+  if (progressLabel)
+    progressLabel.textContent = `${stats.completedItems} / ${stats.totalItems} títulos vistos`;
   if (progressPercent) progressPercent.textContent = `${stats.percent}%`;
   if (progressBar) progressBar.style.width = `${stats.percent}%`;
-  if (episodesCounter) episodesCounter.textContent = `${stats.watchedEpisodes} / ${stats.totalEpisodes} episodios`;
+  if (episodesCounter)
+    episodesCounter.textContent = `${stats.watchedEpisodes} / ${stats.totalEpisodes} episodios`;
   if (timeRemaining) timeRemaining.textContent = `${stats.remainingHours}h restantes`;
   if (countAll) countAll.textContent = String(stats.totalItems);
 }
 
+function setElementText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
 export function renderMarathonPlanner(catalog, filterState, userProgress) {
   const scopeSelect = document.getElementById('plannerScopeSelect');
-  const scope = scopeSelect ? scopeSelect.value : 'filtered';
+  const scope = scopeSelect instanceof HTMLSelectElement ? scopeSelect.value : 'filtered';
   const plan = computeMarathonPlan(catalog, filterState, userProgress, scope);
 
   const daysBadge = document.getElementById('plannerDaysLeftBadge');
   if (daysBadge) {
-    daysBadge.textContent = plan.isReached ? '¡Fecha objetivo alcanzada!' : `Faltan ${plan.daysLeft} días`;
+    daysBadge.textContent = plan.isReached
+      ? '¡Fecha objetivo alcanzada!'
+      : `Faltan ${plan.daysLeft} días`;
   }
 
-  const setText = (id, text) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = text;
-  };
-
-  setText('planPendingHours', `${plan.pendingHours} h`);
-  setText('planPendingItems', `${plan.pendingTitles} títulos (${plan.pendingEpisodesOrMovies} uds.)`);
-  setText('planDailyPace', `${plan.minsPerDay} min / día`);
-  setText('planDailyEps', `~${plan.epsPerDay} cap./pelis al día`);
-  setText('planWeeklyPace', `${plan.hoursPerWeek} h / semana`);
-  setText('planWeeklyMovies', `~${plan.titlesPerWeek} títulos/sem`);
+  setElementText('planPendingHours', `${plan.pendingHours} h`);
+  setElementText(
+    'planPendingItems',
+    `${plan.pendingTitles} títulos (${plan.pendingEpisodesOrMovies} uds.)`,
+  );
+  setElementText('planDailyPace', `${plan.minsPerDay} min / día`);
+  setElementText('planDailyEps', `~${plan.epsPerDay} cap./pelis al día`);
+  setElementText('planWeeklyPace', `${plan.hoursPerWeek} h / semana`);
+  setElementText('planWeeklyMovies', `~${plan.titlesPerWeek} títulos/sem`);
 
   if (plan.nextItem) {
-    setText('planNextItem', plan.nextItem.title);
-    setText('planNextMeta', `${plan.nextItem.phase} • ${plan.nextItem.timelineYear}`);
+    setElementText('planNextItem', plan.nextItem.title);
+    setElementText('planNextMeta', `${plan.nextItem.phase} • ${plan.nextItem.timelineYear}`);
   } else {
-    setText('planNextItem', '¡Todo completado!');
-    setText('planNextMeta', '100% al día');
+    setElementText('planNextItem', '¡Todo completado!');
+    setElementText('planNextMeta', '100% al día');
   }
 }
 
-export function renderCatalogGrid({ catalog, list, filterState, userProgress, collapsedGroups, mediaApi, itemsById }) {
+export function renderCatalogGrid({
+  catalog,
+  list,
+  filterState,
+  userProgress,
+  collapsedGroups,
+  mediaApi,
+  itemsById,
+}) {
   const grid = document.getElementById('catalogGrid');
   const emptyState = document.getElementById('emptyState');
   const resultsCountEl = document.getElementById('resultsCountText');
@@ -279,7 +313,9 @@ export function renderCatalogGrid({ catalog, list, filterState, userProgress, co
 
   if (filterState.groupMode === 'none') {
     grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4';
-    grid.innerHTML = list.map((item, idx) => renderCardHtml(item, idx + 1, userProgress, mediaApi)).join('');
+    grid.innerHTML = list
+      .map((item, idx) => renderCardHtml(item, idx + 1, userProgress, mediaApi))
+      .join('');
     mediaApi.observeVisiblePosters(grid, itemsById);
     return;
   }
@@ -312,7 +348,7 @@ export function renderCatalogGrid({ catalog, list, filterState, userProgress, co
     .map((group) => {
       const totalInGroup = group.items.length;
       const completedInGroup = group.items.filter(
-        (e) => getItemCompletionStatus(e.item, userProgress).status === 'completed'
+        (e) => getItemCompletionStatus(e.item, userProgress).status === 'completed',
       ).length;
       const pct = totalInGroup > 0 ? Math.round((completedInGroup / totalInGroup) * 100) : 0;
       const isCollapsed = Boolean(collapsedGroups[group.id]);
@@ -403,7 +439,7 @@ export function syncToggleAllGroupsButton(collapsedGroups) {
   if (!btn) return;
   const groupEls = document.querySelectorAll('[data-group-section]');
   const anyExpanded = Array.from(groupEls).some(
-    (el) => !collapsedGroups[el.getAttribute('data-group-section')]
+    (el) => !collapsedGroups[el.getAttribute('data-group-section')],
   );
   btn.innerHTML = anyExpanded
     ? '<i class="fa-solid fa-angles-up" aria-hidden="true"></i><span>Plegar bloques</span>'
@@ -467,11 +503,15 @@ function renderEpisodeCardHtml({ safeItemId, seasonNumber, ep, isEpWatched, meta
           </span>
         </button>
       </div>
-      ${safeSynopsis ? `
+      ${
+        safeSynopsis
+          ? `
         <div id="${panelId}" data-episode-synopsis class="px-3 py-2 text-[11px] sm:text-xs text-gray-300 leading-relaxed bg-[#0B0E14]/80 border-t border-marvel-border/60 select-text">
           ${safeSynopsis}
         </div>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
   `;
 }
@@ -494,7 +534,7 @@ function renderSeasonsSectionHtml({ item, safeItemId, comp, epMap, liveEpMeta })
             isEpWatched: Boolean(epMap[ep.code]),
             meta: liveEpMeta[ep.code] || {},
             synopsis: getEpisodeSynopsis(item.id, ep.code),
-          })
+          }),
         )
         .join('');
 
@@ -551,7 +591,8 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
   const comp = getItemCompletionStatus(item, userProgress);
   const isSeries = Array.isArray(item.seasons) && item.seasons.length > 0;
   const userStars = userProgress.userRatings[item.id] || 0;
-  const userNote = typeof userProgress.userNotes[item.id] === 'string' ? userProgress.userNotes[item.id] : '';
+  const userNote =
+    typeof userProgress.userNotes[item.id] === 'string' ? userProgress.userNotes[item.id] : '';
   const epMap = userProgress.watchedEpisodes[item.id] || {};
   const liveEpMeta = mediaApi.getEpisodeMeta(item.id);
 
@@ -577,18 +618,26 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
   const safeImdbId = item.imdbId ? encodeURIComponent(item.imdbId) : '';
   const externalLinksHtml = `
     <div class="flex flex-wrap items-center gap-2 pt-1">
-      ${safeImdbId ? `
+      ${
+        safeImdbId
+          ? `
         <a href="https://www.imdb.com/title/${safeImdbId}/" target="_blank" rel="noopener noreferrer"
            class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition">
           <i class="fa-brands fa-imdb text-sm" aria-hidden="true"></i> Ver ficha oficial en IMDb
         </a>
-      ` : ''}
-      ${item.category === 'Cómic Canon' ? `
+      `
+          : ''
+      }
+      ${
+        item.category === 'Cómic Canon'
+          ? `
         <a href="https://marvelcinematicuniverse.fandom.com/wiki/Category:Comics" target="_blank" rel="noopener noreferrer"
            class="px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 text-xs font-bold flex items-center gap-1.5 transition">
           <i class="fa-solid fa-book-open" aria-hidden="true"></i> Ver en Marvel Cinematic Database (Cómics)
         </a>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
   `;
 
@@ -621,11 +670,15 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
           <span class="px-2.5 py-1 rounded-lg bg-marvel-card border border-marvel-border text-gray-300">
             <i class="fa-solid fa-film mr-1 text-amber-400" aria-hidden="true"></i>Escenas poscréditos: ${item.postCredits}
           </span>
-          ${item.doomsdayEssential ? `
+          ${
+            item.doomsdayEssential
+              ? `
             <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold">
               <i class="fa-solid fa-bolt mr-1" aria-hidden="true"></i>Esencial para Avengers: Doomsday
             </span>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
 
         ${externalLinksHtml}
@@ -651,7 +704,7 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
                     class="text-base px-1 transition ${star <= userStars ? 'text-amber-400 scale-110' : 'text-gray-600 hover:text-gray-400'}">
                   <i class="fa-solid fa-star" aria-hidden="true"></i>
                 </button>
-              `
+              `,
             )
             .join('')}
         </div>

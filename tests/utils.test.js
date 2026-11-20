@@ -5,7 +5,7 @@ describe('escapeHtml', () => {
   test('escapa caracteres peligrosos de HTML y XSS', () => {
     const payload = `<img src="x" onerror='alert("xss")'> & test`;
     expect(escapeHtml(payload)).toBe(
-      '&lt;img src=&quot;x&quot; onerror=&#39;alert(&quot;xss&quot;)&#39;&gt; &amp; test'
+      '&lt;img src=&quot;x&quot; onerror=&#39;alert(&quot;xss&quot;)&#39;&gt; &amp; test',
     );
   });
 
@@ -19,17 +19,17 @@ describe('escapeHtml', () => {
 
 describe('sanitizeImageUrl', () => {
   test('acepta URLs https válidas de hosts permitidos', () => {
-    expect(sanitizeImageUrl('https://static.tvmaze.com/uploads/images/medium_landscape/1/123.jpg')).toBe(
-      'https://static.tvmaze.com/uploads/images/medium_landscape/1/123.jpg'
-    );
+    expect(
+      sanitizeImageUrl('https://static.tvmaze.com/uploads/images/medium_landscape/1/123.jpg'),
+    ).toBe('https://static.tvmaze.com/uploads/images/medium_landscape/1/123.jpg');
     expect(sanitizeImageUrl('https://m.media-amazon.com/images/poster.jpg')).toBe(
-      'https://m.media-amazon.com/images/poster.jpg'
+      'https://m.media-amazon.com/images/poster.jpg',
     );
     expect(sanitizeImageUrl('https://upload.wikimedia.org/wikipedia/en/poster.jpg')).toBe(
-      'https://upload.wikimedia.org/wikipedia/en/poster.jpg'
+      'https://upload.wikimedia.org/wikipedia/en/poster.jpg',
     );
     expect(sanitizeImageUrl('https://covers.openlibrary.org/b/isbn/123-M.jpg')).toBe(
-      'https://covers.openlibrary.org/b/isbn/123-M.jpg'
+      'https://covers.openlibrary.org/b/isbn/123-M.jpg',
     );
   });
 

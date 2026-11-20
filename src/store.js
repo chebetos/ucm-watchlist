@@ -55,9 +55,7 @@ export function createDefaultProgress(targetDate = DEFAULT_TARGET_DATE) {
  */
 export function normalizeUserProgress(raw, current = null) {
   const fallbackDate =
-    current && isValidIsoDate(current.targetDate)
-      ? current.targetDate
-      : DEFAULT_TARGET_DATE;
+    current && isValidIsoDate(current.targetDate) ? current.targetDate : DEFAULT_TARGET_DATE;
 
   const base = createDefaultProgress(fallbackDate);
   if (!isPlainObject(raw)) {
@@ -138,7 +136,10 @@ export function parseSemver(version) {
  * - Mismo MAJOR: 'exact', 'compatible' o 'newer_minor' (compatible).
  * - Distinto MAJOR: 'incompatible'.
  */
-export function checkSchemaCompatibility(importedVersion, currentVersion = PROGRESS_SCHEMA_VERSION) {
+export function checkSchemaCompatibility(
+  importedVersion,
+  currentVersion = PROGRESS_SCHEMA_VERSION,
+) {
   const current = parseSemver(currentVersion);
   if (!current) {
     throw new Error('Versión interna de esquema inválida');
@@ -226,7 +227,7 @@ export function importProgressPayload(raw, current = null) {
   if (!compatibility.compatible) {
     if (compatibility.status === 'incompatible') {
       throw new Error(
-        `Versión de esquema incompatible (v${compatibility.importedVersion}; esta app soporta v${parseSemver(PROGRESS_SCHEMA_VERSION).major}.x.x)`
+        `Versión de esquema incompatible (v${compatibility.importedVersion}; esta app soporta v${parseSemver(PROGRESS_SCHEMA_VERSION).major}.x.x)`,
       );
     }
     throw new Error(`Versión de esquema no válida (${compatibility.importedVersion})`);
@@ -260,6 +261,11 @@ export function decodeSyncCode(code, current = null) {
   return decodeSyncCodeWithMeta(code, current).progress;
 }
 
+/**
+ * @typedef {{ getItem?: (key: string) => string | null, setItem?: (key: string, value: string) => void, removeItem?: (key: string) => void }} StorageLike
+ */
+
+/** @param {StorageLike} [storage] */
 export function loadOmdbApiKey(storage = globalThis.localStorage) {
   try {
     const dedicated = storage?.getItem(OMDB_STORAGE_KEY);
@@ -281,6 +287,7 @@ export function loadOmdbApiKey(storage = globalThis.localStorage) {
   return '';
 }
 
+/** @param {string} key @param {StorageLike} [storage] */
 export function saveOmdbApiKeyToStorage(key, storage = globalThis.localStorage) {
   try {
     const cleaned = String(key ?? '').trim();
@@ -294,6 +301,7 @@ export function saveOmdbApiKeyToStorage(key, storage = globalThis.localStorage) 
   }
 }
 
+/** @param {StorageLike} [storage] */
 export function loadExternalMediaPref(storage = globalThis.localStorage) {
   try {
     return storage?.getItem(EXTERNAL_MEDIA_STORAGE_KEY) === 'true';
@@ -302,6 +310,7 @@ export function loadExternalMediaPref(storage = globalThis.localStorage) {
   }
 }
 
+/** @param {boolean} enabled @param {StorageLike} [storage] */
 export function saveExternalMediaPref(enabled, storage = globalThis.localStorage) {
   try {
     if (enabled) {
@@ -314,6 +323,7 @@ export function saveExternalMediaPref(enabled, storage = globalThis.localStorage
   }
 }
 
+/** @param {StorageLike} [storage] */
 export function loadProgressFromStorage(storage = globalThis.localStorage) {
   try {
     const raw = storage?.getItem(LOCAL_STORAGE_KEY);
@@ -325,6 +335,7 @@ export function loadProgressFromStorage(storage = globalThis.localStorage) {
   }
 }
 
+/** @param {any} progress @param {StorageLike} [storage] */
 export function saveProgressToStorage(progress, storage = globalThis.localStorage) {
   try {
     if (!storage) return false;

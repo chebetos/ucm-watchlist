@@ -1,7 +1,6 @@
 import { MCU_CATALOG } from './catalog.js';
 import {
   createDefaultProgress,
-  normalizeUserProgress,
   getExportableProgress,
   encodeSyncCode,
   decodeSyncCodeWithMeta,
@@ -57,6 +56,22 @@ const mediaApi = createMediaApi({
   onPosterResolved: (itemId, url) => applyPosterToDom(itemId, url),
 });
 
+/**
+ * @param {string} id
+ * @returns {HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null}
+ */
+function getFormField(id) {
+  const el = document.getElementById(id);
+  if (
+    el instanceof HTMLInputElement ||
+    el instanceof HTMLTextAreaElement ||
+    el instanceof HTMLSelectElement
+  ) {
+    return el;
+  }
+  return null;
+}
+
 function showToast(msg) {
   const toast = document.getElementById('toast');
   const toastMsg = document.getElementById('toastMessage');
@@ -98,11 +113,18 @@ function renderApp() {
 // ============================================================================
 // MODALES (CON SOPORTE ESCAPE Y CLIC EN BACKDROP)
 // ============================================================================
-const MODAL_IDS = ['pwaModal', 'detailModal', 'syncModal', 'imageApiModal', 'confirmResetModal', 'legalModal'];
+const MODAL_IDS = [
+  'pwaModal',
+  'detailModal',
+  'syncModal',
+  'imageApiModal',
+  'confirmResetModal',
+  'legalModal',
+];
 
 function openModal(id) {
   if (id === 'syncModal') {
-    const textarea = document.getElementById('syncCodeTextarea');
+    const textarea = getFormField('syncCodeTextarea');
     if (textarea) textarea.value = encodeSyncCode(userProgress);
   }
   const modal = document.getElementById(id);
@@ -140,7 +162,11 @@ function toggleItemWatched(itemId) {
     userProgress.watchedItems[itemId] = true;
     if (item.seasons) {
       const epMap = {};
-      item.seasons.forEach((s) => s.episodes.forEach((ep) => { epMap[ep.code] = true; }));
+      item.seasons.forEach((s) =>
+        s.episodes.forEach((ep) => {
+          epMap[ep.code] = true;
+        }),
+      );
       userProgress.watchedEpisodes[itemId] = epMap;
     }
   } else {
@@ -229,7 +255,9 @@ function setUserRating(itemId, stars) {
 }
 
 function saveUserNote(itemId, text) {
-  const trimmed = String(text ?? '').trim().slice(0, MAX_NOTE_LENGTH);
+  const trimmed = String(text ?? '')
+    .trim()
+    .slice(0, MAX_NOTE_LENGTH);
   if (trimmed) userProgress.userNotes[itemId] = trimmed;
   else delete userProgress.userNotes[itemId];
   saveProgress();
@@ -318,19 +346,21 @@ function toggleDoomsdayFilter() {
   if (btn) {
     btn.setAttribute('aria-pressed', String(filterState.doomsdayOnly));
     if (filterState.doomsdayOnly) {
-      btn.className = 'w-full h-full py-2.5 px-3 rounded-xl border border-emerald-400 bg-emerald-500/20 text-xs sm:text-sm font-bold text-emerald-300 flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-500/10';
+      btn.className =
+        'w-full h-full py-2.5 px-3 rounded-xl border border-emerald-400 bg-emerald-500/20 text-xs sm:text-sm font-bold text-emerald-300 flex items-center justify-center gap-2 transition shadow-lg shadow-emerald-500/10';
     } else {
-      btn.className = 'w-full h-full py-2.5 px-3 rounded-xl border border-marvel-border bg-[#0B0E14] hover:border-emerald-500/50 text-xs sm:text-sm font-semibold text-gray-300 flex items-center justify-center gap-2 transition';
+      btn.className =
+        'w-full h-full py-2.5 px-3 rounded-xl border border-marvel-border bg-[#0B0E14] hover:border-emerald-500/50 text-xs sm:text-sm font-semibold text-gray-300 flex items-center justify-center gap-2 transition';
     }
   }
   renderApp();
 }
 
 function applyFilters() {
-  const searchInput = document.getElementById('searchInput');
+  const searchInput = getFormField('searchInput');
   const clearBtn = document.getElementById('clearSearchBtn');
-  const phaseSelect = document.getElementById('phaseSelect');
-  const statusSelect = document.getElementById('statusSelect');
+  const phaseSelect = getFormField('phaseSelect');
+  const statusSelect = getFormField('statusSelect');
 
   const searchVal = searchInput ? searchInput.value : '';
   filterState.search = searchVal;
@@ -344,16 +374,16 @@ const debouncedSearchFilter = debounce(applyFilters, 200);
 
 function clearSearch() {
   debouncedSearchFilter.cancel();
-  const searchInput = document.getElementById('searchInput');
+  const searchInput = getFormField('searchInput');
   if (searchInput) searchInput.value = '';
   applyFilters();
 }
 
 function resetFilters() {
   debouncedSearchFilter.cancel();
-  const searchInput = document.getElementById('searchInput');
-  const phaseSelect = document.getElementById('phaseSelect');
-  const statusSelect = document.getElementById('statusSelect');
+  const searchInput = getFormField('searchInput');
+  const phaseSelect = getFormField('phaseSelect');
+  const statusSelect = getFormField('statusSelect');
   if (searchInput) searchInput.value = '';
   document.getElementById('clearSearchBtn')?.classList.add('hidden');
   if (phaseSelect) phaseSelect.value = 'all';
@@ -382,7 +412,7 @@ function toggleGroupCollapse(groupId) {
 function toggleAllGroups() {
   const groupEls = document.querySelectorAll('[data-group-section]');
   const anyExpanded = Array.from(groupEls).some(
-    (el) => !collapsedGroups[el.getAttribute('data-group-section')]
+    (el) => !collapsedGroups[el.getAttribute('data-group-section')],
   );
   groupEls.forEach((el) => {
     const gId = el.getAttribute('data-group-section');
@@ -395,11 +425,13 @@ function toggleAllGroups() {
 function toggleGroupWatched(groupId) {
   const list = getFilteredAndSortedCatalog(MCU_CATALOG, filterState, userProgress);
   const groupItems = list.filter(
-    (item) => getItemSagaMeta(item, filterState.orderMode, filterState.groupMode).id === groupId
+    (item) => getItemSagaMeta(item, filterState.orderMode, filterState.groupMode).id === groupId,
   );
   if (groupItems.length === 0) return;
 
-  const allDone = groupItems.every((item) => getItemCompletionStatus(item, userProgress).status === 'completed');
+  const allDone = groupItems.every(
+    (item) => getItemCompletionStatus(item, userProgress).status === 'completed',
+  );
   groupItems.forEach((item) => {
     if (allDone) {
       delete userProgress.watchedItems[item.id];
@@ -408,14 +440,22 @@ function toggleGroupWatched(groupId) {
       userProgress.watchedItems[item.id] = true;
       if (item.seasons) {
         const epMap = {};
-        item.seasons.forEach((s) => s.episodes.forEach((ep) => { epMap[ep.code] = true; }));
+        item.seasons.forEach((s) =>
+          s.episodes.forEach((ep) => {
+            epMap[ep.code] = true;
+          }),
+        );
         userProgress.watchedEpisodes[item.id] = epMap;
       }
     }
   });
   saveProgress();
   renderApp();
-  showToast(allDone ? 'Bloque desmarcado' : `¡${groupItems.length} títulos del bloque marcados como vistos!`);
+  showToast(
+    allDone
+      ? 'Bloque desmarcado'
+      : `¡${groupItems.length} títulos del bloque marcados como vistos!`,
+  );
 }
 
 function markVisibleAsWatched() {
@@ -424,7 +464,11 @@ function markVisibleAsWatched() {
     userProgress.watchedItems[item.id] = true;
     if (item.seasons) {
       const epMap = {};
-      item.seasons.forEach((s) => s.episodes.forEach((ep) => { epMap[ep.code] = true; }));
+      item.seasons.forEach((s) =>
+        s.episodes.forEach((ep) => {
+          epMap[ep.code] = true;
+        }),
+      );
       userProgress.watchedEpisodes[item.id] = epMap;
     }
   });
@@ -491,7 +535,7 @@ function updateActiveFiltersBadge() {
 }
 
 function handleTargetDateChange() {
-  const targetInput = document.getElementById('targetDateInput');
+  const targetInput = getFormField('targetDateInput');
   if (!targetInput) return;
   const val = targetInput.value || '2026-12-18';
   userProgress.targetDate = val;
@@ -504,10 +548,14 @@ function handleTargetDateChange() {
 // ============================================================================
 async function handleCopySyncCode() {
   const code = encodeSyncCode(userProgress);
-  const textarea = document.getElementById('syncCodeTextarea');
+  const textarea = getFormField('syncCodeTextarea');
   if (textarea) textarea.value = code;
   const ok = await copyToClipboard(code, textarea);
-  showToast(ok ? 'Código de sincronización copiado al portapapeles' : 'No se pudo copiar automáticamente; cópialo manualmente');
+  showToast(
+    ok
+      ? 'Código de sincronización copiado al portapapeles'
+      : 'No se pudo copiar automáticamente; cópialo manualmente',
+  );
 }
 
 function formatImportSuccessToast(compatibility, sourceLabel) {
@@ -521,7 +569,7 @@ function formatImportSuccessToast(compatibility, sourceLabel) {
 }
 
 function handleImportSyncCode() {
-  const textarea = document.getElementById('syncCodeTextarea');
+  const textarea = getFormField('syncCodeTextarea');
   const raw = textarea ? textarea.value.trim() : '';
   if (!raw) {
     showToast('Pega primero un código válido');
@@ -530,16 +578,17 @@ function handleImportSyncCode() {
   try {
     const { progress, compatibility } = decodeSyncCodeWithMeta(raw, userProgress);
     userProgress = progress;
-    const targetInput = document.getElementById('targetDateInput');
+    const targetInput = getFormField('targetDateInput');
     if (targetInput) targetInput.value = userProgress.targetDate;
     saveProgress();
     renderApp();
     closeModal('syncModal');
     showToast(formatImportSuccessToast(compatibility, 'Progreso'));
   } catch (err) {
-    const msg = err instanceof Error && err.message.startsWith('Versión de esquema')
-      ? err.message
-      : 'El código introducido no tiene un formato válido';
+    const msg =
+      err instanceof Error && err.message.startsWith('Versión de esquema')
+        ? err.message
+        : 'El código introducido no tiene un formato válido';
     showToast(msg);
   }
 }
@@ -569,31 +618,32 @@ function handleUploadJsonBackup(event) {
   }
 
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.addEventListener('load', (e) => {
     try {
       const parsed = JSON.parse(String(e.target?.result ?? ''));
       const { progress, compatibility } = importProgressPayload(parsed, userProgress);
       userProgress = progress;
-      const targetInput = document.getElementById('targetDateInput');
+      const targetInput = getFormField('targetDateInput');
       if (targetInput) targetInput.value = userProgress.targetDate;
       saveProgress();
       renderApp();
       closeModal('syncModal');
       showToast(formatImportSuccessToast(compatibility, 'Backup JSON'));
     } catch (err) {
-      const msg = err instanceof Error && err.message.startsWith('Versión de esquema')
-        ? err.message
-        : 'El archivo JSON no es válido';
+      const msg =
+        err instanceof Error && err.message.startsWith('Versión de esquema')
+          ? err.message
+          : 'El archivo JSON no es válido';
       showToast(msg);
     } finally {
       // Permite volver a seleccionar el mismo archivo tras una importación o fallo
       input.value = '';
     }
-  };
-  reader.onerror = () => {
+  });
+  reader.addEventListener('error', () => {
     input.value = '';
     showToast('No se pudo leer el archivo JSON');
-  };
+  });
   reader.readAsText(file);
 }
 
@@ -611,7 +661,9 @@ function syncExternalMediaToggleUi() {
   }
   if (track) {
     track.className = `watch-switch-track relative inline-flex items-center w-11 h-6 rounded-full border ${
-      enabled ? 'bg-emerald-500 border-emerald-400 shadow-md shadow-emerald-500/25' : 'bg-gray-800 border-gray-600/80'
+      enabled
+        ? 'bg-emerald-500 border-emerald-400 shadow-md shadow-emerald-500/25'
+        : 'bg-gray-800 border-gray-600/80'
     }`;
   }
   if (knob) {
@@ -630,12 +682,12 @@ function handleToggleExternalMedia() {
   showToast(
     next
       ? 'Portadas externas activadas (TVMaze / Wikipedia / Open Library)'
-      : 'Portadas externas desactivadas (solo pósters locales)'
+      : 'Portadas externas desactivadas (solo pósters locales)',
   );
 }
 
 function handleSaveOmdbApiKey() {
-  const input = document.getElementById('omdbApiKeyInput');
+  const input = getFormField('omdbApiKeyInput');
   const val = input ? input.value.trim() : '';
   saveOmdbApiKeyToStorage(val);
   mediaApi.setOmdbApiKey(val);
@@ -652,7 +704,9 @@ function setEpisodeCardSynopsisExpanded(card, expanded) {
   const panel = card?.querySelector('[data-episode-synopsis]');
   if (!panel) return;
   panel.classList.toggle('hidden', !expanded);
-  card.querySelector('[data-action="toggle-episode-synopsis"]')?.setAttribute('aria-expanded', String(expanded));
+  card
+    .querySelector('[data-action="toggle-episode-synopsis"]')
+    ?.setAttribute('aria-expanded', String(expanded));
   card.querySelector('[data-ep-chevron]')?.classList.toggle('rotate-180', expanded);
 }
 
@@ -696,7 +750,7 @@ function handleDetailModalClick(e) {
   if (toggleEpBtn) {
     toggleEpisodeWatched(
       toggleEpBtn.getAttribute('data-item-id'),
-      toggleEpBtn.getAttribute('data-ep-code')
+      toggleEpBtn.getAttribute('data-ep-code'),
     );
     return;
   }
@@ -729,21 +783,32 @@ function handleDetailModalClick(e) {
   if (toggleSeasonBtn) {
     toggleSeasonWatched(
       toggleSeasonBtn.getAttribute('data-item-id'),
-      Number(toggleSeasonBtn.getAttribute('data-season-num'))
+      Number(toggleSeasonBtn.getAttribute('data-season-num')),
     );
     return;
   }
 
   const ratingBtn = e.target.closest('[data-action="set-rating"]');
   if (ratingBtn) {
-    setUserRating(ratingBtn.getAttribute('data-item-id'), Number(ratingBtn.getAttribute('data-stars')));
+    setUserRating(
+      ratingBtn.getAttribute('data-item-id'),
+      Number(ratingBtn.getAttribute('data-stars')),
+    );
     return;
   }
 
   const saveNoteBtn = e.target.closest('[data-action="save-note"]');
   if (saveNoteBtn) {
-    const noteInput = document.getElementById('userNoteInput');
+    const noteInput = getFormField('userNoteInput');
     saveUserNote(saveNoteBtn.getAttribute('data-item-id'), noteInput ? noteInput.value : '');
+  }
+}
+
+// Manejo de errores de carga de pósters en fase de captura (compatible con CSP estricta sin inline onerror)
+function handlePosterError(e) {
+  const target = e.target;
+  if (target instanceof HTMLImageElement && target.hasAttribute('data-poster-id')) {
+    target.classList.add('opacity-0');
   }
 }
 
@@ -753,7 +818,7 @@ function handleDetailModalClick(e) {
 function bindEvents() {
   // Búsqueda con debounce
   document.getElementById('searchInput')?.addEventListener('input', () => {
-    const val = document.getElementById('searchInput')?.value || '';
+    const val = getFormField('searchInput')?.value || '';
     document.getElementById('clearSearchBtn')?.classList.toggle('hidden', !val);
     debouncedSearchFilter();
   });
@@ -761,9 +826,15 @@ function bindEvents() {
   document.getElementById('clearSearchBtn')?.addEventListener('click', clearSearch);
   document.getElementById('phaseSelect')?.addEventListener('change', applyFilters);
   document.getElementById('statusSelect')?.addEventListener('change', applyFilters);
-  document.getElementById('groupModeSelect')?.addEventListener('change', (e) => setGroupMode(e.target.value));
-  document.getElementById('btnOrderRelease')?.addEventListener('click', () => setOrderMode('release'));
-  document.getElementById('btnOrderChrono')?.addEventListener('click', () => setOrderMode('chrono'));
+  document.getElementById('groupModeSelect')?.addEventListener('change', (e) => {
+    if (e.target instanceof HTMLSelectElement) setGroupMode(e.target.value);
+  });
+  document
+    .getElementById('btnOrderRelease')
+    ?.addEventListener('click', () => setOrderMode('release'));
+  document
+    .getElementById('btnOrderChrono')
+    ?.addEventListener('click', () => setOrderMode('chrono'));
   document.getElementById('btnDoomsdayFilter')?.addEventListener('click', toggleDoomsdayFilter);
   document.getElementById('btnToggleAllGroups')?.addEventListener('click', toggleAllGroups);
   document.getElementById('btnMarkVisibleWatched')?.addEventListener('click', markVisibleAsWatched);
@@ -772,9 +843,11 @@ function bindEvents() {
 
   // Planificador
   document.getElementById('targetDateInput')?.addEventListener('change', handleTargetDateChange);
-  document.getElementById('plannerScopeSelect')?.addEventListener('change', () =>
-    renderMarathonPlanner(MCU_CATALOG, filterState, userProgress)
-  );
+  document
+    .getElementById('plannerScopeSelect')
+    ?.addEventListener('change', () =>
+      renderMarathonPlanner(MCU_CATALOG, filterState, userProgress),
+    );
   document.querySelectorAll('[data-action="toggle-planner"]').forEach((btn) => {
     btn.addEventListener('click', togglePlannerPanel);
   });
@@ -782,6 +855,7 @@ function bindEvents() {
 
   // Categorías
   document.getElementById('categoryFilterContainer')?.addEventListener('click', (e) => {
+    if (!(e.target instanceof Element)) return;
     const btn = e.target.closest('.cat-pill');
     if (!btn) return;
     const cat = btn.getAttribute('data-cat');
@@ -825,10 +899,12 @@ function bindEvents() {
   document.getElementById('btnDownloadJson')?.addEventListener('click', handleDownloadJsonBackup);
   document.getElementById('uploadJsonInput')?.addEventListener('change', handleUploadJsonBackup);
   document.getElementById('btnSaveOmdbKey')?.addEventListener('click', handleSaveOmdbApiKey);
-  document.getElementById('btnToggleExternalMedia')?.addEventListener('click', handleToggleExternalMedia);
-  document.getElementById('btnNativePwaInstall')?.addEventListener('click', () =>
-    triggerNativePwaInstall({ showToast, closeModal })
-  );
+  document
+    .getElementById('btnToggleExternalMedia')
+    ?.addEventListener('click', handleToggleExternalMedia);
+  document
+    .getElementById('btnNativePwaInstall')
+    ?.addEventListener('click', () => triggerNativePwaInstall({ showToast, closeModal }));
   document.getElementById('btnOpenSyncFromPwa')?.addEventListener('click', () => {
     closeModal('pwaModal');
     openModal('syncModal');
@@ -839,6 +915,7 @@ function bindEvents() {
   catalogGrid?.addEventListener('click', handleCatalogGridClick);
   catalogGrid?.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (!(e.target instanceof Element)) return;
     const card = e.target.closest('article[data-action="open-detail"]');
     if (!card || e.target !== card) return;
     e.preventDefault();
@@ -849,13 +926,6 @@ function bindEvents() {
   const modalBody = document.getElementById('modalBodyContent');
   modalBody?.addEventListener('click', handleDetailModalClick);
 
-  // Manejo de errores de carga de pósters en fase de captura (compatible con CSP estricta sin inline onerror)
-  const handlePosterError = (e) => {
-    const target = e.target;
-    if (target instanceof HTMLImageElement && target.hasAttribute('data-poster-id')) {
-      target.classList.add('opacity-0');
-    }
-  };
   catalogGrid?.addEventListener('error', handlePosterError, true);
   modalBody?.addEventListener('error', handlePosterError, true);
 }
@@ -867,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPWA();
 
   userProgress = loadProgressFromStorage();
-  const targetInput = document.getElementById('targetDateInput');
+  const targetInput = getFormField('targetDateInput');
   if (targetInput && userProgress.targetDate) {
     targetInput.value = userProgress.targetDate;
   }
@@ -879,7 +949,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const savedOmdbKey = loadOmdbApiKey();
   if (savedOmdbKey) {
     mediaApi.setOmdbApiKey(savedOmdbKey);
-    const omdbInput = document.getElementById('omdbApiKeyInput');
+    const omdbInput = getFormField('omdbApiKeyInput');
     if (omdbInput) omdbInput.value = savedOmdbKey;
   }
 
