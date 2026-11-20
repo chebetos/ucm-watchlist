@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": ["dist/**", "node_modules/**"],
+  "env": {
+    "browser": true,
+    "es2024": true,
+    "serviceworker": true
+  },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "no-underscore-dangle": [
+      "warn",
+      {
+        "allow": ["_embedded"]
+      }
+    ]
+  }
+}

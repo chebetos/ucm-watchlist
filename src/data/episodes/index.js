@@ -31,7 +31,7 @@ export async function loadAllEpisodeSynopses() {
         const data = await BUCKET_LOADERS[key]();
         loadedBuckets.set(key, data);
       }
-    })
+    }),
   );
 }
 

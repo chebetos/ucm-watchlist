@@ -2,6 +2,7 @@ export const LOCAL_STORAGE_KEY = 'mcu_multiverse_master_progress_v2';
 export const OMDB_STORAGE_KEY = 'mcu_multiverse_omdb_key_v1';
 export const EXTERNAL_MEDIA_STORAGE_KEY = 'mcu_multiverse_external_media_v1';
 export const DEFAULT_TARGET_DATE = '2026-12-18';
+export const PROGRESS_SCHEMA_VERSION = '1.0.0';
 export const MAX_NOTE_LENGTH = 2000;
 export const MAX_MAP_ENTRIES = 1000;
 export const MAX_SYNC_CODE_LENGTH = 512 * 1024;
@@ -9,6 +10,7 @@ export const MAX_IMPORT_FILE_BYTES = 512 * 1024;
 
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 
 function isPlainObject(value) {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -53,9 +55,7 @@ export function createDefaultProgress(targetDate = DEFAULT_TARGET_DATE) {
  */
 export function normalizeUserProgress(raw, current = null) {
   const fallbackDate =
-    current && isValidIsoDate(current.targetDate)
-      ? current.targetDate
-      : DEFAULT_TARGET_DATE;
+    current && isValidIsoDate(current.targetDate) ? current.targetDate : DEFAULT_TARGET_DATE;
 
   const base = createDefaultProgress(fallbackDate);
   if (!isPlainObject(raw)) {
@@ -115,12 +115,98 @@ export function normalizeUserProgress(raw, current = null) {
 }
 
 /**
- * Devuelve un payload seguro para exportar (JSON o código de sincronización).
+ * Parsea una cadena SemVer estricta (MAJOR.MINOR.PATCH).
+ */
+export function parseSemver(version) {
+  if (typeof version !== 'string') return null;
+  const match = SEMVER_RE.exec(version.trim());
+  if (!match) return null;
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+    raw: match[0],
+  };
+}
+
+/**
+ * Evalúa la compatibilidad SemVer entre la versión importada y la versión actual del esquema.
+ * - Sin schemaVersion: 'legacy' (compatible, copia anterior al versionado).
+ * - Formato no SemVer: 'invalid' (incompatible).
+ * - Mismo MAJOR: 'exact', 'compatible' o 'newer_minor' (compatible).
+ * - Distinto MAJOR: 'incompatible'.
+ */
+export function checkSchemaCompatibility(
+  importedVersion,
+  currentVersion = PROGRESS_SCHEMA_VERSION,
+) {
+  const current = parseSemver(currentVersion);
+  if (!current) {
+    throw new Error('Versión interna de esquema inválida');
+  }
+
+  if (importedVersion === undefined || importedVersion === null || importedVersion === '') {
+    return {
+      status: 'legacy',
+      compatible: true,
+      importedVersion: null,
+      currentVersion: current.raw,
+    };
+  }
+
+  const imported = parseSemver(importedVersion);
+  if (!imported) {
+    return {
+      status: 'invalid',
+      compatible: false,
+      importedVersion: String(importedVersion),
+      currentVersion: current.raw,
+    };
+  }
+
+  if (imported.major !== current.major) {
+    return {
+      status: 'incompatible',
+      compatible: false,
+      importedVersion: imported.raw,
+      currentVersion: current.raw,
+    };
+  }
+
+  if (imported.raw === current.raw) {
+    return {
+      status: 'exact',
+      compatible: true,
+      importedVersion: imported.raw,
+      currentVersion: current.raw,
+    };
+  }
+
+  if (imported.minor > current.minor) {
+    return {
+      status: 'newer_minor',
+      compatible: true,
+      importedVersion: imported.raw,
+      currentVersion: current.raw,
+    };
+  }
+
+  return {
+    status: 'compatible',
+    compatible: true,
+    importedVersion: imported.raw,
+    currentVersion: current.raw,
+  };
+}
+
+/**
+ * Devuelve un payload seguro y versionado para exportar (JSON o código de sincronización).
  * Nunca incluye omdbApiKey.
  */
 export function getExportableProgress(progress) {
   const normalized = normalizeUserProgress(progress);
   return {
+    schemaVersion: PROGRESS_SCHEMA_VERSION,
     watchedItems: normalized.watchedItems,
     watchedEpisodes: normalized.watchedEpisodes,
     userRatings: normalized.userRatings,
@@ -129,12 +215,36 @@ export function getExportableProgress(progress) {
   };
 }
 
+/**
+ * Valida la compatibilidad SemVer del payload importado y devuelve el progreso normalizado.
+ */
+export function importProgressPayload(raw, current = null) {
+  if (!isPlainObject(raw)) {
+    throw new Error('Formato de progreso inválido');
+  }
+
+  const compatibility = checkSchemaCompatibility(raw.schemaVersion, PROGRESS_SCHEMA_VERSION);
+  if (!compatibility.compatible) {
+    if (compatibility.status === 'incompatible') {
+      throw new Error(
+        `Versión de esquema incompatible (v${compatibility.importedVersion}; esta app soporta v${parseSemver(PROGRESS_SCHEMA_VERSION).major}.x.x)`,
+      );
+    }
+    throw new Error(`Versión de esquema no válida (${compatibility.importedVersion})`);
+  }
+
+  return {
+    progress: normalizeUserProgress(raw, current),
+    compatibility,
+  };
+}
+
 export function encodeSyncCode(progress) {
   const jsonStr = JSON.stringify(getExportableProgress(progress));
   return btoa(encodeURIComponent(jsonStr));
 }
 
-export function decodeSyncCode(code, current = null) {
+export function decodeSyncCodeWithMeta(code, current = null) {
   const trimmed = String(code ?? '').trim();
   if (!trimmed) {
     throw new Error('Código vacío');
@@ -144,12 +254,18 @@ export function decodeSyncCode(code, current = null) {
   }
   const decoded = decodeURIComponent(atob(trimmed));
   const parsed = JSON.parse(decoded);
-  if (!isPlainObject(parsed)) {
-    throw new Error('Formato de progreso inválido');
-  }
-  return normalizeUserProgress(parsed, current);
+  return importProgressPayload(parsed, current);
 }
 
+export function decodeSyncCode(code, current = null) {
+  return decodeSyncCodeWithMeta(code, current).progress;
+}
+
+/**
+ * @typedef {{ getItem?: (key: string) => string | null, setItem?: (key: string, value: string) => void, removeItem?: (key: string) => void }} StorageLike
+ */
+
+/** @param {StorageLike} [storage] */
 export function loadOmdbApiKey(storage = globalThis.localStorage) {
   try {
     const dedicated = storage?.getItem(OMDB_STORAGE_KEY);
@@ -171,6 +287,7 @@ export function loadOmdbApiKey(storage = globalThis.localStorage) {
   return '';
 }
 
+/** @param {string} key @param {StorageLike} [storage] */
 export function saveOmdbApiKeyToStorage(key, storage = globalThis.localStorage) {
   try {
     const cleaned = String(key ?? '').trim();
@@ -184,6 +301,7 @@ export function saveOmdbApiKeyToStorage(key, storage = globalThis.localStorage) 
   }
 }
 
+/** @param {StorageLike} [storage] */
 export function loadExternalMediaPref(storage = globalThis.localStorage) {
   try {
     return storage?.getItem(EXTERNAL_MEDIA_STORAGE_KEY) === 'true';
@@ -192,6 +310,7 @@ export function loadExternalMediaPref(storage = globalThis.localStorage) {
   }
 }
 
+/** @param {boolean} enabled @param {StorageLike} [storage] */
 export function saveExternalMediaPref(enabled, storage = globalThis.localStorage) {
   try {
     if (enabled) {
@@ -204,6 +323,7 @@ export function saveExternalMediaPref(enabled, storage = globalThis.localStorage
   }
 }
 
+/** @param {StorageLike} [storage] */
 export function loadProgressFromStorage(storage = globalThis.localStorage) {
   try {
     const raw = storage?.getItem(LOCAL_STORAGE_KEY);
@@ -215,6 +335,7 @@ export function loadProgressFromStorage(storage = globalThis.localStorage) {
   }
 }
 
+/** @param {any} progress @param {StorageLike} [storage] */
 export function saveProgressToStorage(progress, storage = globalThis.localStorage) {
   try {
     if (!storage) return false;

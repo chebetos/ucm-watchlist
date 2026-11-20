@@ -12,7 +12,12 @@ describe('createMediaApi', () => {
     const api = createMediaApi({ fetchFn: mockFetch });
     expect(api.isExternalMediaEnabled()).toBe(false);
 
-    const item = { id: 'dplus_loki_s1', imdbId: 'tt9140554', tvShowQuery: 'Loki', wiki: 'Loki_(TV_series)' };
+    const item = {
+      id: 'dplus_loki_s1',
+      imdbId: 'tt9140554',
+      tvShowQuery: 'Loki',
+      wiki: 'Loki_(TV_series)',
+    };
     expect(await api.fetchPosterForItem(item)).toBeNull();
     expect(await api.fetchEpisodeMetaForItem(item)).toEqual({});
     expect(calls).toBe(0);

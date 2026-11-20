@@ -107,13 +107,25 @@ describe('getFilteredAndSortedCatalog', () => {
     const byRelease = getFilteredAndSortedCatalog(MOCK_CATALOG, baseFilters, progress);
     expect(byRelease.map((i) => i.id)).toEqual(['movie_1', 'series_1', 'empty_series']);
 
-    const byChrono = getFilteredAndSortedCatalog(MOCK_CATALOG, { ...baseFilters, orderMode: 'chrono' }, progress);
+    const byChrono = getFilteredAndSortedCatalog(
+      MOCK_CATALOG,
+      { ...baseFilters, orderMode: 'chrono' },
+      progress,
+    );
     expect(byChrono.map((i) => i.id)).toEqual(['series_1', 'movie_1', 'empty_series']);
 
-    const doomsday = getFilteredAndSortedCatalog(MOCK_CATALOG, { ...baseFilters, doomsdayOnly: true }, progress);
+    const doomsday = getFilteredAndSortedCatalog(
+      MOCK_CATALOG,
+      { ...baseFilters, doomsdayOnly: true },
+      progress,
+    );
     expect(doomsday.map((i) => i.id)).toEqual(['movie_1', 'series_1']);
 
-    const searched = getFilteredAndSortedCatalog(MOCK_CATALOG, { ...baseFilters, search: 'multiverso' }, progress);
+    const searched = getFilteredAndSortedCatalog(
+      MOCK_CATALOG,
+      { ...baseFilters, search: 'multiverso' },
+      progress,
+    );
     expect(searched.map((i) => i.id)).toEqual(['series_1']);
   });
 });
@@ -152,7 +164,13 @@ describe('computeMarathonPlan y getItemSagaMeta', () => {
       doomsdayOnly: false,
       search: '',
     };
-    const plan = computeMarathonPlan(MOCK_CATALOG, filterState, progress, 'all', new Date('2026-12-08T12:00:00Z'));
+    const plan = computeMarathonPlan(
+      MOCK_CATALOG,
+      filterState,
+      progress,
+      'all',
+      new Date('2026-12-08T12:00:00Z'),
+    );
     expect(Number.isNaN(plan.daysLeft)).toBe(false);
     expect(Number.isNaN(plan.minsPerDay)).toBe(false);
     expect(plan.targetDate).toBe('2026-12-18');
@@ -161,6 +179,8 @@ describe('computeMarathonPlan y getItemSagaMeta', () => {
   test('usa fa-a en minúsculas para Fase 1 en todos los modos', () => {
     expect(getItemSagaMeta(MOCK_CATALOG[0], 'release', 'strict_phases').icon).toBe('fa-a');
     expect(getItemSagaMeta(MOCK_CATALOG[0], 'release', 'interleaved_sagas').icon).toBe('fa-a');
-    expect(getItemSagaMeta({ ...MOCK_CATALOG[0], chronoSort: 25 }, 'chrono', 'interleaved_sagas').icon).toBe('fa-a');
+    expect(
+      getItemSagaMeta({ ...MOCK_CATALOG[0], chronoSort: 25 }, 'chrono', 'interleaved_sagas').icon,
+    ).toBe('fa-a');
   });
 });

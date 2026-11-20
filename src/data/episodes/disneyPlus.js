@@ -149,7 +149,8 @@ export const DISNEY_PLUS_EPISODE_SYNOPSES = {
     S1E7: 'Herido de gravedad tras su primer duelo contra Escorpión, Peter es rescatado por Norman Osborn, quien lo empuja a adoptar una postura mucho más dura frente al crimen.',
     S1E8: 'Mientras Peter se recupera y duda de los métodos de Osborn, Lonnie queda expuesto a un gas experimental en el escondite de Octavius y desarrolla una piel indestructible.',
     S1E9: 'Spider-Man se alía con un transformado Lonnie para frenar a Escorpión y al grupo de Octavius, reafirmando su código moral frente a la influencia cada vez más oscura de Norman.',
-    S1E10: 'El proyecto secreto de portales de Oscorp desata una criatura simbionte y un bucle temporal junto a Doctor Strange, sellando el destino de Peter como héroe independiente.',
+    S1E10:
+      'El proyecto secreto de portales de Oscorp desata una criatura simbionte y un bucle temporal junto a Doctor Strange, sellando el destino de Peter como héroe independiente.',
   },
   dplus_daredevil_born_again_s1: {
     S1E1: 'Una pérdida devastadora provocada por Bullseye lleva a Matt Murdock a abandonar el manto de Daredevil, mientras Wilson Fisk lanza su campaña a la alcaldía de Nueva York.',

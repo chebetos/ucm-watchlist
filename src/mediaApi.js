@@ -5,9 +5,9 @@ export function createMediaApi({
   onPosterResolved = null,
   externalMediaEnabled: initialExternalMediaEnabled = false,
 } = {}) {
-  const imageCache = new Map();        // itemId -> httpsUrl
-  const tvShowDataCache = new Map();   // tvShowQuery -> tvmazeResponse
-  const episodeMetaCache = new Map();  // itemId -> { "S1E1": { image, title, runtime, airdate } }
+  const imageCache = new Map(); // itemId -> httpsUrl
+  const tvShowDataCache = new Map(); // tvShowQuery -> tvmazeResponse
+  const episodeMetaCache = new Map(); // itemId -> { "S1E1": { image, title, runtime, airdate } }
 
   const inFlightPosterRequests = new Map();
   const inFlightTvShowRequests = new Map();
@@ -175,7 +175,7 @@ export function createMediaApi({
     if (item.wiki) {
       try {
         const res = await fetchFn(
-          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(item.wiki)}`
+          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(item.wiki)}`,
         );
         if (res && res.ok) {
           const data = await res.json();
@@ -246,7 +246,7 @@ export function createMediaApi({
           }
         }
       },
-      { rootMargin: '200px 0px' }
+      { rootMargin: '200px 0px' },
     );
 
     images.forEach((img) => {

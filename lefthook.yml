@@ -1,0 +1,25 @@
+pre-commit:
+  commands:
+    format:
+      run: bun fmt --staged
+    lint:
+      glob: '*.{js,mjs,ts}'
+      run: bun --bun oxlint {staged_files}
+    typecheck:
+      run: bun check
+
+commit-msg:
+  commands:
+    commitlint:
+      run: bun --bun commitlint --edit {1}
+
+pre-push:
+  commands:
+    format-check:
+      run: bun fmt --check
+    lint:
+      run: bun run lint
+    typecheck:
+      run: bun check
+    test:
+      run: bun test
