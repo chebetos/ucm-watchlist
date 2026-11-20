@@ -58,18 +58,6 @@
                     <i class="fa-solid fa-circle-check text-[10px]" aria-hidden="true"></i
                     ><span data-i18n="header.savedLocal">Guardado local</span>
                   </span>
-                  <button
-                    type="button"
-                    id="btnToggleLang"
-                    aria-label="Cambiar idioma a inglés"
-                    title="Switch to English"
-                    class="inline-flex items-center gap-1 whitespace-nowrap shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full bg-marvel-card hover:bg-gray-800 border border-marvel-border text-gray-300 transition cursor-pointer"
-                  >
-                    <i class="fa-solid fa-globe text-[10px] text-sky-400" aria-hidden="true"></i>
-                    <span id="langPillEs" class="text-white font-bold">ES</span>
-                    <span class="text-gray-600" aria-hidden="true">/</span>
-                    <span id="langPillEn" class="text-gray-500">EN</span>
-                  </button>
                 </div>
               </div>
             </div>
@@ -126,29 +114,43 @@
           <div
             class="flex flex-wrap items-center justify-between lg:justify-end gap-2.5 sm:gap-3 min-w-0"
           >
-            <!-- Main Progress Pill -->
-            <div
-              class="flex items-center gap-3 bg-marvel-card border border-marvel-border px-3 sm:px-3.5 py-2 rounded-xl w-full sm:w-auto sm:flex-initial min-w-0"
-            >
-              <div class="flex-1 min-w-0 sm:w-48">
-                <div class="flex justify-between text-xs mb-1">
-                  <span class="text-gray-300 font-semibold" id="progressLabel"
-                    >0 / 0 completados</span
-                  >
-                  <span class="text-marvel-red font-bold" id="progressPercent">0%</span>
-                </div>
-                <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-                  <div
-                    id="progressBar"
-                    class="h-full bg-gradient-to-r from-marvel-red via-amber-500 to-emerald-500 transition-all duration-300"
-                    style="width: 0%"
-                  ></div>
-                </div>
-                <div class="flex justify-between text-[10px] text-gray-400 mt-1">
-                  <span id="episodesCounter">0 / 0 episodios</span>
-                  <span id="timeRemaining">0h restantes</span>
+            <!-- Main Progress Pill + Language Toggle -->
+            <div class="flex items-stretch gap-2 w-full sm:w-auto min-w-0">
+              <div
+                class="flex items-center gap-3 bg-marvel-card border border-marvel-border px-3 sm:px-3.5 py-2 rounded-xl flex-1 sm:flex-initial min-w-0"
+              >
+                <div class="flex-1 min-w-0 sm:w-48">
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-gray-300 font-semibold" id="progressLabel"
+                      >0 / 0 completados</span
+                    >
+                    <span class="text-marvel-red font-bold" id="progressPercent">0%</span>
+                  </div>
+                  <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                    <div
+                      id="progressBar"
+                      class="h-full bg-gradient-to-r from-marvel-red via-amber-500 to-emerald-500 transition-all duration-300"
+                      style="width: 0%"
+                    ></div>
+                  </div>
+                  <div class="flex justify-between text-[10px] text-gray-400 mt-1">
+                    <span id="episodesCounter">0 / 0 episodios</span>
+                    <span id="timeRemaining">0h restantes</span>
+                  </div>
                 </div>
               </div>
+              <button
+                type="button"
+                id="btnToggleLang"
+                aria-label="Cambiar idioma a inglés"
+                title="Switch to English"
+                class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 px-3.5 py-2 rounded-xl bg-marvel-card hover:bg-gray-800 border border-marvel-border hover:border-sky-500/50 text-xs sm:text-sm font-semibold text-gray-300 transition cursor-pointer"
+              >
+                <i class="fa-solid fa-globe text-sm text-sky-400" aria-hidden="true"></i>
+                <span id="langPillEs" class="text-white font-bold">ES</span>
+                <span class="text-gray-600" aria-hidden="true">/</span>
+                <span id="langPillEn" class="text-gray-500">EN</span>
+              </button>
             </div>
 
             <!-- Desktop Action Buttons -->
