@@ -439,9 +439,10 @@
     <div id="syncModal" role="dialog" aria-modal="true" aria-labelledby="syncModalTitle" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-marvel-card border border-marvel-border rounded-2xl max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
             <div class="flex items-center justify-between px-5 py-4 border-b border-marvel-border bg-[#0B0E14]">
-                <h3 id="syncModalTitle" class="font-bold text-white flex items-center gap-2">
+                <h3 id="syncModalTitle" class="font-bold text-white flex flex-wrap items-center gap-2">
                     <i class="fa-solid fa-arrows-rotate text-marvel-red" aria-hidden="true"></i>
-                    Exportar e Importar Progreso entre Dispositivos
+                    <span>Exportar e Importar Progreso entre Dispositivos</span>
+                    <span id="syncSchemaVersionBadge" class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/25">Esquema v1.0.0</span>
                 </h3>
                 <button type="button" data-close-modal="syncModal" aria-label="Cerrar ventana" class="text-gray-400 hover:text-white p-1">
                     <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>

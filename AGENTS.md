@@ -20,7 +20,15 @@
 - **Prioridad al catálogo *above the fold*:** en viewports compactos (`max-width: 1023px` o `max-height: 780px`), `#plannerSection` y `#filtersCollapsibleBody` deben arrancar colapsados para que el primer bloque del catálogo sea visible sin scroll.
 - **Prevención de desbordamiento horizontal:** mantener `html, body { overflow-x: clip; max-width: 100%; }`, usar `min-w-0` en contenedores flex/grid con texto, `whitespace-nowrap shrink-0` en pills de estado (`#syncBadge`), y conservar `shrink-0` en `.cat-pill` cuando se actualice `className` dinámicamente en `src/main.js`.
 
+## Esquema de Progreso y Semantic Versioning (SemVer)
+- **Fuente de verdad:** el formato de exportación/importación (archivo `.JSON` y código rápido) está definido en `schemas/progress.schema.json` y sincronizado con `PROGRESS_SCHEMA_VERSION` en `src/store.js`. Ambos valores deben coincidir siempre (validado por `tests/store.test.js`).
+- **Evolución estricta con SemVer (`MAJOR.MINOR.PATCH`):** cualquier cambio en el esquema debe incrementar la versión según su compatibilidad:
+  - **MAJOR (`X.0.0`):** cambios incompatibles (*breaking changes*: renombrar o eliminar campos, cambiar tipos existentes o alterar la semántica de claves). Al importar, versiones con `MAJOR` distinto se rechazan automáticamente.
+  - **MINOR (`1.Y.0`):** incorporación de campos opcionales retrocompatibles (los backups con el mismo `MAJOR` siguen siendo importables).
+  - **PATCH (`1.0.Z`):** ajustes de documentación, descripciones o aclaraciones del esquema que no afectan a la compatibilidad de payloads existentes.
+
 ## Flujo de Trabajo y Git
+- Introducir todos los cambios mediante ramas dedicadas y Pull Requests hacia `main` (no hacer commits ni `push` directamente sobre `main`).
 - Ejecutar siempre `bun test` y `bun run build` antes de commitear cambios.
 - Verificar que `git config user.email` en este repo personal usa el correo personal (no corporativo).
 - No ejecutar `git push` sin confirmación explícita del usuario.

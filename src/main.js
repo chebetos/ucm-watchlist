@@ -4,7 +4,9 @@ import {
   normalizeUserProgress,
   getExportableProgress,
   encodeSyncCode,
-  decodeSyncCode,
+  decodeSyncCodeWithMeta,
+  importProgressPayload,
+  PROGRESS_SCHEMA_VERSION,
   loadOmdbApiKey,
   saveOmdbApiKeyToStorage,
   loadExternalMediaPref,
@@ -508,6 +510,16 @@ async function handleCopySyncCode() {
   showToast(ok ? 'Código de sincronización copiado al portapapeles' : 'No se pudo copiar automáticamente; cópialo manualmente');
 }
 
+function formatImportSuccessToast(compatibility, sourceLabel) {
+  if (compatibility.status === 'legacy') {
+    return `${sourceLabel} importado (formato anterior migrado a v${compatibility.currentVersion})`;
+  }
+  if (compatibility.status === 'newer_minor') {
+    return `${sourceLabel} importado (esquema v${compatibility.importedVersion}, compatible con v${compatibility.currentVersion})`;
+  }
+  return `${sourceLabel} importado (esquema v${compatibility.importedVersion})`;
+}
+
 function handleImportSyncCode() {
   const textarea = document.getElementById('syncCodeTextarea');
   const raw = textarea ? textarea.value.trim() : '';
@@ -516,15 +528,19 @@ function handleImportSyncCode() {
     return;
   }
   try {
-    userProgress = decodeSyncCode(raw, userProgress);
+    const { progress, compatibility } = decodeSyncCodeWithMeta(raw, userProgress);
+    userProgress = progress;
     const targetInput = document.getElementById('targetDateInput');
     if (targetInput) targetInput.value = userProgress.targetDate;
     saveProgress();
     renderApp();
     closeModal('syncModal');
-    showToast('¡Progreso importado correctamente!');
-  } catch {
-    showToast('El código introducido no tiene un formato válido');
+    showToast(formatImportSuccessToast(compatibility, 'Progreso'));
+  } catch (err) {
+    const msg = err instanceof Error && err.message.startsWith('Versión de esquema')
+      ? err.message
+      : 'El código introducido no tiene un formato válido';
+    showToast(msg);
   }
 }
 
@@ -556,18 +572,19 @@ function handleUploadJsonBackup(event) {
   reader.onload = (e) => {
     try {
       const parsed = JSON.parse(String(e.target?.result ?? ''));
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        throw new Error('JSON raíz inválido');
-      }
-      userProgress = normalizeUserProgress(parsed, userProgress);
+      const { progress, compatibility } = importProgressPayload(parsed, userProgress);
+      userProgress = progress;
       const targetInput = document.getElementById('targetDateInput');
       if (targetInput) targetInput.value = userProgress.targetDate;
       saveProgress();
       renderApp();
       closeModal('syncModal');
-      showToast('¡Copia de seguridad JSON restaurada!');
-    } catch {
-      showToast('El archivo JSON no es válido');
+      showToast(formatImportSuccessToast(compatibility, 'Backup JSON'));
+    } catch (err) {
+      const msg = err instanceof Error && err.message.startsWith('Versión de esquema')
+        ? err.message
+        : 'El archivo JSON no es válido';
+      showToast(msg);
     } finally {
       // Permite volver a seleccionar el mismo archivo tras una importación o fallo
       input.value = '';
@@ -870,6 +887,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const startExpanded = !isCompactViewport();
   setPlannerExpanded(startExpanded);
   setFiltersExpanded(startExpanded);
+  const schemaBadge = document.getElementById('syncSchemaVersionBadge');
+  if (schemaBadge) {
+    schemaBadge.textContent = `Esquema v${PROGRESS_SCHEMA_VERSION}`;
+  }
   updateSyncBadge('Guardado local', 'emerald');
   renderApp();
 });

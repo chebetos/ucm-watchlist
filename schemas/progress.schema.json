@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/chebetos/ucm-watchlist/schemas/progress.schema.json",
+  "title": "UCM Watchlist User Progress",
+  "description": "Esquema versionado (SemVer) para la exportación e importación del progreso del usuario en UCM & Multiverso Watchlist.",
+  "x-schema-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "watchedItems",
+    "watchedEpisodes",
+    "userRatings",
+    "userNotes",
+    "targetDate"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "description": "Versión SemVer (MAJOR.MINOR.PATCH) del esquema utilizado al exportar.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "examples": ["1.0.0"]
+    },
+    "watchedItems": {
+      "type": "object",
+      "description": "Mapa de IDs de películas, especiales o cómics marcados como vistos.",
+      "maxProperties": 1000,
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "watchedEpisodes": {
+      "type": "object",
+      "description": "Mapa de IDs de serie a un mapa de códigos de episodio (ej. S1E1) marcados como vistos.",
+      "maxProperties": 1000,
+      "additionalProperties": {
+        "type": "object",
+        "maxProperties": 1000,
+        "additionalProperties": {
+          "type": "boolean"
+        }
+      }
+    },
+    "userRatings": {
+      "type": "object",
+      "description": "Mapa de IDs de títulos a valoraciones enteras de 1 a 5 estrellas.",
+      "maxProperties": 1000,
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 5
+      }
+    },
+    "userNotes": {
+      "type": "object",
+      "description": "Mapa de IDs de títulos a notas personales del usuario.",
+      "maxProperties": 1000,
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 2000
+      }
+    },
+    "targetDate": {
+      "type": "string",
+      "description": "Fecha objetivo del planificador de maratón en formato ISO YYYY-MM-DD.",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    }
+  }
+}
