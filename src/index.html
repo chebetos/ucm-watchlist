@@ -142,14 +142,31 @@
               <button
                 type="button"
                 id="btnToggleLang"
+                role="switch"
+                aria-checked="false"
                 aria-label="Cambiar idioma a inglés"
                 title="Switch to English"
-                class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 px-3.5 py-2 rounded-xl bg-marvel-card hover:bg-gray-800 border border-marvel-border hover:border-sky-500/50 text-xs sm:text-sm font-semibold text-gray-300 transition cursor-pointer"
+                class="inline-flex items-center justify-center shrink-0 px-2.5 py-2 rounded-xl bg-marvel-card hover:bg-gray-800/80 border border-marvel-border hover:border-sky-500/50 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
               >
-                <i class="fa-solid fa-globe text-sm text-sky-400" aria-hidden="true"></i>
-                <span id="langPillEs" class="text-white font-bold">ES</span>
-                <span class="text-gray-600" aria-hidden="true">/</span>
-                <span id="langPillEn" class="text-gray-500">EN</span>
+                <span
+                  class="relative inline-grid grid-cols-2 items-center w-[84px] h-9 p-1 rounded-full bg-[#0B0E14] border border-marvel-border/90 select-none"
+                >
+                  <span
+                    id="langSwitchThumb"
+                    aria-hidden="true"
+                    class="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] rounded-full bg-sky-500 shadow-md shadow-sky-500/30 transition-transform duration-200 ease-out translate-x-0"
+                  ></span>
+                  <span
+                    id="langPillEs"
+                    class="relative z-10 text-center text-xs font-extrabold tracking-wide transition-colors duration-200 text-gray-950"
+                    >ES</span
+                  >
+                  <span
+                    id="langPillEn"
+                    class="relative z-10 text-center text-xs font-extrabold tracking-wide transition-colors duration-200 text-gray-400"
+                    >EN</span
+                  >
+                </span>
               </button>
             </div>
 

@@ -646,13 +646,21 @@ export function applyStaticTranslations(
 
   const langBtn = doc.getElementById('btnToggleLang');
   if (langBtn) {
+    langBtn.setAttribute('aria-checked', String(lang === 'en'));
     langBtn.setAttribute('aria-label', t('header.langToggleAria', undefined, lang));
     langBtn.setAttribute('title', t('header.langToggleTitle', undefined, lang));
+  }
+  const thumb = doc.getElementById('langSwitchThumb');
+  if (thumb) {
+    thumb.classList.toggle('translate-x-0', lang === 'es');
+    thumb.classList.toggle('translate-x-full', lang === 'en');
   }
   const esPill = doc.getElementById('langPillEs');
   const enPill = doc.getElementById('langPillEn');
   if (esPill && enPill) {
-    esPill.className = lang === 'es' ? 'text-white font-bold' : 'text-gray-500';
-    enPill.className = lang === 'en' ? 'text-white font-bold' : 'text-gray-500';
+    const baseCls =
+      'relative z-10 text-center text-xs font-extrabold tracking-wide transition-colors duration-200';
+    esPill.className = `${baseCls} ${lang === 'es' ? 'text-gray-950' : 'text-gray-400'}`;
+    enPill.className = `${baseCls} ${lang === 'en' ? 'text-gray-950' : 'text-gray-400'}`;
   }
 }
