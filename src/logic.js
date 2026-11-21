@@ -666,3 +666,82 @@ function getRawItemSagaMeta(item, orderMode, groupMode) {
     };
   }
 }
+
+function computeAverageRating(ratingsMap) {
+  if (!ratingsMap || typeof ratingsMap !== 'object') return { avg: null, count: 0 };
+  const vals = Object.values(ratingsMap).filter(
+    (v) => typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 5,
+  );
+  if (vals.length === 0) return { avg: null, count: 0 };
+  const sum = vals.reduce((acc, n) => acc + n, 0);
+  return { avg: Number((sum / vals.length).toFixed(1)), count: vals.length };
+}
+
+/**
+ * Compara el progreso local del usuario frente a un progreso compartido (amigo)
+ * sin mutar ningún estado.
+ */
+export function computeProgressComparison(catalog, localProgress, friendProgress) {
+  const meStats = computeGlobalStats(catalog, localProgress);
+  const friendStats = computeGlobalStats(catalog, friendProgress);
+  const meRatings = computeAverageRating(localProgress?.userRatings);
+  const friendRatings = computeAverageRating(friendProgress?.userRatings);
+
+  let totalCatalogMinutes = 0;
+  for (const item of catalog) {
+    totalCatalogMinutes += item.runtimeMins || 0;
+  }
+
+  const meWatchedHours = Math.max(
+    0,
+    Math.round((totalCatalogMinutes - meStats.remainingMinutes) / 60),
+  );
+  const friendWatchedHours = Math.max(
+    0,
+    Math.round((totalCatalogMinutes - friendStats.remainingMinutes) / 60),
+  );
+
+  const both = [];
+  const onlyFriend = [];
+  const onlyMe = [];
+  const neither = [];
+
+  const sorted = catalog.toSorted((a, b) => a.releaseOrder - b.releaseOrder);
+  for (const item of sorted) {
+    const myComp = getItemCompletionStatus(item, localProgress);
+    const friendComp = getItemCompletionStatus(item, friendProgress);
+    const entry = {
+      item,
+      myComp,
+      friendComp,
+      myRating: localProgress?.userRatings?.[item.id] || 0,
+      friendRating: friendProgress?.userRatings?.[item.id] || 0,
+    };
+
+    if (myComp.status === 'completed' && friendComp.status === 'completed') {
+      both.push(entry);
+    } else if (friendComp.status === 'completed' && myComp.status !== 'completed') {
+      onlyFriend.push(entry);
+    } else if (myComp.status === 'completed' && friendComp.status !== 'completed') {
+      onlyMe.push(entry);
+    } else {
+      neither.push(entry);
+    }
+  }
+
+  return {
+    me: {
+      ...meStats,
+      watchedHours: meWatchedHours,
+      avgRating: meRatings.avg,
+      ratedCount: meRatings.count,
+    },
+    friend: {
+      ...friendStats,
+      watchedHours: friendWatchedHours,
+      avgRating: friendRatings.avg,
+      ratedCount: friendRatings.count,
+    },
+    lists: { both, onlyFriend, onlyMe, neither },
+  };
+}

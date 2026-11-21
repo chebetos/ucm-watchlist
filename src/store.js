@@ -2,14 +2,18 @@ export const LOCAL_STORAGE_KEY = 'mcu_multiverse_master_progress_v2';
 export const OMDB_STORAGE_KEY = 'mcu_multiverse_omdb_key_v1';
 export const EXTERNAL_MEDIA_STORAGE_KEY = 'mcu_multiverse_external_media_v1';
 export const DEFAULT_TARGET_DATE = '2026-12-18';
-export const PROGRESS_SCHEMA_VERSION = '1.0.0';
+export const PROGRESS_SCHEMA_VERSION = '1.1.0';
 export const MAX_NOTE_LENGTH = 2000;
+export const MAX_NICK_LENGTH = 40;
 export const MAX_MAP_ENTRIES = 1000;
 export const MAX_SYNC_CODE_LENGTH = 512 * 1024;
 export const MAX_IMPORT_FILE_BYTES = 512 * 1024;
+export const COMPRESSED_CODE_PREFIX = 'z1.';
+export const DEEPLINK_HASH_PARAM = 'sync';
 
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
 const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/;
 
 function isPlainObject(value) {
@@ -36,8 +40,23 @@ export function isValidIsoDate(str) {
   );
 }
 
-export function createDefaultProgress(targetDate = DEFAULT_TARGET_DATE) {
+export function sanitizeNick(nick) {
+  if (typeof nick !== 'string') return '';
+  return nick
+    .replace(/[\r\n\t]+/g, ' ')
+    .trim()
+    .slice(0, MAX_NICK_LENGTH);
+}
+
+export function isValidIsoTimestamp(str) {
+  if (typeof str !== 'string' || !ISO_TIMESTAMP_RE.test(str)) return false;
+  const ms = Date.parse(str);
+  return !Number.isNaN(ms);
+}
+
+export function createDefaultProgress(targetDate = DEFAULT_TARGET_DATE, nick = '') {
   return {
+    nick: sanitizeNick(nick),
     watchedItems: {},
     watchedEpisodes: {},
     userRatings: {},
@@ -109,6 +128,10 @@ export function normalizeUserProgress(raw, current = null) {
 
   if (isValidIsoDate(raw.targetDate)) {
     base.targetDate = raw.targetDate;
+  }
+
+  if (typeof raw.nick === 'string') {
+    base.nick = sanitizeNick(raw.nick);
   }
 
   return base;
@@ -202,21 +225,37 @@ export function checkSchemaCompatibility(
 /**
  * Devuelve un payload seguro y versionado para exportar (JSON o código de sincronización).
  * Nunca incluye omdbApiKey.
+ * @param {any} progress
+ * @param {{ includeNotes?: boolean, exportedAt?: string | null, nick?: string }} [options]
  */
-export function getExportableProgress(progress) {
+export function getExportableProgress(progress, options = {}) {
   const normalized = normalizeUserProgress(progress);
-  return {
+  const includeNotes = options.includeNotes !== false;
+  const nick = options.nick !== undefined ? sanitizeNick(options.nick) : normalized.nick;
+  const exportedAt =
+    options.exportedAt === null
+      ? null
+      : isValidIsoTimestamp(options.exportedAt)
+        ? options.exportedAt
+        : new Date().toISOString();
+
+  /** @type {Record<string, any>} */
+  const payload = {
     schemaVersion: PROGRESS_SCHEMA_VERSION,
     watchedItems: normalized.watchedItems,
     watchedEpisodes: normalized.watchedEpisodes,
     userRatings: normalized.userRatings,
-    userNotes: normalized.userNotes,
+    userNotes: includeNotes ? normalized.userNotes : {},
     targetDate: normalized.targetDate,
   };
+  if (nick) payload.nick = nick;
+  if (exportedAt) payload.exportedAt = exportedAt;
+  return payload;
 }
 
 /**
- * Valida la compatibilidad SemVer del payload importado y devuelve el progreso normalizado.
+ * Valida la compatibilidad SemVer del payload importado y devuelve el progreso normalizado
+ * junto con metadatos de exportación (nick y exportedAt UTC).
  */
 export function importProgressPayload(raw, current = null) {
   if (!isPlainObject(raw)) {
@@ -233,15 +272,104 @@ export function importProgressPayload(raw, current = null) {
     throw new Error(`Versión de esquema no válida (${compatibility.importedVersion})`);
   }
 
+  const nick = sanitizeNick(raw.nick);
+  const exportedAt = isValidIsoTimestamp(raw.exportedAt) ? raw.exportedAt : null;
+
   return {
     progress: normalizeUserProgress(raw, current),
     compatibility,
+    meta: { nick, exportedAt },
   };
 }
 
-export function encodeSyncCode(progress) {
-  const jsonStr = JSON.stringify(getExportableProgress(progress));
+/** @param {Uint8Array} bytes */
+function bytesToBase64Url(bytes) {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/g, '');
+}
+
+/** @param {string} str */
+function base64UrlToBytes(str) {
+  const normalized = str.replaceAll('-', '+').replaceAll('_', '/');
+  const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
+  const binary = atob(normalized + pad);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/** @param {ReadableStream<Uint8Array>} stream @param {number} maxBytes */
+async function readStreamBytes(stream, maxBytes) {
+  const reader = stream.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        throw new Error('Código demasiado grande');
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return out;
+}
+
+export function encodeSyncCode(progress, options = {}) {
+  const jsonStr = JSON.stringify(getExportableProgress(progress, options));
   return btoa(encodeURIComponent(jsonStr));
+}
+
+/**
+ * Codifica el progreso comprimido con deflate-raw (nativo del navegador) + Base64URL
+ * con prefijo `z1.` para URLs/deeplinks compactos. Hace fallback al código plano si
+ * CompressionStream no está disponible.
+ * @param {any} progress
+ * @param {{ includeNotes?: boolean, exportedAt?: string | null, nick?: string }} [options]
+ */
+export async function encodeCompressedSyncCode(progress, options = {}) {
+  const jsonStr = JSON.stringify(getExportableProgress(progress, options));
+  if (typeof CompressionStream === 'undefined') {
+    return btoa(encodeURIComponent(jsonStr));
+  }
+  const inputBytes = new TextEncoder().encode(jsonStr);
+  const cs = new CompressionStream('deflate-raw');
+  const writer = cs.writable.getWriter();
+  const writePromise = writer.write(inputBytes).then(() => writer.close());
+  const compressed = await readStreamBytes(cs.readable, MAX_SYNC_CODE_LENGTH);
+  await writePromise;
+  return `${COMPRESSED_CODE_PREFIX}${bytesToBase64Url(compressed)}`;
+}
+
+export function extractSyncCodeFromHash(hash) {
+  if (typeof hash !== 'string' || !hash) return null;
+  const cleaned = hash.startsWith('#') ? hash.slice(1) : hash;
+  if (!cleaned) return null;
+  const params = new URLSearchParams(cleaned);
+  const value = params.get(DEEPLINK_HASH_PARAM);
+  return value ? value.trim() : null;
+}
+
+export function buildShareDeeplink(baseHref, code) {
+  const url = new URL(baseHref);
+  url.search = '';
+  url.hash = `${DEEPLINK_HASH_PARAM}=${encodeURIComponent(code)}`;
+  return url.toString();
 }
 
 export function decodeSyncCodeWithMeta(code, current = null) {
@@ -255,6 +383,42 @@ export function decodeSyncCodeWithMeta(code, current = null) {
   const decoded = decodeURIComponent(atob(trimmed));
   const parsed = JSON.parse(decoded);
   return importProgressPayload(parsed, current);
+}
+
+/**
+ * Decodifica cualquier código de sincronización: comprimido (`z1.<base64url>`),
+ * plano (Base64 clásico) o incluso una URL deeplink completa pegada directamente.
+ */
+export async function decodeAnySyncCodeWithMeta(input, current = null) {
+  let trimmed = String(input ?? '').trim();
+  if (!trimmed) {
+    throw new Error('Código vacío');
+  }
+  // Si el usuario pega el enlace completo en el cuadro de código rápido, extraer #sync=...
+  const hashIdx = trimmed.indexOf('#');
+  if (hashIdx !== -1) {
+    const extracted = extractSyncCodeFromHash(trimmed.slice(hashIdx));
+    if (extracted) trimmed = extracted;
+  }
+  if (trimmed.length > MAX_SYNC_CODE_LENGTH) {
+    throw new Error('Código demasiado grande');
+  }
+  if (trimmed.startsWith(COMPRESSED_CODE_PREFIX)) {
+    if (typeof DecompressionStream === 'undefined') {
+      throw new Error('Descompresión no soportada en este navegador');
+    }
+    const payloadStr = trimmed.slice(COMPRESSED_CODE_PREFIX.length);
+    const compressedBytes = base64UrlToBytes(payloadStr);
+    const ds = new DecompressionStream('deflate-raw');
+    const writer = ds.writable.getWriter();
+    const writePromise = writer.write(compressedBytes).then(() => writer.close());
+    const decompressed = await readStreamBytes(ds.readable, MAX_IMPORT_FILE_BYTES);
+    await writePromise;
+    const jsonStr = new TextDecoder().decode(decompressed);
+    const parsed = JSON.parse(jsonStr);
+    return importProgressPayload(parsed, current);
+  }
+  return decodeSyncCodeWithMeta(trimmed, current);
 }
 
 export function decodeSyncCode(code, current = null) {
@@ -339,7 +503,10 @@ export function loadProgressFromStorage(storage = globalThis.localStorage) {
 export function saveProgressToStorage(progress, storage = globalThis.localStorage) {
   try {
     if (!storage) return false;
-    storage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(getExportableProgress(progress)));
+    storage.setItem(
+      LOCAL_STORAGE_KEY,
+      JSON.stringify(getExportableProgress(progress, { exportedAt: null })),
+    );
     return true;
   } catch {
     return false;

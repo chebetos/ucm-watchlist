@@ -8,9 +8,13 @@ import {
   OMDB_STORAGE_KEY,
   EXTERNAL_MEDIA_STORAGE_KEY,
   MAX_NOTE_LENGTH,
+  MAX_NICK_LENGTH,
   MAX_MAP_ENTRIES,
   MAX_SYNC_CODE_LENGTH,
+  COMPRESSED_CODE_PREFIX,
   isValidIsoDate,
+  isValidIsoTimestamp,
+  sanitizeNick,
   parseSemver,
   checkSchemaCompatibility,
   createDefaultProgress,
@@ -18,8 +22,12 @@ import {
   getExportableProgress,
   importProgressPayload,
   encodeSyncCode,
+  encodeCompressedSyncCode,
   decodeSyncCode,
   decodeSyncCodeWithMeta,
+  decodeAnySyncCodeWithMeta,
+  buildShareDeeplink,
+  extractSyncCodeFromHash,
   loadOmdbApiKey,
   saveOmdbApiKeyToStorage,
   loadExternalMediaPref,
@@ -246,5 +254,69 @@ describe('JSON Schema y compatibilidad SemVer', () => {
     expect(() => importProgressPayload({ schemaVersion: 'not-semver', watchedItems: {} })).toThrow(
       'Versión de esquema no válida',
     );
+  });
+});
+
+describe('Deeplinks, compresión deflate-raw, nick y timestamp UTC (v1.1.0)', () => {
+  test('sanitizeNick y isValidIsoTimestamp validan y limpian entradas', () => {
+    expect(sanitizeNick('  Tony\nStark  ')).toBe('Tony Stark');
+    expect(sanitizeNick('A'.repeat(MAX_NICK_LENGTH + 20)).length).toBe(MAX_NICK_LENGTH);
+    expect(isValidIsoTimestamp('2026-11-21T06:30:00.000Z')).toBe(true);
+    expect(isValidIsoTimestamp('2026-11-21')).toBe(false);
+    expect(isValidIsoTimestamp('not-a-timestamp')).toBe(false);
+  });
+
+  test('getExportableProgress incluye nick, exportedAt UTC y respeta includeNotes: false', () => {
+    const progress = createDefaultProgress('2026-12-18', 'Wanda');
+    progress.userNotes = { mcu_iron_man: 'Nota privada' };
+    progress.userRatings = { mcu_iron_man: 5 };
+
+    const withNotes = getExportableProgress(progress, { includeNotes: true });
+    expect(withNotes.schemaVersion).toBe('1.1.0');
+    expect(withNotes.nick).toBe('Wanda');
+    expect(isValidIsoTimestamp(withNotes.exportedAt)).toBe(true);
+    expect(withNotes.userNotes).toEqual({ mcu_iron_man: 'Nota privada' });
+
+    const withoutNotes = getExportableProgress(progress, { includeNotes: false });
+    expect(withoutNotes.userNotes).toEqual({});
+    expect(withoutNotes.userRatings).toEqual({ mcu_iron_man: 5 });
+  });
+
+  test('encodeCompressedSyncCode + buildShareDeeplink + decodeAnySyncCodeWithMeta preservan nick y exportedAt', async () => {
+    const progress = createDefaultProgress('2026-12-18', 'Peter');
+    progress.watchedItems = { mcu_iron_man: true, mcu_avengers: true };
+    progress.userRatings = { mcu_iron_man: 5 };
+
+    const code = await encodeCompressedSyncCode(progress, {
+      includeNotes: false,
+      exportedAt: '2026-11-21T07:00:00.000Z',
+    });
+    expect(code.startsWith(COMPRESSED_CODE_PREFIX)).toBe(true);
+
+    const link = buildShareDeeplink('https://ucm.example.com/?foo=bar#old', code);
+    expect(link).toBe(`https://ucm.example.com/#sync=${encodeURIComponent(code)}`);
+
+    const extracted = extractSyncCodeFromHash(new URL(link).hash);
+    expect(extracted).toBe(code);
+
+    const decodedFromCode = await decodeAnySyncCodeWithMeta(code);
+    expect(decodedFromCode.meta).toEqual({
+      nick: 'Peter',
+      exportedAt: '2026-11-21T07:00:00.000Z',
+    });
+    expect(decodedFromCode.progress.watchedItems).toEqual({
+      mcu_iron_man: true,
+      mcu_avengers: true,
+    });
+    expect(decodedFromCode.progress.nick).toBe('Peter');
+
+    // También acepta pegar el enlace completo directamente
+    const decodedFromLink = await decodeAnySyncCodeWithMeta(link);
+    expect(decodedFromLink.meta.nick).toBe('Peter');
+
+    // Retrocompatibilidad con código plano Base64 clásico
+    const legacyPlainCode = encodeSyncCode(progress);
+    const decodedPlain = await decodeAnySyncCodeWithMeta(legacyPlainCode);
+    expect(decodedPlain.progress.watchedItems).toEqual(progress.watchedItems);
   });
 });

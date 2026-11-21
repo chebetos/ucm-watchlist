@@ -5,6 +5,7 @@ import {
   computeGlobalStats,
   computeMarathonPlan,
   getItemSagaMeta,
+  computeProgressComparison,
 } from '../src/logic.js';
 import { createDefaultProgress } from '../src/store.js';
 
@@ -182,5 +183,30 @@ describe('computeMarathonPlan y getItemSagaMeta', () => {
     expect(
       getItemSagaMeta({ ...MOCK_CATALOG[0], chronoSort: 25 }, 'chrono', 'interleaved_sagas').icon,
     ).toBe('fa-a');
+  });
+});
+
+describe('computeProgressComparison', () => {
+  test('clasifica títulos en both, onlyFriend, onlyMe y neither y calcula medias sin mutar', () => {
+    const me = createDefaultProgress('2026-12-18', 'Yo');
+    me.watchedItems.movie_1 = true;
+    me.userRatings.movie_1 = 5;
+
+    const friend = createDefaultProgress('2026-12-18', 'Amigo');
+    friend.watchedItems.movie_1 = true;
+    friend.watchedEpisodes.series_1 = { S1E1: true, S1E2: true };
+    friend.userRatings = { movie_1: 4, series_1: 5 };
+
+    const cmp = computeProgressComparison(MOCK_CATALOG, me, friend);
+    expect(cmp.me.completedItems).toBe(1);
+    expect(cmp.me.avgRating).toBe(5);
+    expect(cmp.friend.completedItems).toBe(2);
+    expect(cmp.friend.avgRating).toBe(4.5);
+    expect(cmp.lists.both.map((r) => r.item.id)).toEqual(['movie_1']);
+    expect(cmp.lists.onlyFriend.map((r) => r.item.id)).toEqual(['series_1']);
+    expect(cmp.lists.onlyMe).toEqual([]);
+    expect(cmp.lists.neither.map((r) => r.item.id)).toEqual(['empty_series']);
+    expect(cmp.lists.both[0].myRating).toBe(5);
+    expect(cmp.lists.both[0].friendRating).toBe(4);
   });
 });

@@ -2,8 +2,11 @@ import { MCU_CATALOG } from './catalog.js';
 import {
   createDefaultProgress,
   getExportableProgress,
-  encodeSyncCode,
-  decodeSyncCodeWithMeta,
+  encodeCompressedSyncCode,
+  decodeAnySyncCodeWithMeta,
+  buildShareDeeplink,
+  extractSyncCodeFromHash,
+  sanitizeNick,
   importProgressPayload,
   PROGRESS_SCHEMA_VERSION,
   loadOmdbApiKey,
@@ -28,6 +31,9 @@ import {
   renderMarathonPlanner,
   renderCatalogGrid,
   renderDetailModalBody,
+  renderDeeplinkModal,
+  renderOverwriteConfirmModal,
+  renderCompareModal,
   updateSyncBadge,
   syncToggleAllGroupsButton,
 } from './ui.js';
@@ -60,6 +66,8 @@ const filterState = {
 const collapsedGroups = {};
 let currentOpenItemId = null;
 let toastTimeout = null;
+let pendingIncomingShare = null;
+let activeCompareTab = 'both';
 
 const mediaApi = createMediaApi({
   onPosterResolved: (itemId, url) => applyPosterToDom(itemId, url),
@@ -129,12 +137,22 @@ const MODAL_IDS = [
   'imageApiModal',
   'confirmResetModal',
   'legalModal',
+  'deeplinkModal',
+  'compareModal',
+  'confirmOverwriteModal',
 ];
 
 function openModal(id) {
   if (id === 'syncModal') {
-    const textarea = getFormField('syncCodeTextarea');
-    if (textarea) textarea.value = encodeSyncCode(userProgress);
+    const nickInput = getFormField('exportNickInput');
+    if (nickInput) nickInput.value = userProgress.nick || '';
+    const shareBtn = document.getElementById('btnNativeShareLink');
+    if (shareBtn) {
+      const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+      shareBtn.classList.toggle('hidden', !canShare);
+      shareBtn.classList.toggle('inline-flex', canShare);
+    }
+    void refreshSyncModalOutputs();
   }
   const modal = document.getElementById(id);
   if (modal) modal.classList.remove('hidden');
@@ -553,10 +571,72 @@ function handleTargetDateChange() {
 // ============================================================================
 // EXPORTAR / IMPORTAR Y CLAVE OMDB
 // ============================================================================
-async function handleCopySyncCode() {
-  const code = encodeSyncCode(userProgress);
+function getExportOptionsFromModal() {
+  const nickInput = getFormField('exportNickInput');
+  const includeNotesEl = document.getElementById('exportIncludeNotesCheckbox');
+  const includeNotes = includeNotesEl instanceof HTMLInputElement ? includeNotesEl.checked : true;
+  const nick = nickInput ? sanitizeNick(nickInput.value) : userProgress.nick || '';
+  return { includeNotes, nick };
+}
+
+async function refreshSyncModalOutputs() {
+  const { includeNotes, nick } = getExportOptionsFromModal();
+  const code = await encodeCompressedSyncCode(userProgress, { includeNotes, nick });
   const textarea = getFormField('syncCodeTextarea');
   if (textarea) textarea.value = code;
+  const linkInput = getFormField('shareDeeplinkInput');
+  if (linkInput) {
+    linkInput.value = buildShareDeeplink(window.location.href, code);
+  }
+}
+
+function handleExportNickInput() {
+  const nickInput = getFormField('exportNickInput');
+  if (!nickInput) return;
+  const cleaned = sanitizeNick(nickInput.value);
+  if (userProgress.nick !== cleaned) {
+    userProgress.nick = cleaned;
+    saveProgress();
+  }
+  void refreshSyncModalOutputs();
+}
+
+async function handleCopyShareLink() {
+  await refreshSyncModalOutputs();
+  const linkInput = getFormField('shareDeeplinkInput');
+  const url = linkInput ? linkInput.value.trim() : '';
+  if (!url) return;
+  const ok = await copyToClipboard(url, linkInput);
+  showToast(ok ? t('toast.linkCopied') : t('toast.linkCopyFallback'));
+}
+
+async function handleNativeShareLink() {
+  if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return;
+  await refreshSyncModalOutputs();
+  const linkInput = getFormField('shareDeeplinkInput');
+  const url = linkInput ? linkInput.value.trim() : '';
+  if (!url) return;
+  try {
+    await navigator.share({
+      title: t('meta.title'),
+      text: userProgress.nick
+        ? t('deeplink.fromUser', { nick: userProgress.nick })
+        : t('meta.title'),
+      url,
+    });
+    showToast(t('toast.linkShared'));
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') return;
+    const ok = await copyToClipboard(url, linkInput);
+    showToast(ok ? t('toast.linkCopied') : t('toast.linkCopyFallback'));
+  }
+}
+
+async function handleCopySyncCode() {
+  const textarea = getFormField('syncCodeTextarea');
+  if (!textarea) return;
+  await refreshSyncModalOutputs();
+  const code = textarea.value.trim();
   const ok = await copyToClipboard(code, textarea);
   showToast(ok ? t('toast.codeCopied') : t('toast.codeCopyFallback'));
 }
@@ -575,7 +655,7 @@ function formatImportSuccessToast(compatibility, sourceLabel) {
   return t('toast.importExact', { source: sourceLabel, imported: compatibility.importedVersion });
 }
 
-function handleImportSyncCode() {
+async function handleImportSyncCode() {
   const textarea = getFormField('syncCodeTextarea');
   const raw = textarea ? textarea.value.trim() : '';
   if (!raw) {
@@ -583,14 +663,11 @@ function handleImportSyncCode() {
     return;
   }
   try {
-    const { progress, compatibility } = decodeSyncCodeWithMeta(raw, userProgress);
-    userProgress = progress;
-    const targetInput = getFormField('targetDateInput');
-    if (targetInput) targetInput.value = userProgress.targetDate;
-    saveProgress();
-    renderApp();
+    const incoming = await decodeAnySyncCodeWithMeta(raw, userProgress);
+    pendingIncomingShare = incoming;
     closeModal('syncModal');
-    showToast(formatImportSuccessToast(compatibility, t('toast.sourceProgress')));
+    renderOverwriteConfirmModal(MCU_CATALOG, userProgress, incoming);
+    openModal('confirmOverwriteModal');
   } catch (err) {
     const msg =
       err instanceof Error && err.message.startsWith('Versión de esquema')
@@ -600,8 +677,67 @@ function handleImportSyncCode() {
   }
 }
 
+async function checkIncomingDeeplinkHash() {
+  const code = extractSyncCodeFromHash(window.location.hash);
+  if (!code) return;
+
+  // Limpiar el fragmento de la URL para evitar reabrir el modal al recargar
+  try {
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+  } catch {
+    // Ignorar en entornos donde replaceState esté restringido
+  }
+
+  try {
+    const incoming = await decodeAnySyncCodeWithMeta(code, userProgress);
+    pendingIncomingShare = incoming;
+    renderDeeplinkModal(MCU_CATALOG, incoming);
+    openModal('deeplinkModal');
+  } catch (err) {
+    const msg =
+      err instanceof Error && err.message.startsWith('Versión de esquema')
+        ? err.message
+        : t('toast.deeplinkInvalid');
+    showToast(msg);
+  }
+}
+
+function handleOpenCompareFromDeeplink() {
+  if (!pendingIncomingShare) return;
+  closeModal('deeplinkModal');
+  activeCompareTab = 'both';
+  renderCompareModal(MCU_CATALOG, userProgress, pendingIncomingShare, activeCompareTab);
+  openModal('compareModal');
+}
+
+function handleRequestOverwriteConfirm() {
+  if (!pendingIncomingShare) return;
+  closeModal('deeplinkModal');
+  closeModal('compareModal');
+  renderOverwriteConfirmModal(MCU_CATALOG, userProgress, pendingIncomingShare);
+  openModal('confirmOverwriteModal');
+}
+
+function handleConfirmOverwriteImport() {
+  if (!pendingIncomingShare) return;
+  const { progress, compatibility, meta } = pendingIncomingShare;
+  userProgress = progress;
+  const targetInput = getFormField('targetDateInput');
+  if (targetInput) targetInput.value = userProgress.targetDate;
+  saveProgress();
+  renderApp();
+  closeModal('confirmOverwriteModal');
+  pendingIncomingShare = null;
+  if (meta?.nick) {
+    showToast(t('toast.deeplinkImported', { nick: meta.nick }));
+  } else {
+    showToast(formatImportSuccessToast(compatibility, t('toast.sourceProgress')));
+  }
+}
+
 function handleDownloadJsonBackup() {
-  const dataStr = JSON.stringify(getExportableProgress(userProgress), null, 2);
+  const { nick } = getExportOptionsFromModal();
+  const dataStr = JSON.stringify(getExportableProgress(userProgress, { nick }), null, 2);
   const blob = new Blob([dataStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -936,11 +1072,38 @@ function bindEvents() {
     }
   });
 
-  // Sync / Backup / OMDb / PWA
+  // Sync / Backup / Deeplink / Compare / OMDb / PWA
+  document.getElementById('exportNickInput')?.addEventListener('input', handleExportNickInput);
+  document
+    .getElementById('exportIncludeNotesCheckbox')
+    ?.addEventListener('change', () => void refreshSyncModalOutputs());
+  document.getElementById('btnCopyShareLink')?.addEventListener('click', handleCopyShareLink);
+  document.getElementById('btnNativeShareLink')?.addEventListener('click', handleNativeShareLink);
   document.getElementById('btnCopySyncCode')?.addEventListener('click', handleCopySyncCode);
   document.getElementById('btnImportSyncCode')?.addEventListener('click', handleImportSyncCode);
   document.getElementById('btnDownloadJson')?.addEventListener('click', handleDownloadJsonBackup);
   document.getElementById('uploadJsonInput')?.addEventListener('change', handleUploadJsonBackup);
+  document
+    .getElementById('btnDeeplinkCompare')
+    ?.addEventListener('click', handleOpenCompareFromDeeplink);
+  document
+    .getElementById('btnDeeplinkImport')
+    ?.addEventListener('click', handleRequestOverwriteConfirm);
+  document
+    .getElementById('btnCompareImport')
+    ?.addEventListener('click', handleRequestOverwriteConfirm);
+  document
+    .getElementById('btnConfirmOverwrite')
+    ?.addEventListener('click', handleConfirmOverwriteImport);
+  document.getElementById('compareModalBody')?.addEventListener('click', (e) => {
+    if (!(e.target instanceof Element)) return;
+    const tabBtn = e.target.closest('[data-action="compare-tab"]');
+    if (!tabBtn || !pendingIncomingShare) return;
+    const nextTab = tabBtn.getAttribute('data-compare-tab') || 'both';
+    activeCompareTab = nextTab;
+    renderCompareModal(MCU_CATALOG, userProgress, pendingIncomingShare, activeCompareTab);
+  });
+  window.addEventListener('hashchange', () => void checkIncomingDeeplinkHash());
   document.getElementById('btnSaveOmdbKey')?.addEventListener('click', handleSaveOmdbApiKey);
   document
     .getElementById('btnToggleExternalMedia')
@@ -1008,4 +1171,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   syncSchemaBadgeText();
   updateSyncBadge(t('header.savedLocal'), 'emerald');
   renderApp();
+  await checkIncomingDeeplinkHash();
 });

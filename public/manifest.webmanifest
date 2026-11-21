@@ -5,6 +5,9 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "launch_handler": {
+    "client_mode": ["focus-existing", "auto"]
+  },
   "background_color": "#0B0E14",
   "theme_color": "#E62429",
   "orientation": "portrait-primary",
