@@ -209,4 +209,21 @@ describe('computeProgressComparison', () => {
     expect(cmp.lists.both[0].myRating).toBe(5);
     expect(cmp.lists.both[0].friendRating).toBe(4);
   });
+
+  test('reporta 0h vistas con progreso vacío (incluso con series de 0 episodios), avgRating null y horas proporcionales en series en progreso', () => {
+    const emptyMe = createDefaultProgress('2026-12-18', 'Yo');
+    emptyMe.userRatings.non_existent_id = 5; // Debe ignorarse fuera del catálogo
+
+    const inProgressFriend = createDefaultProgress('2026-12-18', 'Wanda');
+    inProgressFriend.watchedEpisodes.series_1 = { S1E1: true }; // 1/2 de 300 min = 150 min -> 3h
+
+    const cmp = computeProgressComparison(MOCK_CATALOG, emptyMe, inProgressFriend);
+    expect(cmp.me.watchedHours).toBe(0);
+    expect(cmp.me.avgRating).toBeNull();
+    expect(cmp.friend.watchedHours).toBe(3);
+    expect(cmp.friend.avgRating).toBeNull();
+    const seriesEntry = cmp.lists.neither.find((r) => r.item.id === 'series_1');
+    expect(seriesEntry?.friendComp.watchedCount).toBe(1);
+    expect(seriesEntry?.friendComp.totalCount).toBe(2);
+  });
 });

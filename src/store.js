@@ -40,10 +40,23 @@ export function isValidIsoDate(str) {
   );
 }
 
+const BASE64URL_RE = /^[A-Za-z0-9_-]+$/;
+
+/** @param {string} str */
+function stripControlAndBidiChars(str) {
+  let out = '';
+  for (let i = 0; i < str.length; i++) {
+    const code = str.charCodeAt(i);
+    const isControl = code <= 0x1f || (code >= 0x7f && code <= 0x9f);
+    const isBidi = (code >= 0x202a && code <= 0x202e) || (code >= 0x2066 && code <= 0x2069);
+    if (!isControl && !isBidi) out += str[i];
+  }
+  return out;
+}
+
 export function sanitizeNick(nick) {
   if (typeof nick !== 'string') return '';
-  return nick
-    .replace(/[\r\n\t]+/g, ' ')
+  return stripControlAndBidiChars(nick.replace(/[\r\n\t]+/g, ' '))
     .trim()
     .slice(0, MAX_NICK_LENGTH);
 }
@@ -75,8 +88,10 @@ export function createDefaultProgress(targetDate = DEFAULT_TARGET_DATE, nick = '
 export function normalizeUserProgress(raw, current = null) {
   const fallbackDate =
     current && isValidIsoDate(current.targetDate) ? current.targetDate : DEFAULT_TARGET_DATE;
+  const fallbackNick =
+    current && typeof current.nick === 'string' ? sanitizeNick(current.nick) : '';
 
-  const base = createDefaultProgress(fallbackDate);
+  const base = createDefaultProgress(fallbackDate, fallbackNick);
   if (!isPlainObject(raw)) {
     return base;
   }
@@ -179,10 +194,13 @@ export function checkSchemaCompatibility(
 
   const imported = parseSemver(importedVersion);
   if (!imported) {
+    const safeVersion = stripControlAndBidiChars(String(importedVersion).replace(/[\r\n\t]+/g, ' '))
+      .trim()
+      .slice(0, 32);
     return {
       status: 'invalid',
       compatible: false,
-      importedVersion: String(importedVersion),
+      importedVersion: safeVersion,
       currentVersion: current.raw,
     };
   }
@@ -293,6 +311,9 @@ function bytesToBase64Url(bytes) {
 
 /** @param {string} str */
 function base64UrlToBytes(str) {
+  if (typeof str !== 'string' || !BASE64URL_RE.test(str)) {
+    throw new Error('Código Base64URL inválido');
+  }
   const normalized = str.replaceAll('-', '+').replaceAll('_', '/');
   const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4));
   const binary = atob(normalized + pad);
@@ -314,6 +335,7 @@ async function readStreamBytes(stream, maxBytes) {
       if (done) break;
       total += value.byteLength;
       if (total > maxBytes) {
+        await reader.cancel('size-limit-exceeded').catch(() => {});
         throw new Error('Código demasiado grande');
       }
       chunks.push(value);
@@ -328,6 +350,23 @@ async function readStreamBytes(stream, maxBytes) {
     offset += chunk.byteLength;
   }
   return out;
+}
+
+/** @param {CompressionStream | DecompressionStream} transform @param {BufferSource} inputBytes @param {number} maxOutputBytes */
+async function runTransformStream(transform, inputBytes, maxOutputBytes) {
+  const writer = transform.writable.getWriter();
+  const writePromise = writer.write(inputBytes).then(() => writer.close());
+  writePromise.catch(() => {});
+  try {
+    const output = await readStreamBytes(transform.readable, maxOutputBytes);
+    await writePromise;
+    return output;
+  } catch (err) {
+    await writer.abort().catch(() => {});
+    throw err;
+  } finally {
+    writer.releaseLock();
+  }
 }
 
 export function encodeSyncCode(progress, options = {}) {
@@ -348,16 +387,16 @@ export async function encodeCompressedSyncCode(progress, options = {}) {
     return btoa(encodeURIComponent(jsonStr));
   }
   const inputBytes = new TextEncoder().encode(jsonStr);
-  const cs = new CompressionStream('deflate-raw');
-  const writer = cs.writable.getWriter();
-  const writePromise = writer.write(inputBytes).then(() => writer.close());
-  const compressed = await readStreamBytes(cs.readable, MAX_SYNC_CODE_LENGTH);
-  await writePromise;
+  const compressed = await runTransformStream(
+    new CompressionStream('deflate-raw'),
+    inputBytes,
+    MAX_SYNC_CODE_LENGTH,
+  );
   return `${COMPRESSED_CODE_PREFIX}${bytesToBase64Url(compressed)}`;
 }
 
 export function extractSyncCodeFromHash(hash) {
-  if (typeof hash !== 'string' || !hash) return null;
+  if (typeof hash !== 'string' || !hash || hash.length > MAX_SYNC_CODE_LENGTH + 64) return null;
   const cleaned = hash.startsWith('#') ? hash.slice(1) : hash;
   if (!cleaned) return null;
   const params = new URLSearchParams(cleaned);
@@ -394,6 +433,9 @@ export async function decodeAnySyncCodeWithMeta(input, current = null) {
   if (!trimmed) {
     throw new Error('Código vacío');
   }
+  if (trimmed.length > MAX_SYNC_CODE_LENGTH + 256) {
+    throw new Error('Código demasiado grande');
+  }
   // Si el usuario pega el enlace completo en el cuadro de código rápido, extraer #sync=...
   const hashIdx = trimmed.indexOf('#');
   if (hashIdx !== -1) {
@@ -409,12 +451,12 @@ export async function decodeAnySyncCodeWithMeta(input, current = null) {
     }
     const payloadStr = trimmed.slice(COMPRESSED_CODE_PREFIX.length);
     const compressedBytes = base64UrlToBytes(payloadStr);
-    const ds = new DecompressionStream('deflate-raw');
-    const writer = ds.writable.getWriter();
-    const writePromise = writer.write(compressedBytes).then(() => writer.close());
-    const decompressed = await readStreamBytes(ds.readable, MAX_IMPORT_FILE_BYTES);
-    await writePromise;
-    const jsonStr = new TextDecoder().decode(decompressed);
+    const decompressed = await runTransformStream(
+      new DecompressionStream('deflate-raw'),
+      compressedBytes,
+      MAX_IMPORT_FILE_BYTES,
+    );
+    const jsonStr = new TextDecoder('utf-8', { fatal: true }).decode(decompressed);
     const parsed = JSON.parse(jsonStr);
     return importProgressPayload(parsed, current);
   }

@@ -11,6 +11,7 @@ import {
   MAX_NICK_LENGTH,
   MAX_MAP_ENTRIES,
   MAX_SYNC_CODE_LENGTH,
+  MAX_IMPORT_FILE_BYTES,
   COMPRESSED_CODE_PREFIX,
   isValidIsoDate,
   isValidIsoTimestamp,
@@ -318,5 +319,89 @@ describe('Deeplinks, compresión deflate-raw, nick y timestamp UTC (v1.1.0)', ()
     const legacyPlainCode = encodeSyncCode(progress);
     const decodedPlain = await decodeAnySyncCodeWithMeta(legacyPlainCode);
     expect(decodedPlain.progress.watchedItems).toEqual(progress.watchedItems);
+  });
+
+  test('sanitizeNick elimina caracteres de control y BiDi y checkSchemaCompatibility trunca versiones inválidas', () => {
+    expect(sanitizeNick('Tony\u202E\u0007Stark\u2066')).toBe('TonyStark');
+    const hugeInvalid = checkSchemaCompatibility('x'.repeat(200), '1.1.0');
+    expect(hugeInvalid.status).toBe('invalid');
+    expect(hugeInvalid.compatible).toBe(false);
+    expect(hugeInvalid.importedVersion?.length).toBeLessThanOrEqual(32);
+  });
+
+  test('rechaza payloads z1. corruptos, Base64URL inválido, UTF-8 inválido y decompression bombs', async () => {
+    await expect(decodeAnySyncCodeWithMeta('z1.')).rejects.toThrow();
+    await expect(decodeAnySyncCodeWithMeta('z1.!!!not-base64url!!!')).rejects.toThrow();
+    await expect(decodeAnySyncCodeWithMeta('z1.AAAA')).rejects.toThrow();
+
+    // Comprimir un payload que al descomprimir supera MAX_IMPORT_FILE_BYTES (decompression bomb)
+    const bombBytes = new TextEncoder().encode('A'.repeat(MAX_IMPORT_FILE_BYTES + 4096));
+    const cs = new CompressionStream('deflate-raw');
+    const writer = cs.writable.getWriter();
+    const wp = writer.write(bombBytes).then(() => writer.close());
+    const reader = cs.readable.getReader();
+    const chunks = [];
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+    await wp;
+    const total = chunks.reduce((acc, c) => acc + c.byteLength, 0);
+    const merged = new Uint8Array(total);
+    let offset = 0;
+    for (const c of chunks) {
+      merged.set(c, offset);
+      offset += c.byteLength;
+    }
+    let bin = '';
+    for (let i = 0; i < merged.length; i++) bin += String.fromCharCode(merged[i]);
+    const b64url = btoa(bin).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/g, '');
+
+    await expect(decodeAnySyncCodeWithMeta(`z1.${b64url}`)).rejects.toThrow(
+      'Código demasiado grande',
+    );
+  });
+
+  test('compatibilidad 1.0.0 -> 1.1.0 preserva current.nick y excluye omdbApiKey de deeplinks', async () => {
+    const current = createDefaultProgress('2026-12-18', 'MiNick');
+    const v100Payload = {
+      schemaVersion: '1.0.0',
+      watchedItems: { mcu_iron_man: true },
+      watchedEpisodes: {},
+      userRatings: {},
+      userNotes: {},
+      targetDate: '2026-12-18',
+    };
+    const legacyCode = btoa(encodeURIComponent(JSON.stringify(v100Payload)));
+    const imported = await decodeAnySyncCodeWithMeta(legacyCode, current);
+    expect(imported.compatibility.status).toBe('compatible');
+    expect(imported.meta).toEqual({ nick: '', exportedAt: null });
+    expect(imported.progress.nick).toBe('MiNick');
+
+    // Exclusión de omdbApiKey en código comprimido y deeplink
+    const leaky = {
+      ...createDefaultProgress('2026-12-18', 'Tony'),
+      omdbApiKey: 'SUPER_SECRET_KEY',
+    };
+    const code = await encodeCompressedSyncCode(leaky);
+    const link = buildShareDeeplink('https://ucm.example.com/', code);
+    expect(link).not.toContain('SUPER_SECRET_KEY');
+    const decoded = await decodeAnySyncCodeWithMeta(link);
+    expect('omdbApiKey' in decoded.progress).toBe(false);
+  });
+
+  test('extractSyncCodeFromHash maneja casos límite y saveProgressToStorage guarda nick sin exportedAt', () => {
+    expect(extractSyncCodeFromHash('')).toBeNull();
+    expect(extractSyncCodeFromHash('#')).toBeNull();
+    expect(extractSyncCodeFromHash('#foo=1&sync=z1.abc')).toBe('z1.abc');
+    expect(extractSyncCodeFromHash(`#sync=${'a'.repeat(MAX_SYNC_CODE_LENGTH + 100)}`)).toBeNull();
+
+    const storage = createMemoryStorage();
+    const progress = createDefaultProgress('2026-12-18', 'Natasha');
+    expect(saveProgressToStorage(progress, storage)).toBe(true);
+    const saved = JSON.parse(storage.getItem(LOCAL_STORAGE_KEY) || '{}');
+    expect(saved.nick).toBe('Natasha');
+    expect(saved.exportedAt).toBeUndefined();
   });
 });

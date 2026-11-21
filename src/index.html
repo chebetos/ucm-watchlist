@@ -1307,8 +1307,8 @@
               <li>
                 <code>mcu_multiverse_master_progress_v2</code>:
                 <span data-i18n="legal.s2li1"
-                  >títulos y episodios marcados, valoraciones, notas personales y fecha
-                  objetivo.</span
+                  >títulos y episodios marcados, valoraciones, notas personales, nick opcional y
+                  fecha objetivo.</span
                 >
               </li>
               <li>
@@ -1439,10 +1439,10 @@
       class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
     >
       <div
-        class="bg-marvel-card border border-sky-500/40 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl"
+        class="bg-marvel-card border border-sky-500/40 rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
       >
         <div
-          class="flex items-center justify-between px-5 py-4 border-b border-marvel-border bg-[#0B0E14]"
+          class="flex items-center justify-between px-5 py-4 border-b border-marvel-border bg-[#0B0E14] shrink-0"
         >
           <h3 id="deeplinkModalTitle" class="font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-link text-sky-400" aria-hidden="true"></i>
@@ -1458,14 +1458,14 @@
             <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
           </button>
         </div>
-        <div class="p-5 space-y-4 text-xs text-gray-300 leading-relaxed">
-          <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2">
-            <div class="flex flex-wrap items-center gap-2">
+        <div class="p-5 overflow-y-auto space-y-4 text-xs text-gray-300 leading-relaxed">
+          <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2 min-w-0">
+            <div class="flex flex-wrap items-center gap-2 min-w-0">
               <span
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-bold text-xs"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-bold text-xs min-w-0 max-w-full"
               >
-                <i class="fa-solid fa-user text-[10px]" aria-hidden="true"></i>
-                <span id="deeplinkSenderBadge"></span>
+                <i class="fa-solid fa-user text-[10px] shrink-0" aria-hidden="true"></i>
+                <span id="deeplinkSenderBadge" class="truncate"></span>
               </span>
             </div>
             <p class="text-[11px] text-gray-400 flex items-center gap-1.5">
@@ -1519,7 +1519,7 @@
       class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
     >
       <div
-        class="bg-marvel-card border border-amber-500/40 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl"
+        class="bg-marvel-card border border-amber-500/40 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl"
       >
         <h3
           id="confirmOverwriteModalTitle"

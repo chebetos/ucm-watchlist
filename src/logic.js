@@ -667,14 +667,35 @@ function getRawItemSagaMeta(item, orderMode, groupMode) {
   }
 }
 
-function computeAverageRating(ratingsMap) {
+function computeAverageRating(ratingsMap, catalogIds) {
   if (!ratingsMap || typeof ratingsMap !== 'object') return { avg: null, count: 0 };
-  const vals = Object.values(ratingsMap).filter(
-    (v) => typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 5,
-  );
+  const vals = Object.entries(ratingsMap)
+    .filter(
+      ([id, v]) =>
+        catalogIds.has(id) && typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 5,
+    )
+    .map(([, v]) => v);
   if (vals.length === 0) return { avg: null, count: 0 };
   const sum = vals.reduce((acc, n) => acc + n, 0);
   return { avg: Number((sum / vals.length).toFixed(1)), count: vals.length };
+}
+
+function computeWatchedMinutes(catalog, progress) {
+  let watchedMinutes = 0;
+  for (const item of catalog) {
+    const runtime = item.runtimeMins || 0;
+    if (runtime <= 0) continue;
+    const comp = getItemCompletionStatus(item, progress);
+    const isSeries = Array.isArray(item.seasons) && item.seasons.length > 0;
+    if (isSeries) {
+      if (comp.totalCount > 0) {
+        watchedMinutes += runtime * (comp.watchedCount / comp.totalCount);
+      }
+    } else if (comp.status === 'completed') {
+      watchedMinutes += runtime;
+    }
+  }
+  return watchedMinutes;
 }
 
 /**
@@ -682,24 +703,14 @@ function computeAverageRating(ratingsMap) {
  * sin mutar ningún estado.
  */
 export function computeProgressComparison(catalog, localProgress, friendProgress) {
+  const catalogIds = new Set(catalog.map((i) => i.id));
   const meStats = computeGlobalStats(catalog, localProgress);
   const friendStats = computeGlobalStats(catalog, friendProgress);
-  const meRatings = computeAverageRating(localProgress?.userRatings);
-  const friendRatings = computeAverageRating(friendProgress?.userRatings);
+  const meRatings = computeAverageRating(localProgress?.userRatings, catalogIds);
+  const friendRatings = computeAverageRating(friendProgress?.userRatings, catalogIds);
 
-  let totalCatalogMinutes = 0;
-  for (const item of catalog) {
-    totalCatalogMinutes += item.runtimeMins || 0;
-  }
-
-  const meWatchedHours = Math.max(
-    0,
-    Math.round((totalCatalogMinutes - meStats.remainingMinutes) / 60),
-  );
-  const friendWatchedHours = Math.max(
-    0,
-    Math.round((totalCatalogMinutes - friendStats.remainingMinutes) / 60),
-  );
+  const meWatchedHours = Math.round(computeWatchedMinutes(catalog, localProgress) / 60);
+  const friendWatchedHours = Math.round(computeWatchedMinutes(catalog, friendProgress) / 60);
 
   const both = [];
   const onlyFriend = [];

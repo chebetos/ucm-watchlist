@@ -928,9 +928,11 @@ export function renderCompareModal(catalog, localProgress, incoming, activeTab =
         : 'bg-[#0B0E14] text-gray-300 hover:text-white border-marvel-border';
       return `
         <button type="button"
+            role="tab"
+            aria-selected="${isActive}"
             data-action="compare-tab"
             data-compare-tab="${tab.id}"
-            class="px-3 py-1.5 rounded-lg border text-xs font-bold transition whitespace-nowrap shrink-0 cursor-pointer ${cls}">
+            class="px-3 py-1.5 rounded-lg border text-xs font-bold transition max-w-full truncate shrink-0 cursor-pointer ${cls}">
           ${escapeHtml(tab.label)}
         </button>
       `;
@@ -950,11 +952,13 @@ export function renderCompareModal(catalog, localProgress, incoming, activeTab =
                      ${friendRating ? `<span class="text-sky-400 font-bold" title="${escapeHtml(nickDisplay)}">★ ${friendRating}</span>` : ''}
                    </div>`
                 : '';
+            const isSeriesWithEps =
+              Array.isArray(item.seasons) && item.seasons.length > 0 && myComp.totalCount > 0;
             const epInfo =
-              myComp.totalEpisodes > 0 &&
+              isSeriesWithEps &&
               (myComp.status === 'in_progress' || friendComp.status === 'in_progress')
                 ? `<span class="text-[10px] text-gray-400">
-                     ${escapeHtml(t('compare.you'))}: ${myComp.watchedEpisodes}/${myComp.totalEpisodes} • ${escapeHtml(nickDisplay)}: ${friendComp.watchedEpisodes}/${friendComp.totalEpisodes}
+                     ${escapeHtml(t('compare.you'))}: ${myComp.watchedCount}/${myComp.totalCount} • ${escapeHtml(nickDisplay)}: ${friendComp.watchedCount}/${friendComp.totalCount}
                    </span>`
                 : '';
 
@@ -982,7 +986,7 @@ export function renderCompareModal(catalog, localProgress, incoming, activeTab =
       ${renderCompareStatCard(myNick, cmp.me, 'border-emerald-500/35', 'text-emerald-400')}
       ${renderCompareStatCard(nickDisplay, cmp.friend, 'border-sky-500/35', 'text-sky-400')}
     </div>
-    <div class="flex flex-wrap items-center gap-1.5 pt-1">
+    <div role="tablist" class="flex flex-wrap items-center gap-1.5 pt-1">
       ${tabsHtml}
     </div>
     <div class="space-y-1.5 max-h-80 overflow-y-auto pr-1">

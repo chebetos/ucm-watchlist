@@ -67,7 +67,10 @@ const collapsedGroups = {};
 let currentOpenItemId = null;
 let toastTimeout = null;
 let pendingIncomingShare = null;
+let pendingImportSource = 'progress';
 let activeCompareTab = 'both';
+let syncOutputSeq = 0;
+let deeplinkRequestSeq = 0;
 
 const mediaApi = createMediaApi({
   onPosterResolved: (itemId, url) => applyPosterToDom(itemId, url),
@@ -158,10 +161,23 @@ function openModal(id) {
   if (modal) modal.classList.remove('hidden');
 }
 
+function isModalVisible(id) {
+  const modal = document.getElementById(id);
+  return Boolean(modal && !modal.classList.contains('hidden'));
+}
+
 function closeModal(id) {
   const modal = document.getElementById(id);
   if (modal) modal.classList.add('hidden');
   if (id === 'detailModal') currentOpenItemId = null;
+  if (
+    (id === 'deeplinkModal' || id === 'compareModal' || id === 'confirmOverwriteModal') &&
+    !isModalVisible('deeplinkModal') &&
+    !isModalVisible('compareModal') &&
+    !isModalVisible('confirmOverwriteModal')
+  ) {
+    pendingIncomingShare = null;
+  }
 }
 
 function closeActiveModal() {
@@ -503,8 +519,8 @@ function markVisibleAsWatched() {
 }
 
 function resetAllProgress() {
-  // Preserva targetDate y mantiene intacta la clave OMDb (almacenada por separado)
-  userProgress = createDefaultProgress(userProgress.targetDate);
+  // Preserva targetDate y nick; mantiene intacta la clave OMDb (almacenada por separado)
+  userProgress = createDefaultProgress(userProgress.targetDate, userProgress.nick);
   saveProgress();
   renderApp();
   closeModal('confirmResetModal');
@@ -580,17 +596,25 @@ function getExportOptionsFromModal() {
 }
 
 async function refreshSyncModalOutputs() {
-  const { includeNotes, nick } = getExportOptionsFromModal();
-  const code = await encodeCompressedSyncCode(userProgress, { includeNotes, nick });
-  const textarea = getFormField('syncCodeTextarea');
-  if (textarea) textarea.value = code;
-  const linkInput = getFormField('shareDeeplinkInput');
-  if (linkInput) {
-    linkInput.value = buildShareDeeplink(window.location.href, code);
+  const seq = ++syncOutputSeq;
+  try {
+    const { includeNotes, nick } = getExportOptionsFromModal();
+    const code = await encodeCompressedSyncCode(userProgress, { includeNotes, nick });
+    if (seq !== syncOutputSeq) return;
+    const textarea = getFormField('syncCodeTextarea');
+    if (textarea) textarea.value = code;
+    const linkInput = getFormField('shareDeeplinkInput');
+    if (linkInput) {
+      linkInput.value = buildShareDeeplink(window.location.href, code);
+    }
+  } catch {
+    if (seq === syncOutputSeq) {
+      showToast(t('toast.invalidCode'));
+    }
   }
 }
 
-function handleExportNickInput() {
+const debouncedExportNickInput = debounce(() => {
   const nickInput = getFormField('exportNickInput');
   if (!nickInput) return;
   const cleaned = sanitizeNick(nickInput.value);
@@ -599,12 +623,19 @@ function handleExportNickInput() {
     saveProgress();
   }
   void refreshSyncModalOutputs();
+}, 250);
+
+function handleExportNickInput() {
+  debouncedExportNickInput();
 }
 
 async function handleCopyShareLink() {
-  await refreshSyncModalOutputs();
   const linkInput = getFormField('shareDeeplinkInput');
-  const url = linkInput ? linkInput.value.trim() : '';
+  let url = linkInput ? linkInput.value.trim() : '';
+  if (!url) {
+    await refreshSyncModalOutputs();
+    url = linkInput ? linkInput.value.trim() : '';
+  }
   if (!url) return;
   const ok = await copyToClipboard(url, linkInput);
   showToast(ok ? t('toast.linkCopied') : t('toast.linkCopyFallback'));
@@ -612,9 +643,12 @@ async function handleCopyShareLink() {
 
 async function handleNativeShareLink() {
   if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return;
-  await refreshSyncModalOutputs();
   const linkInput = getFormField('shareDeeplinkInput');
-  const url = linkInput ? linkInput.value.trim() : '';
+  let url = linkInput ? linkInput.value.trim() : '';
+  if (!url) {
+    await refreshSyncModalOutputs();
+    url = linkInput ? linkInput.value.trim() : '';
+  }
   if (!url) return;
   try {
     await navigator.share({
@@ -635,8 +669,12 @@ async function handleNativeShareLink() {
 async function handleCopySyncCode() {
   const textarea = getFormField('syncCodeTextarea');
   if (!textarea) return;
-  await refreshSyncModalOutputs();
-  const code = textarea.value.trim();
+  let code = textarea.value.trim();
+  if (!code) {
+    await refreshSyncModalOutputs();
+    code = textarea.value.trim();
+  }
+  if (!code) return;
   const ok = await copyToClipboard(code, textarea);
   showToast(ok ? t('toast.codeCopied') : t('toast.codeCopyFallback'));
 }
@@ -665,6 +703,7 @@ async function handleImportSyncCode() {
   try {
     const incoming = await decodeAnySyncCodeWithMeta(raw, userProgress);
     pendingIncomingShare = incoming;
+    pendingImportSource = 'progress';
     closeModal('syncModal');
     renderOverwriteConfirmModal(MCU_CATALOG, userProgress, incoming);
     openModal('confirmOverwriteModal');
@@ -681,6 +720,8 @@ async function checkIncomingDeeplinkHash() {
   const code = extractSyncCodeFromHash(window.location.hash);
   if (!code) return;
 
+  const reqSeq = ++deeplinkRequestSeq;
+
   // Limpiar el fragmento de la URL para evitar reabrir el modal al recargar
   try {
     window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
@@ -690,10 +731,15 @@ async function checkIncomingDeeplinkHash() {
 
   try {
     const incoming = await decodeAnySyncCodeWithMeta(code, userProgress);
+    if (reqSeq !== deeplinkRequestSeq) return;
+    closeModal('confirmOverwriteModal');
+    closeModal('compareModal');
     pendingIncomingShare = incoming;
+    pendingImportSource = 'deeplink';
     renderDeeplinkModal(MCU_CATALOG, incoming);
     openModal('deeplinkModal');
   } catch (err) {
+    if (reqSeq !== deeplinkRequestSeq) return;
     const msg =
       err instanceof Error && err.message.startsWith('Versión de esquema')
         ? err.message
@@ -704,31 +750,34 @@ async function checkIncomingDeeplinkHash() {
 
 function handleOpenCompareFromDeeplink() {
   if (!pendingIncomingShare) return;
-  closeModal('deeplinkModal');
   activeCompareTab = 'both';
   renderCompareModal(MCU_CATALOG, userProgress, pendingIncomingShare, activeCompareTab);
   openModal('compareModal');
+  closeModal('deeplinkModal');
 }
 
 function handleRequestOverwriteConfirm() {
   if (!pendingIncomingShare) return;
-  closeModal('deeplinkModal');
-  closeModal('compareModal');
   renderOverwriteConfirmModal(MCU_CATALOG, userProgress, pendingIncomingShare);
   openModal('confirmOverwriteModal');
+  closeModal('deeplinkModal');
+  closeModal('compareModal');
 }
 
 function handleConfirmOverwriteImport() {
   if (!pendingIncomingShare) return;
   const { progress, compatibility, meta } = pendingIncomingShare;
+  const source = pendingImportSource;
   userProgress = progress;
   const targetInput = getFormField('targetDateInput');
   if (targetInput) targetInput.value = userProgress.targetDate;
   saveProgress();
   renderApp();
-  closeModal('confirmOverwriteModal');
   pendingIncomingShare = null;
-  if (meta?.nick) {
+  closeModal('confirmOverwriteModal');
+  if (source === 'json') {
+    showToast(formatImportSuccessToast(compatibility, t('toast.sourceJson')));
+  } else if (meta?.nick) {
     showToast(t('toast.deeplinkImported', { nick: meta.nick }));
   } else {
     showToast(formatImportSuccessToast(compatibility, t('toast.sourceProgress')));
@@ -764,14 +813,12 @@ function handleUploadJsonBackup(event) {
   reader.addEventListener('load', (e) => {
     try {
       const parsed = JSON.parse(String(e.target?.result ?? ''));
-      const { progress, compatibility } = importProgressPayload(parsed, userProgress);
-      userProgress = progress;
-      const targetInput = getFormField('targetDateInput');
-      if (targetInput) targetInput.value = userProgress.targetDate;
-      saveProgress();
-      renderApp();
+      const incoming = importProgressPayload(parsed, userProgress);
+      pendingIncomingShare = incoming;
+      pendingImportSource = 'json';
       closeModal('syncModal');
-      showToast(formatImportSuccessToast(compatibility, t('toast.sourceJson')));
+      renderOverwriteConfirmModal(MCU_CATALOG, userProgress, incoming);
+      openModal('confirmOverwriteModal');
     } catch (err) {
       const msg =
         err instanceof Error && err.message.startsWith('Versión de esquema')
@@ -873,6 +920,18 @@ async function handleToggleLang() {
         phaseBadge.textContent = `${getLocalizedPhase(item.phase)} • ${item.timelineYear}`;
       }
       renderDetailModalBody(item, { filterState, userProgress, mediaApi });
+    }
+  }
+
+  if (pendingIncomingShare) {
+    if (isModalVisible('deeplinkModal')) {
+      renderDeeplinkModal(MCU_CATALOG, pendingIncomingShare);
+    }
+    if (isModalVisible('compareModal')) {
+      renderCompareModal(MCU_CATALOG, userProgress, pendingIncomingShare, activeCompareTab);
+    }
+    if (isModalVisible('confirmOverwriteModal')) {
+      renderOverwriteConfirmModal(MCU_CATALOG, userProgress, pendingIncomingShare);
     }
   }
   showToast(t('toast.langSwitched'));
