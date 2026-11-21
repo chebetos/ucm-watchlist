@@ -71,6 +71,13 @@ let pendingImportSource = 'progress';
 let activeCompareTab = 'both';
 let syncOutputSeq = 0;
 let deeplinkRequestSeq = 0;
+/** @type {{ code: string, url: string } | null} */
+let latestLocalExport = null;
+/** @type {Promise<void> | null} */
+let pendingSyncRefreshPromise = null;
+let syncTextareaDirty = false;
+/** @type {HTMLElement | null} */
+let modalReturnFocusEl = null;
 
 const mediaApi = createMediaApi({
   onPosterResolved: (itemId, url) => applyPosterToDom(itemId, url),
@@ -145,8 +152,70 @@ const MODAL_IDS = [
   'confirmOverwriteModal',
 ];
 
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function getTopmostVisibleModal() {
+  for (let i = MODAL_IDS.length - 1; i >= 0; i--) {
+    const modal = document.getElementById(MODAL_IDS[i]);
+    if (modal && !modal.classList.contains('hidden')) {
+      return modal;
+    }
+  }
+  return null;
+}
+
+/** @param {HTMLElement} container */
+function getFocusableElements(container) {
+  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTOR)).filter((el) => {
+    if (!(el instanceof HTMLElement)) return false;
+    return !el.classList.contains('hidden') && el.offsetParent !== null;
+  });
+}
+
+/** @param {HTMLElement} modal */
+function focusFirstElementInModal(modal) {
+  const focusables = getFocusableElements(modal);
+  if (focusables.length > 0 && focusables[0] instanceof HTMLElement) {
+    focusables[0].focus();
+    return;
+  }
+  if (!modal.hasAttribute('tabindex')) {
+    modal.setAttribute('tabindex', '-1');
+  }
+  modal.focus();
+}
+
+/** @param {KeyboardEvent} e */
+function handleModalTabTrap(e) {
+  const modal = getTopmostVisibleModal();
+  if (!modal) return;
+  const focusables = getFocusableElements(modal);
+  if (focusables.length === 0) {
+    e.preventDefault();
+    return;
+  }
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+  const active = document.activeElement;
+  if (e.shiftKey) {
+    if (active === first || !(active instanceof Node) || !modal.contains(active)) {
+      e.preventDefault();
+      if (last instanceof HTMLElement) last.focus();
+    }
+  } else if (active === last || !(active instanceof Node) || !modal.contains(active)) {
+    e.preventDefault();
+    if (first instanceof HTMLElement) first.focus();
+  }
+}
+
 function openModal(id) {
+  const anyAlreadyOpen = getTopmostVisibleModal() !== null;
+  if (!anyAlreadyOpen && document.activeElement instanceof HTMLElement) {
+    modalReturnFocusEl = document.activeElement;
+  }
   if (id === 'syncModal') {
+    syncTextareaDirty = false;
     const nickInput = getFormField('exportNickInput');
     if (nickInput) nickInput.value = userProgress.nick || '';
     const shareBtn = document.getElementById('btnNativeShareLink');
@@ -158,7 +227,10 @@ function openModal(id) {
     void refreshSyncModalOutputs();
   }
   const modal = document.getElementById(id);
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    focusFirstElementInModal(modal);
+  }
 }
 
 function isModalVisible(id) {
@@ -177,6 +249,13 @@ function closeModal(id) {
     !isModalVisible('confirmOverwriteModal')
   ) {
     pendingIncomingShare = null;
+  }
+  if (!getTopmostVisibleModal() && modalReturnFocusEl) {
+    const returnEl = modalReturnFocusEl;
+    modalReturnFocusEl = null;
+    if (returnEl.isConnected && returnEl.offsetParent !== null) {
+      returnEl.focus();
+    }
   }
 }
 
@@ -597,21 +676,39 @@ function getExportOptionsFromModal() {
 
 async function refreshSyncModalOutputs() {
   const seq = ++syncOutputSeq;
-  try {
-    const { includeNotes, nick } = getExportOptionsFromModal();
-    const code = await encodeCompressedSyncCode(userProgress, { includeNotes, nick });
-    if (seq !== syncOutputSeq) return;
-    const textarea = getFormField('syncCodeTextarea');
-    if (textarea) textarea.value = code;
-    const linkInput = getFormField('shareDeeplinkInput');
-    if (linkInput) {
-      linkInput.value = buildShareDeeplink(window.location.href, code);
+  // Invalidar de inmediato la exportación previa para no compartir datos obsoletos (p. ej. notas recién excluidas)
+  latestLocalExport = null;
+  const linkInput = getFormField('shareDeeplinkInput');
+  if (linkInput) linkInput.value = '';
+  const textarea = getFormField('syncCodeTextarea');
+  if (textarea && !syncTextareaDirty) textarea.value = '';
+
+  const run = (async () => {
+    try {
+      const { includeNotes, nick } = getExportOptionsFromModal();
+      const code = await encodeCompressedSyncCode(userProgress, { includeNotes, nick });
+      if (seq !== syncOutputSeq) return;
+      const url = buildShareDeeplink(window.location.href, code);
+      latestLocalExport = { code, url };
+      if (linkInput) linkInput.value = url;
+      if (textarea && !syncTextareaDirty) textarea.value = code;
+    } catch (err) {
+      if (seq === syncOutputSeq) {
+        latestLocalExport = null;
+        if (linkInput) linkInput.value = '';
+        if (textarea && !syncTextareaDirty) textarea.value = '';
+        const isTooLarge = err instanceof Error && err.message === 'Código demasiado grande';
+        showToast(isTooLarge ? t('toast.exportTooLarge') : t('toast.invalidCode'));
+      }
+    } finally {
+      if (seq === syncOutputSeq) {
+        pendingSyncRefreshPromise = null;
+      }
     }
-  } catch {
-    if (seq === syncOutputSeq) {
-      showToast(t('toast.invalidCode'));
-    }
-  }
+  })();
+
+  pendingSyncRefreshPromise = run;
+  return run;
 }
 
 const debouncedExportNickInput = debounce(() => {
@@ -626,56 +723,58 @@ const debouncedExportNickInput = debounce(() => {
 }, 250);
 
 function handleExportNickInput() {
+  latestLocalExport = null;
+  const linkInput = getFormField('shareDeeplinkInput');
+  if (linkInput) linkInput.value = '';
   debouncedExportNickInput();
 }
 
-async function handleCopyShareLink() {
-  const linkInput = getFormField('shareDeeplinkInput');
-  let url = linkInput ? linkInput.value.trim() : '';
-  if (!url) {
-    await refreshSyncModalOutputs();
-    url = linkInput ? linkInput.value.trim() : '';
+async function ensureFreshLocalExport() {
+  if (latestLocalExport) return latestLocalExport;
+  if (pendingSyncRefreshPromise) {
+    await pendingSyncRefreshPromise;
+    return latestLocalExport;
   }
-  if (!url) return;
-  const ok = await copyToClipboard(url, linkInput);
+  await refreshSyncModalOutputs();
+  return latestLocalExport;
+}
+
+async function handleCopyShareLink() {
+  const exp = latestLocalExport || (await ensureFreshLocalExport());
+  if (!exp) return;
+  const linkInput = getFormField('shareDeeplinkInput');
+  const ok = await copyToClipboard(exp.url, linkInput);
   showToast(ok ? t('toast.linkCopied') : t('toast.linkCopyFallback'));
 }
 
 async function handleNativeShareLink() {
   if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return;
+  const exp = latestLocalExport || (await ensureFreshLocalExport());
+  if (!exp) return;
   const linkInput = getFormField('shareDeeplinkInput');
-  let url = linkInput ? linkInput.value.trim() : '';
-  if (!url) {
-    await refreshSyncModalOutputs();
-    url = linkInput ? linkInput.value.trim() : '';
-  }
-  if (!url) return;
   try {
     await navigator.share({
       title: t('meta.title'),
       text: userProgress.nick
         ? t('deeplink.fromUser', { nick: userProgress.nick })
         : t('meta.title'),
-      url,
+      url: exp.url,
     });
     showToast(t('toast.linkShared'));
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') return;
-    const ok = await copyToClipboard(url, linkInput);
+    const ok = await copyToClipboard(exp.url, linkInput);
     showToast(ok ? t('toast.linkCopied') : t('toast.linkCopyFallback'));
   }
 }
 
 async function handleCopySyncCode() {
   const textarea = getFormField('syncCodeTextarea');
-  if (!textarea) return;
-  let code = textarea.value.trim();
-  if (!code) {
-    await refreshSyncModalOutputs();
-    code = textarea.value.trim();
-  }
-  if (!code) return;
-  const ok = await copyToClipboard(code, textarea);
+  const exp = latestLocalExport || (await ensureFreshLocalExport());
+  if (!exp) return;
+  syncTextareaDirty = false;
+  if (textarea) textarea.value = exp.code;
+  const ok = await copyToClipboard(exp.code, textarea);
   showToast(ok ? t('toast.codeCopied') : t('toast.codeCopyFallback'));
 }
 
@@ -1124,15 +1223,20 @@ function bindEvents() {
     });
   });
 
-  // Cierre con tecla Escape
+  // Cierre con tecla Escape y focus trap con Tab dentro del modal activo
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       closeActiveModal();
+    } else if (e.key === 'Tab') {
+      handleModalTabTrap(e);
     }
   });
 
   // Sync / Backup / Deeplink / Compare / OMDb / PWA
   document.getElementById('exportNickInput')?.addEventListener('input', handleExportNickInput);
+  document.getElementById('syncCodeTextarea')?.addEventListener('input', () => {
+    syncTextareaDirty = true;
+  });
   document
     .getElementById('exportIncludeNotesCheckbox')
     ?.addEventListener('change', () => void refreshSyncModalOutputs());

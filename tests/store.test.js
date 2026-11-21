@@ -404,4 +404,23 @@ describe('Deeplinks, compresión deflate-raw, nick y timestamp UTC (v1.1.0)', ()
     expect(saved.nick).toBe('Natasha');
     expect(saved.exportedAt).toBeUndefined();
   });
+
+  test('encodeCompressedSyncCode rechaza perfiles cuya serialización UTF-8 supera MAX_IMPORT_FILE_BYTES pero permite includeNotes: false', async () => {
+    const huge = createDefaultProgress('2026-12-18', 'Bruce');
+    // 100 notas de 2000 caracteres CJK (~600 KB UTF-8, supera MAX_IMPORT_FILE_BYTES = 512 KB)
+    const cjkNote = '漢'.repeat(2000);
+    for (let i = 0; i < 100; i++) {
+      huge.userNotes[`item_${i}`] = cjkNote;
+    }
+
+    await expect(encodeCompressedSyncCode(huge, { includeNotes: true })).rejects.toThrow(
+      'Código demasiado grande',
+    );
+
+    const withoutNotesCode = await encodeCompressedSyncCode(huge, { includeNotes: false });
+    expect(withoutNotesCode.startsWith(COMPRESSED_CODE_PREFIX)).toBe(true);
+    const decoded = await decodeAnySyncCodeWithMeta(withoutNotesCode);
+    expect(decoded.progress.userNotes).toEqual({});
+    expect(decoded.meta.nick).toBe('Bruce');
+  });
 });

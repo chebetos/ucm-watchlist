@@ -383,10 +383,13 @@ export function encodeSyncCode(progress, options = {}) {
  */
 export async function encodeCompressedSyncCode(progress, options = {}) {
   const jsonStr = JSON.stringify(getExportableProgress(progress, options));
+  const inputBytes = new TextEncoder().encode(jsonStr);
+  if (inputBytes.byteLength > MAX_IMPORT_FILE_BYTES) {
+    throw new Error('Código demasiado grande');
+  }
   if (typeof CompressionStream === 'undefined') {
     return btoa(encodeURIComponent(jsonStr));
   }
-  const inputBytes = new TextEncoder().encode(jsonStr);
   const compressed = await runTransformStream(
     new CompressionStream('deflate-raw'),
     inputBytes,

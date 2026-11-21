@@ -275,6 +275,8 @@ export const TRANSLATIONS = {
     'toast.linkShared': 'Enlace compartido',
     'toast.deeplinkInvalid': 'El enlace recibido no contiene un código de progreso válido',
     'toast.deeplinkImported': 'Progreso de {nick} incorporado correctamente',
+    'toast.exportTooLarge':
+      'La exportación supera el límite de 512 KB; prueba a desmarcar «Incluir notas personales»',
     'toast.pasteValidCode': 'Pega primero un código válido',
     'toast.invalidCode': 'El código introducido no tiene un formato válido',
     'toast.jsonDownloaded': 'Archivo JSON descargado',
@@ -570,6 +572,8 @@ export const TRANSLATIONS = {
     'toast.linkShared': 'Link shared',
     'toast.deeplinkInvalid': 'The received link does not contain a valid progress code',
     'toast.deeplinkImported': 'Progress from {nick} imported successfully',
+    'toast.exportTooLarge':
+      'Export exceeds the 512 KB limit; try unchecking "Include personal notes"',
     'toast.pasteValidCode': 'Paste a valid code first',
     'toast.invalidCode': 'The entered code is not in a valid format',
     'toast.jsonDownloaded': 'JSON backup downloaded',

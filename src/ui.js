@@ -981,6 +981,13 @@ export function renderCompareModal(catalog, localProgress, incoming, activeTab =
           })
           .join('');
 
+  const activeEl = typeof document !== 'undefined' ? document.activeElement : null;
+  const shouldRestoreTabFocus = Boolean(
+    activeEl instanceof Element &&
+    body.contains(activeEl) &&
+    activeEl.closest('[data-action="compare-tab"]'),
+  );
+
   body.innerHTML = `
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       ${renderCompareStatCard(myNick, cmp.me, 'border-emerald-500/35', 'text-emerald-400')}
@@ -993,4 +1000,11 @@ export function renderCompareModal(catalog, localProgress, incoming, activeTab =
       ${listHtml}
     </div>
   `;
+
+  if (shouldRestoreTabFocus) {
+    const replacementTab = body.querySelector(`[data-compare-tab="${validTab}"]`);
+    if (replacementTab instanceof HTMLElement) {
+      replacementTab.focus();
+    }
+  }
 }
