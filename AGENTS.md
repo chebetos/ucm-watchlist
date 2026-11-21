@@ -32,9 +32,15 @@
   - **MINOR (`1.Y.0`):** incorporación de campos opcionales retrocompatibles (los backups con el mismo `MAJOR` siguen siendo importables).
   - **PATCH (`1.0.Z`):** ajustes de documentación, descripciones o aclaraciones del esquema que no afectan a la compatibilidad de payloads existentes.
 
+## Historial de Requisitos (`docs/REQUIREMENTS.md`)
+
+- **Fuente de verdad en inglés:** el historial completo de requisitos funcionales (`FR-*`) y no funcionales (`NFR-*`) del proyecto se mantiene en `docs/REQUIREMENTS.md` en inglés, con una breve _User Story_ o _Job Story_ y 1–2 _Acceptance Criteria_ en formato Gherkin por requisito.
+- **Actualización obligatoria y política _append-only_:** siempre que se introduzca un nuevo requisito o se modifique una funcionalidad existente, se debe actualizar `docs/REQUIREMENTS.md`. **Si una funcionalidad cambia, nunca se elimina ni reescribe el requisito original:** se añade un nuevo requisito de actualización (`Updates: FR-XXX` / `NFR-XXX`) y se marca el original como `Updated by <NUEVO-ID>`.
+
 ## Flujo de Trabajo y Git
 
 - Introducir todos los cambios mediante ramas dedicadas y Pull Requests hacia `main` (no hacer commits ni `push` directamente sobre `main`).
+- **Antes de cerrar o mergear una rama/PR**, verificar que `docs/REQUIREMENTS.md` está actualizado con todos los requisitos nuevos o modificados introducidos en la rama.
 - Ejecutar siempre `bun test` y `bun run build` antes de commitear cambios.
 - Verificar que `git config user.email` en este repo personal usa el correo personal (no corporativo).
 - No ejecutar `git push` sin confirmación explícita del usuario.

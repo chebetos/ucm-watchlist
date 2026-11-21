@@ -1,6 +1,6 @@
 # MCU & Multiverse — Unofficial Watchlist Tracker
 
-> [Leer en español](./README.es.md)
+> [Leer en español](./README.es.md) · [Requirements History (Gherkin)](./docs/REQUIREMENTS.md)
 
 A non-profit, fan-made static web app (PWA) to track movies, TV series, specials, and canon comics across the Marvel Cinematic Universe and the Multiverse.
 
