@@ -1,3 +1,156 @@
+import { getLang, t } from './i18n.js';
+
+const SAGA_META_EN = {
+  strict_fase_1: {
+    saga: 'THE INFINITY SAGA',
+    title: 'Phase 1: Avengers Assembled (2008–2012)',
+    subtitle: 'The birth of the founding heroes and the first gathering of the Avengers',
+  },
+  strict_fase_2: {
+    saga: 'THE INFINITY SAGA',
+    title: 'Phase 2: Cosmic Expansion & Fall of S.H.I.E.L.D. (2013–2015)',
+    subtitle: 'From the aftermath of New York to the Age of Ultron and the Quantum Realm',
+  },
+  strict_fase_3: {
+    saga: 'THE INFINITY SAGA',
+    title: 'Phase 3: Civil War & Infinity War (2016–2019)',
+    subtitle: 'From the fracture of the Avengers to the Snap and Avengers: Endgame',
+  },
+  strict_era_marvel_tv: {
+    saga: 'MARVEL TELEVISION ERA',
+    title: 'ABC, Netflix (The Defenders) & Hulu / Freeform Series (2013–2020)',
+    subtitle:
+      'Agents of S.H.I.E.L.D., Agent Carter, Daredevil, Jessica Jones, Punisher, Runaways & Cloak & Dagger',
+  },
+  strict_era_fox_sony: {
+    saga: 'MULTIVERSAL LEGACY',
+    title: 'Fox Era (X-Men, Deadpool, F4) & Sony / Spider-Verse (2000–2024)',
+    subtitle:
+      'Parallel Earths whose heroes converge in No Way Home, Deadpool & Wolverine, and Doomsday',
+  },
+  strict_fase_4: {
+    saga: 'THE MULTIVERSE SAGA',
+    title: 'Phase 4: Awakening of the Multiverse & New Legacies (2021–2022)',
+    subtitle:
+      'From WandaVision and Loki S1 to Spider-Man: No Way Home, Multiverse of Madness, and Wakanda Forever',
+  },
+  strict_fase_5: {
+    saga: 'THE MULTIVERSE SAGA',
+    title: 'Phase 5: Incursions, TVA & New Avengers (2023–2025)',
+    subtitle:
+      'From Quantumania and Loki S2 to Deadpool & Wolverine, Daredevil: Born Again, and Thunderbolts*',
+  },
+  strict_fase_6: {
+    saga: 'THE MULTIVERSE SAGA',
+    title: 'Phase 6: Final Collision — Doomsday & Secret Wars (2025–2027)',
+    subtitle:
+      'The Fantastic Four: First Steps, Spider-Man: Brand New Day, VisionQuest, Doomsday, and Secret Wars',
+  },
+  chrono_era_1: {
+    saga: 'MCU ORIGINS & S.S.R. ERA',
+    title: 'Era 1: Antiquity, World War II & Post-War (1200 BC – 1947)',
+    subtitle: 'Eyes of Wakanda, The First Avenger, and both seasons of Agent Carter',
+  },
+  chrono_era_2: {
+    saga: 'EARLY MULTIVERSAL & COSMIC ERA',
+    title: 'Era 2: 1960s–1990s — First Mutants, Earth-828 & Captain Marvel (1962–1995)',
+    subtitle: 'X-Men in the 60s–90s, The Fantastic Four on Earth-828, and Carol Danvers in 1995',
+  },
+  chrono_era_3: {
+    saga: 'PRE-MCU ERA: FOX & SONY LEGACY',
+    title: 'Era 3: Dawn of the Multiverse Heroes (2000–2007)',
+    subtitle:
+      'Original X-Men trilogy, Sam Raimi Spider-Man trilogy, Daredevil (2003), and Fantastic Four (2005)',
+  },
+  chrono_fase_1: {
+    saga: 'THE INFINITY SAGA • PHASE 1',
+    title: 'Chronological Phase 1: The Avengers Initiative (2008–2012)',
+    subtitle: 'From Iron Man to the Battle of New York in The Avengers (+ The Amazing Spider-Man)',
+  },
+  chrono_fase_2: {
+    saga: 'THE INFINITY SAGA • PHASE 2 + ABC & NETFLIX',
+    title: 'Chronological Phase 2: Fall of S.H.I.E.L.D., Defenders & Age of Ultron (2013–2015)',
+    subtitle:
+      'Phase 2 films interleaved with Agents of S.H.I.E.L.D. (S1–S2), Daredevil (S1–S2), Jessica Jones (S1), and Luke Cage (S1)',
+  },
+  chrono_fase_3: {
+    saga: 'THE INFINITY SAGA • PHASE 3 + MARVEL TV & MULTIVERSE',
+    title: 'Chronological Phase 3: From Civil War to Avengers: Infinity War (2016–2018)',
+    subtitle:
+      'Phase 3 films interleaved with Agents of S.H.I.E.L.D. (S3–S5), The Defenders, Punisher, Runaways, Cloak & Dagger, Deadpool, and Venom',
+  },
+  chrono_blip_endgame: {
+    saga: 'THE INFINITY SAGA • THE BLIP & CLIMAX',
+    title: 'Phase 3 (Epilogue): The Blip Years & Avengers: Endgame (2019–2023)',
+    subtitle:
+      'Agents of S.H.I.E.L.D. (S6–S7), Helstrom, Spider-Verse ties, and the final battle against Thanos',
+  },
+  chrono_fase_4: {
+    saga: 'THE MULTIVERSE SAGA • PHASE 4',
+    title: 'Chronological Phase 4: The TVA & First Cracks in the Multiverse (2023–2025)',
+    subtitle:
+      'Loki (S1–S2), WandaVision, No Way Home, Multiverse of Madness, Wakanda Forever, and new Disney+ series',
+  },
+  chrono_fase_5: {
+    saga: 'THE MULTIVERSE SAGA • PHASE 5',
+    title: 'Chronological Phase 5: Incursions, Mayor Fisk & New Avengers (2026–2027)',
+    subtitle:
+      'From Quantumania, Guardians Vol. 3, and The Marvels to Daredevil: Born Again (S1), Brave New World, and Thunderbolts*',
+  },
+  chrono_fase_6: {
+    saga: 'THE MULTIVERSE SAGA • PHASE 6',
+    title: 'Chronological Phase 6: Road to Avengers: Doomsday & Secret Wars (2027–2029)',
+    subtitle:
+      'Born Again (S2), Spider-Man: Brand New Day, VisionQuest, Logan, Deadpool & Wolverine, Doomsday, and Secret Wars',
+  },
+  rel_era_pre_mcu: {
+    saga: 'PRE-MCU ERA: FOX & SONY LEGACY',
+    title: 'Pre-MCU Era: X-Men, Spider-Man (Raimi), Daredevil & Fantastic Four (2000–2007)',
+    subtitle:
+      'Foundational classics whose casts return in No Way Home, Deadpool & Wolverine, and Doomsday',
+  },
+  rel_fase_1: {
+    saga: 'THE INFINITY SAGA • PHASE 1',
+    title: 'Phase 1 (2008–2012): From Iron Man to The Avengers',
+    subtitle: 'Phase 1 movies, One-Shots, and prelude comics (+ 2009–2012 multiverse releases)',
+  },
+  rel_fase_2: {
+    saga: 'THE INFINITY SAGA • PHASE 2 + ABC / NETFLIX ERA',
+    title: 'Phase 2 (2013–2015): From Iron Man 3 to Ant-Man + S.H.I.E.L.D. & Daredevil Debut',
+    subtitle:
+      'Phase 2 films interleaved by release date with Agents of S.H.I.E.L.D. (S1–S2), Agent Carter (S1), Daredevil (S1), and Jessica Jones (S1)',
+  },
+  rel_fase_3: {
+    saga: 'THE INFINITY SAGA • PHASE 3 + MARVEL TV CLIMAX',
+    title: 'Phase 3 (2016–2020): From Civil War to Endgame & Far From Home',
+    subtitle:
+      'Interleaved with The Defenders, Punisher, S.H.I.E.L.D. (S3–S7), Runaways, Cloak & Dagger, Deadpool, and Logan',
+  },
+  rel_fase_4: {
+    saga: 'THE MULTIVERSE SAGA • PHASE 4',
+    title: 'Phase 4 (2021–2022): From WandaVision to Black Panther: Wakanda Forever',
+    subtitle: 'Debut of Marvel Studios Disney+ series and opening of the Multiverse in theaters',
+  },
+  rel_fase_5: {
+    saga: 'THE MULTIVERSE SAGA • PHASE 5',
+    title: 'Phase 5 (2023 – June 2025): From Quantumania to Thunderbolts* & Ironheart',
+    subtitle:
+      'Guardians Vol. 3, Loki S2, The Marvels, Deadpool & Wolverine, Daredevil: Born Again S1, Brave New World, and Thunderbolts*',
+  },
+  rel_fase_6: {
+    saga: 'THE MULTIVERSE SAGA • PHASE 6',
+    title:
+      'Phase 6 (July 2025 – 2027): From The Fantastic Four: First Steps to Doomsday & Secret Wars',
+    subtitle:
+      'Eyes of Wakanda, Wonder Man, Born Again S2, Spider-Man: Brand New Day, VisionQuest, Doomsday, and Secret Wars',
+  },
+};
+
+function localizeSagaMeta(meta, lang) {
+  if (lang !== 'en' || !SAGA_META_EN[meta.id]) return meta;
+  return { ...meta, ...SAGA_META_EN[meta.id] };
+}
+
 export function getItemCompletionStatus(item, userProgress) {
   const isSeries = Array.isArray(item.seasons) && item.seasons.length > 0;
   if (!isSeries) {
@@ -167,36 +320,42 @@ export function computeMarathonPlan(
   };
 }
 
-export function getCategoryColors(category) {
+export function getCategoryColors(category, lang = getLang()) {
   const map = {
     'Película UCM': {
-      label: 'Película UCM',
+      label: t('cat.movie', undefined, lang),
       badge: 'bg-red-500/15 text-red-300 border-red-500/30',
     },
     'Serie Disney+': {
-      label: 'Serie Disney+',
+      label: t('cat.disneyPlus', undefined, lang),
       badge: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
     },
-    'Serie Netflix': { label: 'Netflix', badge: 'bg-rose-500/15 text-rose-300 border-rose-500/30' },
-    'Serie ABC': { label: 'Serie ABC', badge: 'bg-sky-500/15 text-sky-300 border-sky-500/30' },
+    'Serie Netflix': {
+      label: t('cat.netflix', undefined, lang),
+      badge: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+    },
+    'Serie ABC': {
+      label: t('cat.abc', undefined, lang),
+      badge: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+    },
     'Marvel TV Juvenil / Hulu': {
-      label: 'Juvenil / Hulu',
+      label: t('cat.hulu', undefined, lang),
       badge: 'bg-pink-500/15 text-pink-300 border-pink-500/30',
     },
     'Legado Fox / Multiverso': {
-      label: 'Legado Fox',
+      label: t('cat.fox', undefined, lang),
       badge: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
     },
     'Universo Sony / Spider-Verse': {
-      label: 'Sony / Spider-Verse',
+      label: t('cat.sony', undefined, lang),
       badge: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30',
     },
     'Cómic Canon': {
-      label: 'Cómic Canon',
+      label: t('cat.comic', undefined, lang),
       badge: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
     },
     'Especial / Corto': {
-      label: 'Especial / Corto',
+      label: t('cat.special', undefined, lang),
       badge: 'bg-teal-500/15 text-teal-300 border-teal-500/30',
     },
   };
@@ -205,14 +364,22 @@ export function getCategoryColors(category) {
   );
 }
 
-export function getShortSagaName(phase) {
-  if (phase === 'Fase 1' || phase === 'Fase 2' || phase === 'Fase 3') return 'Saga del Infinito';
-  if (phase === 'Fase 4' || phase === 'Fase 5' || phase === 'Fase 6') return 'Saga del Multiverso';
-  if (phase === 'Era Marvel Television') return 'Era Marvel TV';
-  return 'Multiverso Fox/Sony';
+export function getShortSagaName(phase, lang = getLang()) {
+  if (phase === 'Fase 1' || phase === 'Fase 2' || phase === 'Fase 3') {
+    return t('saga.shortInfinity', undefined, lang);
+  }
+  if (phase === 'Fase 4' || phase === 'Fase 5' || phase === 'Fase 6') {
+    return t('saga.shortMultiverse', undefined, lang);
+  }
+  if (phase === 'Era Marvel Television') return t('saga.shortMarvelTv', undefined, lang);
+  return t('saga.shortFoxSony', undefined, lang);
 }
 
-export function getItemSagaMeta(item, orderMode, groupMode) {
+export function getItemSagaMeta(item, orderMode, groupMode, lang = getLang()) {
+  return localizeSagaMeta(getRawItemSagaMeta(item, orderMode, groupMode), lang);
+}
+
+function getRawItemSagaMeta(item, orderMode, groupMode) {
   if (groupMode === 'strict_phases') {
     const phaseMap = {
       'Fase 1': {

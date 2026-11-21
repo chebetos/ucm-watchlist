@@ -8,6 +8,13 @@ import {
 } from './logic.js';
 import { escapeHtml, sanitizeImageUrl } from './utils.js';
 import { getEpisodeSynopsis } from './data/episodes/index.js';
+import {
+  getLang,
+  getLocalizedItemSynopsis,
+  getLocalizedPhase,
+  getLocalizedSeasonNote,
+  t,
+} from './i18n.js';
 
 export function applyPosterToDom(itemId, url) {
   const safeUrl = sanitizeImageUrl(url);
@@ -26,7 +33,7 @@ export function renderPosterArt(item, orderNumber, mediaApi) {
   const safeId = escapeHtml(item.id);
   const safeTitle = escapeHtml(item.title);
   const safeYear = escapeHtml(item.year);
-  const safePhase = escapeHtml(item.phase);
+  const safePhase = escapeHtml(getLocalizedPhase(item.phase));
   const safeIcon = escapeHtml(item.icon || 'fa-film');
 
   return `
@@ -69,24 +76,23 @@ export function renderWatchSwitchHtml(item, comp) {
 
   let trackClasses = 'bg-gray-800 border-gray-600/80';
   let knobTranslate = 'translate-x-0.5 bg-gray-300';
-  let labelText = 'No visto';
+  let labelText = t('card.unwatched');
   let labelColor = 'text-gray-400';
 
   if (isCompleted) {
     trackClasses = 'bg-emerald-500 border-emerald-400 shadow-md shadow-emerald-500/25';
     knobTranslate = 'translate-x-5 bg-white';
-    labelText = 'Visto';
+    labelText = t('card.watched');
     labelColor = 'text-emerald-400';
   } else if (isInProgress) {
     trackClasses = 'bg-amber-500/80 border-amber-400';
     knobTranslate = 'translate-x-2.5 bg-white';
-    labelText = `${comp.watchedCount}/${comp.totalCount} ep.`;
+    labelText = t('card.epShort', { watched: comp.watchedCount, total: comp.totalCount });
     labelColor = 'text-amber-300';
   }
 
-  const actionLabel = isCompleted
-    ? `Desmarcar ${safeTitle} como visto`
-    : `Marcar ${safeTitle} como visto`;
+  const toggleTitle = isCompleted ? t('card.markUnwatchedTitle') : t('card.markWatchedTitle');
+  const actionLabel = `${toggleTitle}: ${safeTitle}`;
 
   return `
     <button type="button"
@@ -94,8 +100,8 @@ export function renderWatchSwitchHtml(item, comp) {
          data-item-id="${safeId}"
          role="switch"
          aria-checked="${isCompleted}"
-         aria-label="${actionLabel}"
-         title="${isCompleted ? 'Marcar como no visto' : 'Marcar como visto'}"
+         aria-label="${escapeHtml(actionLabel)}"
+         title="${escapeHtml(toggleTitle)}"
          class="inline-flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-[#0B0E14] hover:bg-gray-900 border border-marvel-border cursor-pointer select-none transition group focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
       <span class="text-xs font-bold ${labelColor} group-hover:text-white transition">
         ${escapeHtml(labelText)}
@@ -119,11 +125,10 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
 
   const safeId = escapeHtml(item.id);
   const safeTitle = escapeHtml(item.title);
-  const safePhase = escapeHtml(item.phase);
+  const safePhase = escapeHtml(getLocalizedPhase(item.phase));
   const safeSaga = escapeHtml(sagaShort);
-  const safeYear = escapeHtml(item.year);
   const safeTimeline = escapeHtml(item.timelineYear);
-  const safeSynopsis = escapeHtml(item.synopsis);
+  const safeSynopsis = escapeHtml(getLocalizedItemSynopsis(item));
   const safeImdbId = item.imdbId ? encodeURIComponent(item.imdbId) : '';
 
   return `
@@ -148,7 +153,7 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
               ${
                 item.doomsdayEssential
                   ? `
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" title="Imprescindible para Avengers: Doomsday">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" title="${escapeHtml(t('card.doomsdayTitle'))}">
                   <i class="fa-solid fa-bolt mr-0.5" aria-hidden="true"></i>Doomsday
                 </span>
               `
@@ -170,9 +175,9 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
             </h2>
 
             <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-gray-400 mt-1">
-              <span><i class="fa-regular fa-calendar mr-1 text-gray-500" aria-hidden="true"></i>Estreno: ${safeYear}</span>
+              <span><i class="fa-regular fa-calendar mr-1 text-gray-500" aria-hidden="true"></i>${escapeHtml(t('card.release', { year: item.year }))}</span>
               <span class="text-sky-300/90 font-medium"><i class="fa-solid fa-timeline mr-1" aria-hidden="true"></i>${safeTimeline}</span>
-              ${item.postCredits > 0 ? `<span class="text-amber-400/90" title="Escenas poscréditos"><i class="fa-solid fa-film mr-1" aria-hidden="true"></i>${item.postCredits} poscréditos</span>` : ''}
+              ${item.postCredits > 0 ? `<span class="text-amber-400/90" title="${escapeHtml(t('card.postCreditsTitle'))}"><i class="fa-solid fa-film mr-1" aria-hidden="true"></i>${escapeHtml(t('card.postCredits', { count: item.postCredits }))}</span>` : ''}
             </div>
 
             <p class="text-xs text-gray-300/90 mt-2 line-clamp-3 leading-relaxed">
@@ -186,7 +191,7 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
             <div class="mt-2.5 pt-2 border-t border-marvel-border/60">
               <div class="flex justify-between text-[11px] mb-1">
                 <span class="text-blue-300 font-semibold">
-                  <i class="fa-solid fa-list-check mr-1" aria-hidden="true"></i>${comp.watchedCount}/${comp.totalCount} episodios vistos
+                  <i class="fa-solid fa-list-check mr-1" aria-hidden="true"></i>${escapeHtml(t('card.episodesWatched', { watched: comp.watchedCount, total: comp.totalCount }))}
                 </span>
                 <span class="font-bold text-gray-300">${comp.percent}%</span>
               </div>
@@ -207,8 +212,8 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
               data-item-id="${safeId}"
               class="text-xs font-semibold text-gray-300 hover:text-white flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0B0E14] border border-marvel-border focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
             <i class="fa-solid ${isSeries ? 'fa-images text-blue-400' : 'fa-circle-info text-gray-400'}" aria-hidden="true"></i>
-            ${isSeries ? 'Capítulos' : 'Reseña'}
-            ${hasNote ? '<i class="fa-solid fa-comment-dots text-amber-400 ml-1" title="Tienes una nota guardada" aria-label="Tienes una nota guardada"></i>' : ''}
+            ${escapeHtml(isSeries ? t('card.episodesBtn') : t('card.reviewBtn'))}
+            ${hasNote ? `<i class="fa-solid fa-comment-dots text-amber-400 ml-1" title="${escapeHtml(t('card.hasNoteTitle'))}" aria-label="${escapeHtml(t('card.hasNoteTitle'))}"></i>` : ''}
           </button>
           ${
             safeImdbId
@@ -216,7 +221,7 @@ export function renderCardHtml(item, globalIndex, userProgress, mediaApi) {
             <a href="https://www.imdb.com/title/${safeImdbId}/" target="_blank" rel="noopener noreferrer"
                data-stop-card="true"
                class="px-2 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-400 text-xs font-bold transition"
-               title="Ver ficha en IMDb">
+               title="${escapeHtml(t('card.imdbTitle'))}">
               IMDb
             </a>
           `
@@ -239,13 +244,23 @@ export function renderGlobalStats(catalog, userProgress) {
   const timeRemaining = document.getElementById('timeRemaining');
   const countAll = document.getElementById('count-all');
 
-  if (progressLabel)
-    progressLabel.textContent = `${stats.completedItems} / ${stats.totalItems} títulos vistos`;
+  if (progressLabel) {
+    progressLabel.textContent = t('stats.titlesWatched', {
+      completed: stats.completedItems,
+      total: stats.totalItems,
+    });
+  }
   if (progressPercent) progressPercent.textContent = `${stats.percent}%`;
   if (progressBar) progressBar.style.width = `${stats.percent}%`;
-  if (episodesCounter)
-    episodesCounter.textContent = `${stats.watchedEpisodes} / ${stats.totalEpisodes} episodios`;
-  if (timeRemaining) timeRemaining.textContent = `${stats.remainingHours}h restantes`;
+  if (episodesCounter) {
+    episodesCounter.textContent = t('stats.episodes', {
+      watched: stats.watchedEpisodes,
+      total: stats.totalEpisodes,
+    });
+  }
+  if (timeRemaining) {
+    timeRemaining.textContent = t('stats.remainingHours', { hours: stats.remainingHours });
+  }
   if (countAll) countAll.textContent = String(stats.totalItems);
 }
 
@@ -262,26 +277,29 @@ export function renderMarathonPlanner(catalog, filterState, userProgress) {
   const daysBadge = document.getElementById('plannerDaysLeftBadge');
   if (daysBadge) {
     daysBadge.textContent = plan.isReached
-      ? '¡Fecha objetivo alcanzada!'
-      : `Faltan ${plan.daysLeft} días`;
+      ? t('planner.reached')
+      : t('planner.daysLeft', { days: plan.daysLeft });
   }
 
   setElementText('planPendingHours', `${plan.pendingHours} h`);
   setElementText(
     'planPendingItems',
-    `${plan.pendingTitles} títulos (${plan.pendingEpisodesOrMovies} uds.)`,
+    t('planner.pendingItems', { titles: plan.pendingTitles, units: plan.pendingEpisodesOrMovies }),
   );
-  setElementText('planDailyPace', `${plan.minsPerDay} min / día`);
-  setElementText('planDailyEps', `~${plan.epsPerDay} cap./pelis al día`);
-  setElementText('planWeeklyPace', `${plan.hoursPerWeek} h / semana`);
-  setElementText('planWeeklyMovies', `~${plan.titlesPerWeek} títulos/sem`);
+  setElementText('planDailyPace', t('planner.dailyUnit', { mins: plan.minsPerDay }));
+  setElementText('planDailyEps', t('planner.dailyEps', { eps: plan.epsPerDay }));
+  setElementText('planWeeklyPace', t('planner.weeklyUnit', { hours: plan.hoursPerWeek }));
+  setElementText('planWeeklyMovies', t('planner.weeklyTitles', { titles: plan.titlesPerWeek }));
 
   if (plan.nextItem) {
     setElementText('planNextItem', plan.nextItem.title);
-    setElementText('planNextMeta', `${plan.nextItem.phase} • ${plan.nextItem.timelineYear}`);
+    setElementText(
+      'planNextMeta',
+      `${getLocalizedPhase(plan.nextItem.phase)} • ${plan.nextItem.timelineYear}`,
+    );
   } else {
-    setElementText('planNextItem', '¡Todo completado!');
-    setElementText('planNextMeta', '100% al día');
+    setElementText('planNextItem', t('planner.allDone'));
+    setElementText('planNextMeta', t('planner.upToDate'));
   }
 }
 
@@ -299,9 +317,14 @@ export function renderCatalogGrid({
   const resultsCountEl = document.getElementById('resultsCountText');
   if (!grid || !emptyState || !resultsCountEl) return;
 
-  resultsCountEl.textContent = `Mostrando ${list.length} de ${catalog.length} títulos y temporadas (${
-    filterState.orderMode === 'release' ? '1. Orden de Publicación' : '2. Orden Cronológico por Año'
-  })`;
+  resultsCountEl.textContent = t('toolbar.resultsCount', {
+    shown: list.length,
+    total: catalog.length,
+    order:
+      filterState.orderMode === 'release'
+        ? t('toolbar.orderReleaseLong')
+        : t('toolbar.orderChronoLong'),
+  });
 
   if (list.length === 0) {
     grid.innerHTML = '';
@@ -372,7 +395,7 @@ export function renderCatalogGrid({
                     ${escapeHtml(group.saga)}
                   </span>
                   <span class="text-xs font-bold text-gray-300">
-                    ${totalInGroup} ${totalInGroup === 1 ? 'título' : 'títulos'}
+                    ${totalInGroup} ${escapeHtml(totalInGroup === 1 ? t('group.titleSingular') : t('group.titlePlural'))}
                   </span>
                 </div>
                 <h3 class="text-base sm:text-lg font-extrabold text-white leading-snug">
@@ -387,7 +410,7 @@ export function renderCatalogGrid({
             <div class="flex flex-wrap sm:flex-nowrap items-center justify-between lg:justify-end gap-2.5 sm:gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-white/10">
               <div class="flex-1 min-w-[130px] sm:flex-initial sm:w-44 bg-[#0B0E14]/85 border border-marvel-border rounded-xl px-3 py-1.5">
                 <div class="flex justify-between text-[11px] mb-1">
-                  <span class="text-gray-300 font-semibold">${completedInGroup}/${totalInGroup} vistos</span>
+                  <span class="text-gray-300 font-semibold">${escapeHtml(t('group.watchedCount', { done: completedInGroup, total: totalInGroup }))}</span>
                   <span class="font-bold ${allGroupCompleted ? 'text-emerald-400' : 'text-amber-400'}">${pct}%</span>
                 </div>
                 <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
@@ -400,11 +423,11 @@ export function renderCatalogGrid({
                    data-group-id="${safeGroupId}"
                    role="switch"
                    aria-checked="${allGroupCompleted}"
-                   aria-label="${allGroupCompleted ? `Desmarcar bloque ${safeGroupTitle}` : `Marcar bloque ${safeGroupTitle} como visto`}"
-                   title="${allGroupCompleted ? 'Desmarcar toda esta fase/era' : 'Marcar toda esta fase/era como vista'}"
+                   aria-label="${escapeHtml(allGroupCompleted ? `${t('group.unmarkPhaseTitle')}: ${group.title}` : `${t('group.markPhaseTitle')}: ${group.title}`)}"
+                   title="${escapeHtml(allGroupCompleted ? t('group.unmarkPhaseTitle') : t('group.markPhaseTitle'))}"
                    class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#0B0E14]/90 hover:bg-gray-900 border border-marvel-border cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-marvel-red">
                 <span class="text-[11px] font-bold ${allGroupCompleted ? 'text-emerald-400' : 'text-gray-400'}">
-                  ${allGroupCompleted ? 'Fase vista' : 'Marcar fase'}
+                  ${escapeHtml(allGroupCompleted ? t('group.phaseDone') : t('group.markPhase'))}
                 </span>
                 <span class="watch-switch-track relative inline-flex items-center w-9 h-5 rounded-full border ${allGroupCompleted ? 'bg-emerald-500 border-emerald-400' : 'bg-gray-800 border-gray-600'}" aria-hidden="true">
                   <span class="watch-switch-knob inline-block w-3.5 h-3.5 rounded-full bg-white shadow transform ${allGroupCompleted ? 'translate-x-4' : 'translate-x-0.5'}"></span>
@@ -442,8 +465,8 @@ export function syncToggleAllGroupsButton(collapsedGroups) {
     (el) => !collapsedGroups[el.getAttribute('data-group-section')],
   );
   btn.innerHTML = anyExpanded
-    ? '<i class="fa-solid fa-angles-up" aria-hidden="true"></i><span>Plegar bloques</span>'
-    : '<i class="fa-solid fa-angles-down" aria-hidden="true"></i><span>Desplegar bloques</span>';
+    ? `<i class="fa-solid fa-angles-up" aria-hidden="true"></i><span>${escapeHtml(t('toolbar.collapseBlocks'))}</span>`
+    : `<i class="fa-solid fa-angles-down" aria-hidden="true"></i><span>${escapeHtml(t('toolbar.expandBlocks'))}</span>`;
 }
 
 function renderEpisodeCardHtml({ safeItemId, seasonNumber, ep, isEpWatched, meta, synopsis }) {
@@ -517,6 +540,7 @@ function renderEpisodeCardHtml({ safeItemId, seasonNumber, ep, isEpWatched, meta
 }
 
 function renderSeasonsSectionHtml({ item, safeItemId, comp, epMap, liveEpMeta }) {
+  const lang = getLang();
   const seasonsMarkup = item.seasons
     .map((season) => {
       const watchedInSeason = season.episodes.filter((ep) => Boolean(epMap[ep.code])).length;
@@ -524,6 +548,7 @@ function renderSeasonsSectionHtml({ item, safeItemId, comp, epMap, liveEpMeta })
       const seasonBtnTheme = allSeasonDone
         ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
         : 'bg-marvel-card border-marvel-border text-gray-300 hover:text-white';
+      const seasonNote = getLocalizedSeasonNote(item, season, lang);
 
       const episodesMarkup = season.episodes
         .map((ep) =>
@@ -533,7 +558,7 @@ function renderSeasonsSectionHtml({ item, safeItemId, comp, epMap, liveEpMeta })
             ep,
             isEpWatched: Boolean(epMap[ep.code]),
             meta: liveEpMeta[ep.code] || {},
-            synopsis: getEpisodeSynopsis(item.id, ep.code),
+            synopsis: getEpisodeSynopsis(item.id, ep.code, lang),
           }),
         )
         .join('');
@@ -542,9 +567,9 @@ function renderSeasonsSectionHtml({ item, safeItemId, comp, epMap, liveEpMeta })
         <div data-season-block="${season.seasonNumber}" class="bg-[#0B0E14] border border-marvel-border rounded-xl overflow-hidden">
           <div class="px-4 py-3 bg-gray-900/70 border-b border-marvel-border flex flex-wrap items-center justify-between gap-2">
             <div>
-              <span class="font-bold text-sm text-white">Temporada ${season.seasonNumber} (${escapeHtml(season.year)})</span>
-              <span class="text-xs text-gray-400 ml-2">${watchedInSeason}/${season.episodes.length} episodios</span>
-              ${season.note ? `<p class="text-[11px] text-gray-400 mt-0.5">${escapeHtml(season.note)}</p>` : ''}
+              <span class="font-bold text-sm text-white">${escapeHtml(t('detail.seasonTitle', { num: season.seasonNumber, year: season.year }))}</span>
+              <span class="text-xs text-gray-400 ml-2">${escapeHtml(t('detail.seasonCount', { watched: watchedInSeason, total: season.episodes.length }))}</span>
+              ${seasonNote ? `<p class="text-[11px] text-gray-400 mt-0.5">${escapeHtml(seasonNote)}</p>` : ''}
             </div>
             <div class="flex flex-wrap items-center gap-1.5">
               <button type="button"
@@ -553,7 +578,7 @@ function renderSeasonsSectionHtml({ item, safeItemId, comp, epMap, liveEpMeta })
                   aria-expanded="true"
                   class="px-2.5 py-1 rounded-lg text-xs font-semibold border border-marvel-border bg-marvel-card text-sky-300 hover:text-white hover:border-sky-500/40 transition inline-flex items-center gap-1">
                 <i class="fa-solid fa-book-open text-[10px]" aria-hidden="true"></i>
-                <span data-season-synopses-label>Ocultar reseñas</span>
+                <span data-season-synopses-label>${escapeHtml(t('detail.hideReviews'))}</span>
               </button>
               <button type="button"
                   data-action="toggle-season"
@@ -561,7 +586,7 @@ function renderSeasonsSectionHtml({ item, safeItemId, comp, epMap, liveEpMeta })
                   data-season-num="${season.seasonNumber}"
                   class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${seasonBtnTheme}">
                 <i class="fa-solid ${allSeasonDone ? 'fa-check-double' : 'fa-check'} mr-1" aria-hidden="true"></i>
-                ${allSeasonDone ? 'Temporada completada' : 'Marcar todos'}
+                ${escapeHtml(allSeasonDone ? t('detail.seasonDone') : t('detail.markAllSeason'))}
               </button>
             </div>
           </div>
@@ -577,7 +602,7 @@ function renderSeasonsSectionHtml({ item, safeItemId, comp, epMap, liveEpMeta })
     <div class="space-y-3">
       <div class="flex items-center justify-between">
         <h4 class="text-xs font-bold uppercase tracking-wider text-blue-400">
-          <i class="fa-solid fa-list-check mr-1" aria-hidden="true"></i>Checklist de Episodios (${comp.watchedCount}/${comp.totalCount})
+          <i class="fa-solid fa-list-check mr-1" aria-hidden="true"></i>${escapeHtml(t('detail.episodesChecklist', { watched: comp.watchedCount, total: comp.totalCount }))}
         </h4>
       </div>
       <div class="space-y-3">
@@ -598,17 +623,20 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
 
   const safeItemId = escapeHtml(item.id);
   const safeTitle = escapeHtml(item.title);
-  const safeReleaseDate = escapeHtml(item.releaseDate);
-  const safeSynopsis = escapeHtml(item.synopsis);
+  const safeSynopsis = escapeHtml(getLocalizedItemSynopsis(item));
   const safeUserNote = escapeHtml(userNote);
 
   const progInfo = document.getElementById('modalProgressInfo');
   if (progInfo) {
     progInfo.textContent = isSeries
-      ? `${comp.watchedCount}/${comp.totalCount} episodios (${comp.percent}%)`
+      ? t('detail.episodesProgress', {
+          watched: comp.watchedCount,
+          total: comp.totalCount,
+          percent: comp.percent,
+        })
       : comp.status === 'completed'
-        ? 'Completado'
-        : 'Pendiente';
+        ? t('detail.completed')
+        : t('detail.pending');
   }
 
   const seasonsHtml = isSeries
@@ -623,7 +651,7 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
           ? `
         <a href="https://www.imdb.com/title/${safeImdbId}/" target="_blank" rel="noopener noreferrer"
            class="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-1.5 transition">
-          <i class="fa-brands fa-imdb text-sm" aria-hidden="true"></i> Ver ficha oficial en IMDb
+          <i class="fa-brands fa-imdb text-sm" aria-hidden="true"></i> ${escapeHtml(t('detail.imdbLink'))}
         </a>
       `
           : ''
@@ -633,7 +661,7 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
           ? `
         <a href="https://marvelcinematicuniverse.fandom.com/wiki/Category:Comics" target="_blank" rel="noopener noreferrer"
            class="px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 text-xs font-bold flex items-center gap-1.5 transition">
-          <i class="fa-solid fa-book-open" aria-hidden="true"></i> Ver en Marvel Cinematic Database (Cómics)
+          <i class="fa-solid fa-book-open" aria-hidden="true"></i> ${escapeHtml(t('detail.comicLink'))}
         </a>
       `
           : ''
@@ -652,29 +680,29 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
           <div>
             <h3 id="detailModalTitle" class="text-lg sm:text-xl font-extrabold text-white">${safeTitle}</h3>
             <p class="text-xs text-gray-400 mt-0.5">
-              Estreno: <strong>${safeReleaseDate}</strong> • Orden Publicación: <strong>#${item.releaseOrder}</strong> • Orden Cronológico: <strong>#${item.chronoOrder}</strong>
+              ${escapeHtml(t('detail.metaLine', { date: item.releaseDate, release: item.releaseOrder, chrono: item.chronoOrder }))}
             </p>
           </div>
           ${renderWatchSwitchHtml(item, comp)}
         </div>
 
         <div class="bg-marvel-card border border-marvel-border rounded-xl p-3">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-marvel-red block mb-1">Reseña y Conexión Cronológica</span>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-marvel-red block mb-1">${escapeHtml(t('detail.synopsisHeading'))}</span>
           <p class="text-xs sm:text-sm text-gray-200 leading-relaxed">${safeSynopsis}</p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 text-xs">
           <span class="px-2.5 py-1 rounded-lg bg-marvel-card border border-marvel-border text-gray-300">
-            <i class="fa-regular fa-clock mr-1 text-gray-400" aria-hidden="true"></i>Duración total: ${Math.round((item.runtimeMins / 60) * 10) / 10} h (${item.runtimeMins} min)
+            <i class="fa-regular fa-clock mr-1 text-gray-400" aria-hidden="true"></i>${escapeHtml(t('detail.runtime', { hours: Math.round((item.runtimeMins / 60) * 10) / 10, mins: item.runtimeMins }))}
           </span>
           <span class="px-2.5 py-1 rounded-lg bg-marvel-card border border-marvel-border text-gray-300">
-            <i class="fa-solid fa-film mr-1 text-amber-400" aria-hidden="true"></i>Escenas poscréditos: ${item.postCredits}
+            <i class="fa-solid fa-film mr-1 text-amber-400" aria-hidden="true"></i>${escapeHtml(t('detail.postCredits', { count: item.postCredits }))}
           </span>
           ${
             item.doomsdayEssential
               ? `
             <span class="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold">
-              <i class="fa-solid fa-bolt mr-1" aria-hidden="true"></i>Esencial para Avengers: Doomsday
+              <i class="fa-solid fa-bolt mr-1" aria-hidden="true"></i>${escapeHtml(t('detail.doomsdayBadge'))}
             </span>
           `
               : ''
@@ -688,10 +716,10 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
     <div class="bg-[#0B0E14] border border-marvel-border rounded-2xl p-4 space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-xs font-bold uppercase tracking-wider text-amber-400">
-          <i class="fa-solid fa-pen-to-square mr-1" aria-hidden="true"></i>Tu Valoración y Notas Personales
+          <i class="fa-solid fa-pen-to-square mr-1" aria-hidden="true"></i>${escapeHtml(t('detail.ratingHeading'))}
         </span>
-        <div class="flex items-center gap-1" role="group" aria-label="Valoración en estrellas">
-          <span class="text-xs text-gray-400 mr-1">Tu nota:</span>
+        <div class="flex items-center gap-1" role="group" aria-label="${escapeHtml(t('detail.yourRating'))}">
+          <span class="text-xs text-gray-400 mr-1">${escapeHtml(t('detail.yourRating'))}</span>
           ${[1, 2, 3, 4, 5]
             .map(
               (star) => `
@@ -699,7 +727,7 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
                     data-action="set-rating"
                     data-item-id="${safeItemId}"
                     data-stars="${star}"
-                    aria-label="Valorar con ${star} de 5 estrellas"
+                    aria-label="${star}/5"
                     aria-pressed="${star <= userStars}"
                     class="text-base px-1 transition ${star <= userStars ? 'text-amber-400 scale-110' : 'text-gray-600 hover:text-gray-400'}">
                   <i class="fa-solid fa-star" aria-hidden="true"></i>
@@ -711,14 +739,14 @@ export function renderDetailModalBody(item, { filterState, userProgress, mediaAp
       </div>
       <div class="flex gap-2">
         <input id="userNoteInput" type="text" maxlength="2000" value="${safeUserNote}"
-            aria-label="Nota personal"
-            placeholder="Escribe aquí tu opinión, por qué minuto vas o con quién la viste..."
+            aria-label="${escapeHtml(t('detail.ratingHeading'))}"
+            placeholder="${escapeHtml(t('detail.notePlaceholder'))}"
             class="flex-1 bg-marvel-card border border-marvel-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
         <button type="button"
             data-action="save-note"
             data-item-id="${safeItemId}"
             class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-gray-950 text-xs font-bold transition">
-          Guardar nota
+          ${escapeHtml(t('detail.saveNote'))}
         </button>
       </div>
     </div>

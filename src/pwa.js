@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 let deferredPwaPrompt = null;
 
 export function initPWA() {
@@ -19,7 +21,7 @@ export function initPWA() {
       const box = document.getElementById('nativePwaInstallBox');
       if (box) box.classList.remove('hidden');
       const btnText = document.getElementById('pwaHeaderBtnText');
-      if (btnText) btnText.textContent = '¡Instalar App!';
+      if (btnText) btnText.textContent = t('header.pwaInstallShort');
     });
   } catch (e) {
     console.warn('Aviso inicializando PWA:', e);
@@ -28,13 +30,13 @@ export function initPWA() {
 
 export async function triggerNativePwaInstall({ showToast, closeModal }) {
   if (!deferredPwaPrompt) {
-    showToast('Usa el menú de tu navegador para añadir a la pantalla de inicio');
+    showToast(t('pwa.manualInstallToast'));
     return;
   }
   deferredPwaPrompt.prompt();
   const { outcome } = await deferredPwaPrompt.userChoice;
   if (outcome === 'accepted') {
-    showToast('¡Aplicación instalada correctamente!');
+    showToast(t('pwa.installedToast'));
     closeModal('pwaModal');
   }
   deferredPwaPrompt = null;

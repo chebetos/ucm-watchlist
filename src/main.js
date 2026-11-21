@@ -34,6 +34,15 @@ import {
 import { initPWA, triggerNativePwaInstall } from './pwa.js';
 import { debounce, copyToClipboard } from './utils.js';
 import { loadEpisodeSynopsesForItem } from './data/episodes/index.js';
+import {
+  applyStaticTranslations,
+  detectInitialLang,
+  getLang,
+  getLocalizedPhase,
+  loadCatalogTranslations,
+  setLang,
+  t,
+} from './i18n.js';
 
 const itemsById = new Map(MCU_CATALOG.map((item) => [item.id, item]));
 
@@ -87,10 +96,10 @@ function showToast(msg) {
 function saveProgress() {
   const saved = saveProgressToStorage(userProgress);
   if (!saved) {
-    updateSyncBadge('Sin espacio local', 'amber');
-    showToast('No se pudo guardar en el navegador (cuota llena o modo privado)');
+    updateSyncBadge(t('header.noLocalSpace'), 'amber');
+    showToast(t('toast.quotaError'));
   } else {
-    updateSyncBadge('Guardado local', 'emerald');
+    updateSyncBadge(t('header.savedLocal'), 'emerald');
   }
 }
 
@@ -179,7 +188,7 @@ function toggleItemWatched(itemId) {
   if (currentOpenItemId === itemId) {
     renderDetailModalBody(item, { filterState, userProgress, mediaApi });
   }
-  showToast(markAsDone ? `Marcado como visto: ${item.title}` : `Desmarcado: ${item.title}`);
+  showToast(t(markAsDone ? 'toast.markedWatched' : 'toast.markedUnwatched', { title: item.title }));
 }
 
 function toggleEpisodeWatched(itemId, epCode) {
@@ -251,7 +260,7 @@ function setUserRating(itemId, stars) {
   if (item && currentOpenItemId === itemId) {
     renderDetailModalBody(item, { filterState, userProgress, mediaApi });
   }
-  showToast(`Valoración guardada: ${num}/5 estrellas`);
+  showToast(t('toast.ratingSaved', { stars: num }));
 }
 
 function saveUserNote(itemId, text) {
@@ -262,7 +271,7 @@ function saveUserNote(itemId, text) {
   else delete userProgress.userNotes[itemId];
   saveProgress();
   renderApp();
-  showToast('Nota personal guardada');
+  showToast(t('toast.noteSaved'));
 }
 
 async function openDetailModal(itemId) {
@@ -278,12 +287,12 @@ async function openDetailModal(itemId) {
   }
   const phaseBadge = document.getElementById('modalPhaseBadge');
   if (phaseBadge) {
-    phaseBadge.textContent = `${item.phase} • ${item.timelineYear}`;
+    phaseBadge.textContent = `${getLocalizedPhase(item.phase)} • ${item.timelineYear}`;
   }
 
   if (Array.isArray(item.seasons) && item.seasons.length > 0) {
     try {
-      await loadEpisodeSynopsesForItem(item.id);
+      await loadEpisodeSynopsesForItem(item.id, getLang());
     } catch (err) {
       console.error('Error loading episode synopses:', err);
     }
@@ -452,9 +461,7 @@ function toggleGroupWatched(groupId) {
   saveProgress();
   renderApp();
   showToast(
-    allDone
-      ? 'Bloque desmarcado'
-      : `¡${groupItems.length} títulos del bloque marcados como vistos!`,
+    t(allDone ? 'toast.blockUnwatched' : 'toast.blockWatched', { count: groupItems.length }),
   );
 }
 
@@ -474,7 +481,7 @@ function markVisibleAsWatched() {
   });
   saveProgress();
   renderApp();
-  showToast(`${visible.length} contenidos marcados como vistos`);
+  showToast(t('toast.visibleMarked', { count: visible.length }));
 }
 
 function resetAllProgress() {
@@ -483,7 +490,7 @@ function resetAllProgress() {
   saveProgress();
   renderApp();
   closeModal('confirmResetModal');
-  showToast('Progreso reiniciado');
+  showToast(t('toast.resetDone'));
 }
 
 function isCompactViewport() {
@@ -551,28 +558,28 @@ async function handleCopySyncCode() {
   const textarea = getFormField('syncCodeTextarea');
   if (textarea) textarea.value = code;
   const ok = await copyToClipboard(code, textarea);
-  showToast(
-    ok
-      ? 'Código de sincronización copiado al portapapeles'
-      : 'No se pudo copiar automáticamente; cópialo manualmente',
-  );
+  showToast(ok ? t('toast.codeCopied') : t('toast.codeCopyFallback'));
 }
 
 function formatImportSuccessToast(compatibility, sourceLabel) {
   if (compatibility.status === 'legacy') {
-    return `${sourceLabel} importado (formato anterior migrado a v${compatibility.currentVersion})`;
+    return t('toast.importLegacy', { source: sourceLabel, current: compatibility.currentVersion });
   }
   if (compatibility.status === 'newer_minor') {
-    return `${sourceLabel} importado (esquema v${compatibility.importedVersion}, compatible con v${compatibility.currentVersion})`;
+    return t('toast.importNewerMinor', {
+      source: sourceLabel,
+      imported: compatibility.importedVersion,
+      current: compatibility.currentVersion,
+    });
   }
-  return `${sourceLabel} importado (esquema v${compatibility.importedVersion})`;
+  return t('toast.importExact', { source: sourceLabel, imported: compatibility.importedVersion });
 }
 
 function handleImportSyncCode() {
   const textarea = getFormField('syncCodeTextarea');
   const raw = textarea ? textarea.value.trim() : '';
   if (!raw) {
-    showToast('Pega primero un código válido');
+    showToast(t('toast.pasteValidCode'));
     return;
   }
   try {
@@ -583,12 +590,12 @@ function handleImportSyncCode() {
     saveProgress();
     renderApp();
     closeModal('syncModal');
-    showToast(formatImportSuccessToast(compatibility, 'Progreso'));
+    showToast(formatImportSuccessToast(compatibility, t('toast.sourceProgress')));
   } catch (err) {
     const msg =
       err instanceof Error && err.message.startsWith('Versión de esquema')
         ? err.message
-        : 'El código introducido no tiene un formato válido';
+        : t('toast.invalidCode');
     showToast(msg);
   }
 }
@@ -604,7 +611,7 @@ function handleDownloadJsonBackup() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-  showToast('Archivo JSON descargado');
+  showToast(t('toast.jsonDownloaded'));
 }
 
 function handleUploadJsonBackup(event) {
@@ -613,7 +620,7 @@ function handleUploadJsonBackup(event) {
   if (!file) return;
   if (file.size > MAX_IMPORT_FILE_BYTES) {
     input.value = '';
-    showToast('El archivo JSON supera el límite máximo permitido (512 KB)');
+    showToast(t('toast.jsonTooLarge'));
     return;
   }
 
@@ -628,12 +635,12 @@ function handleUploadJsonBackup(event) {
       saveProgress();
       renderApp();
       closeModal('syncModal');
-      showToast(formatImportSuccessToast(compatibility, 'Backup JSON'));
+      showToast(formatImportSuccessToast(compatibility, t('toast.sourceJson')));
     } catch (err) {
       const msg =
         err instanceof Error && err.message.startsWith('Versión de esquema')
           ? err.message
-          : 'El archivo JSON no es válido';
+          : t('toast.invalidJson');
       showToast(msg);
     } finally {
       // Permite volver a seleccionar el mismo archivo tras una importación o fallo
@@ -642,7 +649,7 @@ function handleUploadJsonBackup(event) {
   });
   reader.addEventListener('error', () => {
     input.value = '';
-    showToast('No se pudo leer el archivo JSON');
+    showToast(t('toast.jsonReadError'));
   });
   reader.readAsText(file);
 }
@@ -656,7 +663,7 @@ function syncExternalMediaToggleUi() {
 
   if (btn) btn.setAttribute('aria-checked', String(enabled));
   if (label) {
-    label.textContent = enabled ? 'Activado' : 'Desactivado';
+    label.textContent = enabled ? t('imageApi.enabled') : t('imageApi.disabled');
     label.className = `text-xs font-bold ${enabled ? 'text-emerald-400' : 'text-gray-400'}`;
   }
   if (track) {
@@ -679,11 +686,7 @@ function handleToggleExternalMedia() {
   mediaApi.setExternalMediaEnabled(next);
   syncExternalMediaToggleUi();
   renderApp();
-  showToast(
-    next
-      ? 'Portadas externas activadas (TVMaze / Wikipedia / Open Library)'
-      : 'Portadas externas desactivadas (solo pósters locales)',
-  );
+  showToast(next ? t('toast.externalOn') : t('toast.externalOff'));
 }
 
 function handleSaveOmdbApiKey() {
@@ -694,10 +697,49 @@ function handleSaveOmdbApiKey() {
   renderApp();
   closeModal('imageApiModal');
   if (!mediaApi.isExternalMediaEnabled() && val) {
-    showToast('Clave OMDb guardada. Activa las portadas externas para usarla.');
+    showToast(t('toast.omdbSavedOff'));
   } else {
-    showToast(val ? 'Clave OMDb (IMDb) activada y recargando portadas' : 'Clave OMDb eliminada');
+    showToast(val ? t('toast.omdbSavedOn') : t('toast.omdbRemoved'));
   }
+}
+
+function syncSchemaBadgeText() {
+  const schemaBadge = document.getElementById('syncSchemaVersionBadge');
+  if (schemaBadge) {
+    schemaBadge.textContent = t('sync.schemaBadge', { version: PROGRESS_SCHEMA_VERSION });
+  }
+}
+
+async function handleToggleLang() {
+  const nextLang = getLang() === 'es' ? 'en' : 'es';
+  setLang(nextLang);
+  await loadCatalogTranslations(nextLang);
+  applyStaticTranslations();
+  syncExternalMediaToggleUi();
+  syncSchemaBadgeText();
+  updateSyncBadge(t('header.savedLocal'), 'emerald');
+  renderApp();
+
+  if (currentOpenItemId) {
+    const item = itemsById.get(currentOpenItemId);
+    if (item) {
+      if (Array.isArray(item.seasons) && item.seasons.length > 0) {
+        await loadEpisodeSynopsesForItem(item.id, nextLang);
+      }
+      const catStyle = getCategoryColors(item.category);
+      const catBadge = document.getElementById('modalCategoryBadge');
+      if (catBadge) {
+        catBadge.className = `text-xs font-bold px-2.5 py-1 rounded-md border ${catStyle.badge}`;
+        catBadge.textContent = catStyle.label;
+      }
+      const phaseBadge = document.getElementById('modalPhaseBadge');
+      if (phaseBadge) {
+        phaseBadge.textContent = `${getLocalizedPhase(item.phase)} • ${item.timelineYear}`;
+      }
+      renderDetailModalBody(item, { filterState, userProgress, mediaApi });
+    }
+  }
+  showToast(t('toast.langSwitched'));
 }
 
 function setEpisodeCardSynopsisExpanded(card, expanded) {
@@ -772,7 +814,7 @@ function handleDetailModalClick(e) {
     const shouldOpen = toggleSeasonSynopsesBtn.getAttribute('aria-expanded') !== 'true';
     toggleSeasonSynopsesBtn.setAttribute('aria-expanded', String(shouldOpen));
     const label = toggleSeasonSynopsesBtn.querySelector('[data-season-synopses-label]');
-    if (label) label.textContent = shouldOpen ? 'Ocultar reseñas' : 'Ver reseñas';
+    if (label) label.textContent = shouldOpen ? t('detail.hideReviews') : t('detail.showReviews');
     seasonBlock.querySelectorAll('[data-episode-card]').forEach((card) => {
       setEpisodeCardSynopsisExpanded(card, shouldOpen);
     });
@@ -852,6 +894,7 @@ function bindEvents() {
     btn.addEventListener('click', togglePlannerPanel);
   });
   document.getElementById('btnToggleFilters')?.addEventListener('click', toggleFiltersPanel);
+  document.getElementById('btnToggleLang')?.addEventListener('click', handleToggleLang);
 
   // Categorías
   document.getElementById('categoryFilterContainer')?.addEventListener('click', (e) => {
@@ -933,8 +976,13 @@ function bindEvents() {
 // ============================================================================
 // INICIALIZACIÓN
 // ============================================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initPWA();
+
+  const initialLang = detectInitialLang();
+  setLang(initialLang);
+  await loadCatalogTranslations(initialLang);
+  applyStaticTranslations();
 
   userProgress = loadProgressFromStorage();
   const targetInput = getFormField('targetDateInput');
@@ -957,10 +1005,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const startExpanded = !isCompactViewport();
   setPlannerExpanded(startExpanded);
   setFiltersExpanded(startExpanded);
-  const schemaBadge = document.getElementById('syncSchemaVersionBadge');
-  if (schemaBadge) {
-    schemaBadge.textContent = `Esquema v${PROGRESS_SCHEMA_VERSION}`;
-  }
-  updateSyncBadge('Guardado local', 'emerald');
+  syncSchemaBadgeText();
+  updateSyncBadge(t('header.savedLocal'), 'emerald');
   renderApp();
 });
