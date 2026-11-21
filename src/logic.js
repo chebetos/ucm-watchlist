@@ -666,3 +666,93 @@ function getRawItemSagaMeta(item, orderMode, groupMode) {
     };
   }
 }
+
+function computeAverageRating(ratingsMap, catalogIds) {
+  if (!ratingsMap || typeof ratingsMap !== 'object') return { avg: null, count: 0 };
+  const vals = Object.entries(ratingsMap)
+    .filter(
+      ([id, v]) =>
+        catalogIds.has(id) && typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 5,
+    )
+    .map(([, v]) => v);
+  if (vals.length === 0) return { avg: null, count: 0 };
+  const sum = vals.reduce((acc, n) => acc + n, 0);
+  return { avg: Number((sum / vals.length).toFixed(1)), count: vals.length };
+}
+
+function computeWatchedMinutes(catalog, progress) {
+  let watchedMinutes = 0;
+  for (const item of catalog) {
+    const runtime = item.runtimeMins || 0;
+    if (runtime <= 0) continue;
+    const comp = getItemCompletionStatus(item, progress);
+    const isSeries = Array.isArray(item.seasons) && item.seasons.length > 0;
+    if (isSeries) {
+      if (comp.totalCount > 0) {
+        watchedMinutes += runtime * (comp.watchedCount / comp.totalCount);
+      }
+    } else if (comp.status === 'completed') {
+      watchedMinutes += runtime;
+    }
+  }
+  return watchedMinutes;
+}
+
+/**
+ * Compara el progreso local del usuario frente a un progreso compartido (amigo)
+ * sin mutar ningún estado.
+ */
+export function computeProgressComparison(catalog, localProgress, friendProgress) {
+  const catalogIds = new Set(catalog.map((i) => i.id));
+  const meStats = computeGlobalStats(catalog, localProgress);
+  const friendStats = computeGlobalStats(catalog, friendProgress);
+  const meRatings = computeAverageRating(localProgress?.userRatings, catalogIds);
+  const friendRatings = computeAverageRating(friendProgress?.userRatings, catalogIds);
+
+  const meWatchedHours = Math.round(computeWatchedMinutes(catalog, localProgress) / 60);
+  const friendWatchedHours = Math.round(computeWatchedMinutes(catalog, friendProgress) / 60);
+
+  const both = [];
+  const onlyFriend = [];
+  const onlyMe = [];
+  const neither = [];
+
+  const sorted = catalog.toSorted((a, b) => a.releaseOrder - b.releaseOrder);
+  for (const item of sorted) {
+    const myComp = getItemCompletionStatus(item, localProgress);
+    const friendComp = getItemCompletionStatus(item, friendProgress);
+    const entry = {
+      item,
+      myComp,
+      friendComp,
+      myRating: localProgress?.userRatings?.[item.id] || 0,
+      friendRating: friendProgress?.userRatings?.[item.id] || 0,
+    };
+
+    if (myComp.status === 'completed' && friendComp.status === 'completed') {
+      both.push(entry);
+    } else if (friendComp.status === 'completed' && myComp.status !== 'completed') {
+      onlyFriend.push(entry);
+    } else if (myComp.status === 'completed' && friendComp.status !== 'completed') {
+      onlyMe.push(entry);
+    } else {
+      neither.push(entry);
+    }
+  }
+
+  return {
+    me: {
+      ...meStats,
+      watchedHours: meWatchedHours,
+      avgRating: meRatings.avg,
+      ratedCount: meRatings.count,
+    },
+    friend: {
+      ...friendStats,
+      watchedHours: friendWatchedHours,
+      avgRating: friendRatings.avg,
+      ratedCount: friendRatings.count,
+    },
+    lists: { both, onlyFriend, onlyMe, neither },
+  };
+}

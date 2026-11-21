@@ -898,7 +898,7 @@
             <span
               id="syncSchemaVersionBadge"
               class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/25"
-              >Esquema v1.0.0</span
+              >Esquema v1.1.0</span
             >
           </h3>
           <button
@@ -912,17 +912,88 @@
           </button>
         </div>
         <div class="p-5 overflow-y-auto space-y-4 text-xs text-gray-300">
+          <!-- Export metadata: Nick + Include notes toggle -->
+          <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-3">
+            <div class="space-y-1.5">
+              <label
+                for="exportNickInput"
+                data-i18n="sync.nickLabel"
+                class="font-bold text-white block"
+              >
+                Tu nombre o nick (opcional)
+              </label>
+              <input
+                id="exportNickInput"
+                type="text"
+                maxlength="40"
+                autocomplete="nickname"
+                data-i18n-placeholder="sync.nickPlaceholder"
+                placeholder="Ej: Tony, Peter, Wanda..."
+                class="w-full bg-marvel-card border border-marvel-border rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-sky-400"
+              />
+            </div>
+            <label class="inline-flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
+              <input
+                id="exportIncludeNotesCheckbox"
+                type="checkbox"
+                checked
+                class="rounded border-marvel-border bg-marvel-card text-sky-500 focus:ring-sky-400"
+              />
+              <span data-i18n="sync.includeNotesLabel"
+                >Incluir notas personales en el enlace y código</span
+              >
+            </label>
+          </div>
+
+          <!-- 1. Shareable Deeplink (PWA / Web) -->
+          <div class="bg-[#0B0E14] border border-sky-500/30 rounded-xl p-4 space-y-2.5">
+            <label for="shareDeeplinkInput" class="font-bold text-white flex items-center gap-1.5">
+              <i class="fa-solid fa-link text-sky-400" aria-hidden="true"></i>
+              <span data-i18n="sync.deeplinkLabel">1. Enlace Compartible (Deeplink PWA / Web)</span>
+            </label>
+            <p data-i18n="sync.deeplinkDesc" class="text-gray-400">
+              Comparte este enlace por WhatsApp o Telegram para abrir directamente la app/PWA y
+              comparar progreso con un amigo o sincronizar otro dispositivo (viaja en el #fragmento,
+              nunca al servidor):
+            </p>
+            <input
+              id="shareDeeplinkInput"
+              type="text"
+              readonly
+              class="w-full bg-marvel-card border border-marvel-border rounded-xl px-3 py-2 text-[11px] font-mono text-sky-300 focus:outline-none focus:border-sky-400"
+            />
+            <div class="flex flex-wrap gap-2 pt-0.5">
+              <button
+                type="button"
+                id="btnCopyShareLink"
+                class="flex-1 py-2 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold transition flex items-center justify-center gap-1.5"
+              >
+                <i class="fa-solid fa-link" aria-hidden="true"></i>
+                <span data-i18n="sync.copyLinkBtn">Copiar enlace</span>
+              </button>
+              <button
+                type="button"
+                id="btnNativeShareLink"
+                class="hidden py-2 px-3.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-marvel-border text-white font-bold transition items-center justify-center gap-1.5"
+              >
+                <i class="fa-solid fa-share-nodes text-sky-400" aria-hidden="true"></i>
+                <span data-i18n="sync.shareLinkBtn">Compartir</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Quick Code -->
           <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2.5">
             <label
               for="syncCodeTextarea"
               data-i18n="sync.quickCodeLabel"
               class="font-bold text-white block"
             >
-              1. Código Rápido (Copiar y Pegar por WhatsApp, Telegram o Notas)
+              2. Código Rápido (Copiar y Pegar)
             </label>
             <p data-i18n="sync.quickCodeDesc" class="text-gray-400">
-              Copia este código para llevar todo tu progreso (películas, capítulos vistos y notas) a
-              otro móvil u ordenador sin servidor (nunca incluye tu clave privada de OMDb):
+              Copia este código o pega aquí un código/enlace recibido para restaurar tu progreso
+              (nunca incluye tu clave privada de OMDb):
             </p>
             <textarea
               id="syncCodeTextarea"
@@ -951,7 +1022,7 @@
 
           <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2.5">
             <span data-i18n="sync.jsonLabel" class="font-bold text-white block">
-              2. Copia de Seguridad en Archivo (.JSON)
+              3. Copia de Seguridad en Archivo (.JSON)
             </span>
             <div class="flex flex-wrap gap-2">
               <button
@@ -1236,8 +1307,8 @@
               <li>
                 <code>mcu_multiverse_master_progress_v2</code>:
                 <span data-i18n="legal.s2li1"
-                  >títulos y episodios marcados, valoraciones, notas personales y fecha
-                  objetivo.</span
+                  >títulos y episodios marcados, valoraciones, notas personales, nick opcional y
+                  fecha objetivo.</span
                 >
               </li>
               <li>
@@ -1350,6 +1421,191 @@
           <button
             type="button"
             data-close-modal="legalModal"
+            data-i18n="modal.close"
+            class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold transition"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Incoming Deeplink Action -->
+    <div
+      id="deeplinkModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="deeplinkModalTitle"
+      class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-marvel-card border border-sky-500/40 rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+      >
+        <div
+          class="flex items-center justify-between px-5 py-4 border-b border-marvel-border bg-[#0B0E14] shrink-0"
+        >
+          <h3 id="deeplinkModalTitle" class="font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-link text-sky-400" aria-hidden="true"></i>
+            <span data-i18n="deeplink.title">Progreso Compartido Recibido</span>
+          </h3>
+          <button
+            type="button"
+            data-close-modal="deeplinkModal"
+            data-i18n-aria="modal.close"
+            aria-label="Cerrar ventana"
+            class="text-gray-400 hover:text-white p-1"
+          >
+            <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="p-5 overflow-y-auto space-y-4 text-xs text-gray-300 leading-relaxed">
+          <div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-4 space-y-2 min-w-0">
+            <div class="flex flex-wrap items-center gap-2 min-w-0">
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-500/15 text-sky-300 border border-sky-500/30 font-bold text-xs min-w-0 max-w-full"
+              >
+                <i class="fa-solid fa-user text-[10px] shrink-0" aria-hidden="true"></i>
+                <span id="deeplinkSenderBadge" class="truncate"></span>
+              </span>
+            </div>
+            <p class="text-[11px] text-gray-400 flex items-center gap-1.5">
+              <i class="fa-solid fa-clock text-gray-500" aria-hidden="true"></i>
+              <span id="deeplinkDateText"></span>
+            </p>
+            <p id="deeplinkSummaryText" class="text-xs font-semibold text-emerald-400 pt-1"></p>
+          </div>
+
+          <p data-i18n="deeplink.question" class="text-gray-300">
+            ¿Qué quieres hacer con este progreso? Puedes compararlo con el tuyo sin cambiar nada o
+            incorporarlo a este dispositivo.
+          </p>
+
+          <div class="flex flex-col gap-2">
+            <button
+              type="button"
+              id="btnDeeplinkCompare"
+              class="w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold transition flex items-center justify-center gap-2"
+            >
+              <i class="fa-solid fa-code-compare" aria-hidden="true"></i>
+              <span data-i18n="deeplink.compareBtn">Comparar con mi progreso</span>
+            </button>
+            <button
+              type="button"
+              id="btnDeeplinkImport"
+              class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center justify-center gap-2"
+            >
+              <i class="fa-solid fa-file-import" aria-hidden="true"></i>
+              <span data-i18n="deeplink.importBtn">Incorporar datos</span>
+            </button>
+            <button
+              type="button"
+              data-close-modal="deeplinkModal"
+              data-i18n="deeplink.ignoreBtn"
+              class="w-full py-2 px-4 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold transition"
+            >
+              Cerrar sin cambios
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Confirm Overwrite Before Importing Shared Data -->
+    <div
+      id="confirmOverwriteModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirmOverwriteModalTitle"
+      class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+    >
+      <div
+        class="bg-marvel-card border border-amber-500/40 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-5 space-y-4 shadow-2xl"
+      >
+        <h3
+          id="confirmOverwriteModalTitle"
+          class="font-bold text-white text-base flex items-center gap-2"
+        >
+          <i class="fa-solid fa-triangle-exclamation text-amber-400" aria-hidden="true"></i>
+          <span data-i18n="overwrite.title">¿Sobrescribir tu progreso actual?</span>
+        </h3>
+        <p data-i18n="overwrite.warning" class="text-xs text-gray-300 leading-relaxed">
+          Al confirmar, se reemplazarán tus películas, episodios, valoraciones y notas actuales por
+          los datos recibidos. Esta acción no se puede deshacer.
+        </p>
+        <div
+          id="overwriteDiffSummary"
+          class="bg-[#0B0E14] border border-marvel-border rounded-xl p-3.5 space-y-2 text-xs"
+        ></div>
+        <p data-i18n="overwrite.omdbPreserved" class="text-[11px] text-gray-400">
+          Tu clave privada de OMDb y preferencia de idioma se conservarán.
+        </p>
+        <div class="flex justify-end gap-2 pt-1">
+          <button
+            type="button"
+            data-close-modal="confirmOverwriteModal"
+            data-i18n="modal.cancel"
+            class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-bold transition"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            id="btnConfirmOverwrite"
+            data-i18n="overwrite.confirmBtn"
+            class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition"
+          >
+            Sí, sobrescribir mis datos
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Friend Progress Comparison -->
+    <div
+      id="compareModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="compareModalTitle"
+      class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+    >
+      <div
+        class="bg-marvel-card border border-marvel-border rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+      >
+        <div
+          class="flex items-center justify-between px-5 py-4 border-b border-marvel-border bg-[#0B0E14] gap-3"
+        >
+          <div class="min-w-0">
+            <h3 id="compareModalTitle" class="font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-code-compare text-sky-400" aria-hidden="true"></i>
+              <span data-i18n="compare.title">Comparativa de Progreso</span>
+            </h3>
+            <p id="compareMetaSubtitle" class="text-[11px] text-gray-400 mt-0.5 truncate"></p>
+          </div>
+          <button
+            type="button"
+            data-close-modal="compareModal"
+            data-i18n-aria="modal.close"
+            aria-label="Cerrar ventana"
+            class="text-gray-400 hover:text-white p-1 shrink-0"
+          >
+            <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div id="compareModalBody" class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs"></div>
+        <div
+          class="px-5 py-3 border-t border-marvel-border bg-[#0B0E14] flex flex-wrap items-center justify-between gap-2"
+        >
+          <button
+            type="button"
+            id="btnCompareImport"
+            class="px-3.5 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition flex items-center gap-1.5"
+          >
+            <i class="fa-solid fa-file-import" aria-hidden="true"></i>
+            <span data-i18n="compare.importInsteadBtn">Incorporar estos datos</span>
+          </button>
+          <button
+            type="button"
+            data-close-modal="compareModal"
             data-i18n="modal.close"
             class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-white text-xs font-bold transition"
           >
