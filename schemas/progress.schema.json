@@ -3,7 +3,7 @@
   "$id": "https://github.com/chebetos/ucm-watchlist/schemas/progress.schema.json",
   "title": "UCM Watchlist User Progress",
   "description": "Esquema versionado (SemVer) para la exportación e importación del progreso del usuario en UCM & Multiverso Watchlist.",
-  "x-schema-version": "1.0.0",
+  "x-schema-version": "1.1.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -19,7 +19,17 @@
       "type": "string",
       "description": "Versión SemVer (MAJOR.MINOR.PATCH) del esquema utilizado al exportar.",
       "pattern": "^\\d+\\.\\d+\\.\\d+$",
-      "examples": ["1.0.0"]
+      "examples": ["1.1.0", "1.0.0"]
+    },
+    "nick": {
+      "type": "string",
+      "description": "Nombre o apodo opcional del usuario que realiza la exportación.",
+      "maxLength": 40
+    },
+    "exportedAt": {
+      "type": "string",
+      "description": "Marca temporal UTC (ISO-8601) de la exportación.",
+      "format": "date-time"
     },
     "watchedItems": {
       "type": "object",

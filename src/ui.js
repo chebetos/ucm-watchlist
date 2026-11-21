@@ -5,6 +5,7 @@ import {
   getItemSagaMeta,
   computeGlobalStats,
   computeMarathonPlan,
+  computeProgressComparison,
 } from './logic.js';
 import { escapeHtml, sanitizeImageUrl } from './utils.js';
 import { getEpisodeSynopsis } from './data/episodes/index.js';
@@ -769,4 +770,241 @@ export function updateSyncBadge(text, color) {
 
   badge.className = `${SYNC_BADGE_BASE_CLASS} ${themeClass}`;
   badge.innerHTML = `<i class="fa-solid ${iconClass} text-[10px]" aria-hidden="true"></i><span>${escapeHtml(text)}</span>`;
+}
+
+/** @param {string | null | undefined} isoStr @param {'es' | 'en'} [lang] */
+export function formatUtcTimestamp(isoStr, lang = getLang()) {
+  if (!isoStr) return '';
+  const date = new Date(isoStr);
+  if (Number.isNaN(date.getTime())) return '';
+  try {
+    return new Intl.DateTimeFormat(lang === 'en' ? 'en-US' : 'es-ES', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'UTC',
+    }).format(date);
+  } catch {
+    return isoStr.replace('T', ' ').slice(0, 16);
+  }
+}
+
+export function renderDeeplinkModal(catalog, incoming) {
+  const nickDisplay = incoming.meta?.nick || t('deeplink.anonymous');
+  const formattedDate = formatUtcTimestamp(incoming.meta?.exportedAt);
+  const stats = computeGlobalStats(catalog, incoming.progress);
+
+  const senderEl = document.getElementById('deeplinkSenderBadge');
+  if (senderEl) senderEl.textContent = t('deeplink.fromUser', { nick: nickDisplay });
+
+  const dateEl = document.getElementById('deeplinkDateText');
+  if (dateEl) {
+    dateEl.textContent = formattedDate
+      ? t('deeplink.exportedAt', { date: formattedDate })
+      : t('deeplink.noDate');
+  }
+
+  const summaryEl = document.getElementById('deeplinkSummaryText');
+  if (summaryEl) {
+    summaryEl.textContent = t('deeplink.summary', {
+      completed: stats.completedItems,
+      total: stats.totalItems,
+      percent: stats.percent,
+      epWatched: stats.watchedEpisodes,
+    });
+  }
+}
+
+export function renderOverwriteConfirmModal(catalog, localProgress, incoming) {
+  const container = document.getElementById('overwriteDiffSummary');
+  if (!container) return;
+
+  const myStats = computeGlobalStats(catalog, localProgress);
+  const incomingStats = computeGlobalStats(catalog, incoming.progress);
+  const nickDisplay = incoming.meta?.nick || t('deeplink.anonymous');
+  const formattedDate = formatUtcTimestamp(incoming.meta?.exportedAt);
+
+  const myLine = t('deeplink.summary', {
+    completed: myStats.completedItems,
+    total: myStats.totalItems,
+    percent: myStats.percent,
+    epWatched: myStats.watchedEpisodes,
+  });
+  const incLine = t('deeplink.summary', {
+    completed: incomingStats.completedItems,
+    total: incomingStats.totalItems,
+    percent: incomingStats.percent,
+    epWatched: incomingStats.watchedEpisodes,
+  });
+
+  container.innerHTML = `
+    <div class="space-y-1">
+      <div class="text-[10px] uppercase font-bold text-gray-400">${escapeHtml(t('overwrite.currentLabel'))}</div>
+      <div class="font-semibold text-white">${escapeHtml(myLine)}</div>
+    </div>
+    <div class="border-t border-marvel-border/70 pt-2 space-y-1">
+      <div class="text-[10px] uppercase font-bold text-amber-300">${escapeHtml(t('overwrite.incomingLabel', { nick: nickDisplay }))}</div>
+      <div class="font-semibold text-emerald-400">${escapeHtml(incLine)}</div>
+      ${
+        formattedDate
+          ? `<div class="text-[11px] text-gray-400">${escapeHtml(t('deeplink.exportedAt', { date: formattedDate }))}</div>`
+          : ''
+      }
+    </div>
+  `;
+}
+
+function renderCompareStatCard(label, stats, accentClass, barClass) {
+  return `
+    <div class="bg-[#0B0E14] border ${accentClass} rounded-xl p-3.5 space-y-2.5 min-w-0">
+      <div class="flex items-center justify-between gap-2">
+        <span class="font-extrabold text-white text-sm truncate">${escapeHtml(label)}</span>
+        <span class="text-sm font-black ${barClass}">${stats.percent}%</span>
+      </div>
+      <div class="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+        <div class="h-full bg-gradient-to-r from-marvel-red via-amber-500 to-emerald-500" style="width: ${stats.percent}%"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-[11px]">
+        <div>
+          <span class="text-gray-400 block">${escapeHtml(t('compare.titles'))}</span>
+          <span class="font-bold text-white">${stats.completedItems} / ${stats.totalItems}</span>
+        </div>
+        <div>
+          <span class="text-gray-400 block">${escapeHtml(t('compare.episodes'))}</span>
+          <span class="font-bold text-white">${stats.watchedEpisodes} / ${stats.totalEpisodes}</span>
+        </div>
+        <div>
+          <span class="text-gray-400 block">${escapeHtml(t('compare.hoursWatched'))}</span>
+          <span class="font-bold text-white">${stats.watchedHours} h</span>
+        </div>
+        <div>
+          <span class="text-gray-400 block">${escapeHtml(t('compare.avgRating'))}</span>
+          <span class="font-bold text-amber-400">${stats.avgRating !== null ? `★ ${stats.avgRating}` : escapeHtml(t('compare.noRatings'))}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+export function renderCompareModal(catalog, localProgress, incoming, activeTab = 'both') {
+  const body = document.getElementById('compareModalBody');
+  const subtitle = document.getElementById('compareMetaSubtitle');
+  if (!body) return;
+
+  const nickDisplay = incoming.meta?.nick || t('deeplink.anonymous');
+  const formattedDate = formatUtcTimestamp(incoming.meta?.exportedAt);
+  if (subtitle) {
+    const parts = [t('deeplink.fromUser', { nick: nickDisplay })];
+    if (formattedDate) parts.push(t('deeplink.exportedAt', { date: formattedDate }));
+    subtitle.textContent = parts.join(' • ');
+  }
+
+  const cmp = computeProgressComparison(catalog, localProgress, incoming.progress);
+  const myNick = localProgress?.nick
+    ? `${t('compare.you')} (${localProgress.nick})`
+    : t('compare.you');
+
+  const tabs = [
+    { id: 'both', label: t('compare.tabBoth', { count: cmp.lists.both.length }) },
+    {
+      id: 'onlyFriend',
+      label: t('compare.tabOnlyFriend', { nick: nickDisplay, count: cmp.lists.onlyFriend.length }),
+    },
+    { id: 'onlyMe', label: t('compare.tabOnlyMe', { count: cmp.lists.onlyMe.length }) },
+    { id: 'neither', label: t('compare.tabNeither', { count: cmp.lists.neither.length }) },
+  ];
+
+  const validTab = Object.prototype.hasOwnProperty.call(cmp.lists, activeTab) ? activeTab : 'both';
+  const rows = cmp.lists[validTab];
+
+  const tabsHtml = tabs
+    .map((tab) => {
+      const isActive = tab.id === validTab;
+      const cls = isActive
+        ? 'bg-sky-600 text-white border-sky-500 shadow'
+        : 'bg-[#0B0E14] text-gray-300 hover:text-white border-marvel-border';
+      return `
+        <button type="button"
+            role="tab"
+            aria-selected="${isActive}"
+            data-action="compare-tab"
+            data-compare-tab="${tab.id}"
+            class="px-3 py-1.5 rounded-lg border text-xs font-bold transition max-w-full truncate shrink-0 cursor-pointer ${cls}">
+          ${escapeHtml(tab.label)}
+        </button>
+      `;
+    })
+    .join('');
+
+  const listHtml =
+    rows.length === 0
+      ? `<div class="bg-[#0B0E14] border border-marvel-border rounded-xl p-6 text-center text-gray-400">${escapeHtml(t('compare.emptyTab'))}</div>`
+      : rows
+          .map(({ item, myComp, friendComp, myRating, friendRating }) => {
+            const cat = getCategoryColors(item.category);
+            const ratingsHtml =
+              myRating || friendRating
+                ? `<div class="flex items-center gap-2 text-[11px] shrink-0">
+                     ${myRating ? `<span class="text-emerald-400 font-bold" title="${escapeHtml(myNick)}">★ ${myRating}</span>` : ''}
+                     ${friendRating ? `<span class="text-sky-400 font-bold" title="${escapeHtml(nickDisplay)}">★ ${friendRating}</span>` : ''}
+                   </div>`
+                : '';
+            const isSeriesWithEps =
+              Array.isArray(item.seasons) && item.seasons.length > 0 && myComp.totalCount > 0;
+            const epInfo =
+              isSeriesWithEps &&
+              (myComp.status === 'in_progress' || friendComp.status === 'in_progress')
+                ? `<span class="text-[10px] text-gray-400">
+                     ${escapeHtml(t('compare.you'))}: ${myComp.watchedCount}/${myComp.totalCount} • ${escapeHtml(nickDisplay)}: ${friendComp.watchedCount}/${friendComp.totalCount}
+                   </span>`
+                : '';
+
+            return `
+              <div class="flex items-center justify-between gap-3 bg-[#0B0E14] border border-marvel-border rounded-xl px-3 py-2">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="font-bold text-white text-xs truncate">${escapeHtml(item.title)}</span>
+                    <span class="text-[10px] text-gray-500">(${escapeHtml(item.year)})</span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2 mt-0.5">
+                    <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded border ${cat.badge}">${escapeHtml(cat.label)}</span>
+                    <span class="text-[10px] text-gray-400">${escapeHtml(getLocalizedPhase(item.phase))}</span>
+                    ${epInfo}
+                  </div>
+                </div>
+                ${ratingsHtml}
+              </div>
+            `;
+          })
+          .join('');
+
+  const activeEl = typeof document !== 'undefined' ? document.activeElement : null;
+  const shouldRestoreTabFocus = Boolean(
+    activeEl instanceof Element &&
+    body.contains(activeEl) &&
+    activeEl.closest('[data-action="compare-tab"]'),
+  );
+
+  body.innerHTML = `
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      ${renderCompareStatCard(myNick, cmp.me, 'border-emerald-500/35', 'text-emerald-400')}
+      ${renderCompareStatCard(nickDisplay, cmp.friend, 'border-sky-500/35', 'text-sky-400')}
+    </div>
+    <div role="tablist" class="flex flex-wrap items-center gap-1.5 pt-1">
+      ${tabsHtml}
+    </div>
+    <div class="space-y-1.5 max-h-80 overflow-y-auto pr-1">
+      ${listHtml}
+    </div>
+  `;
+
+  if (shouldRestoreTabFocus) {
+    const replacementTab = body.querySelector(`[data-compare-tab="${validTab}"]`);
+    if (replacementTab instanceof HTMLElement) {
+      replacementTab.focus();
+    }
+  }
 }
