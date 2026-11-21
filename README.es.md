@@ -1,6 +1,6 @@
 # UCM & Multiverso — Checklist No Oficial
 
-> [Read in English](./README.md)
+> [Read in English](./README.md) · [Historial de Requisitos (EN / Gherkin)](./docs/REQUIREMENTS.md)
 
 Aplicación web estática (PWA) y sin ánimo de lucro para llevar el seguimiento completo de películas, series, especiales y cómics canon del Universo Cinematográfico de Marvel y el Multiverso.
 
