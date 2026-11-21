@@ -209,6 +209,31 @@ function handleModalTabTrap(e) {
   }
 }
 
+const BACKGROUND_LANDMARK_SELECTORS = [
+  'header',
+  '#plannerSection',
+  '#filtersSection',
+  'main',
+  'footer',
+];
+
+function syncBackgroundInertState() {
+  const activeModal = getTopmostVisibleModal();
+  const isLocked = activeModal !== null;
+  for (const selector of BACKGROUND_LANDMARK_SELECTORS) {
+    const el = document.querySelector(selector);
+    if (el instanceof HTMLElement) {
+      el.inert = isLocked;
+    }
+  }
+  for (const modalId of MODAL_IDS) {
+    const el = document.getElementById(modalId);
+    if (el instanceof HTMLElement) {
+      el.inert = isLocked && el !== activeModal;
+    }
+  }
+}
+
 function openModal(id) {
   const anyAlreadyOpen = getTopmostVisibleModal() !== null;
   if (!anyAlreadyOpen && document.activeElement instanceof HTMLElement) {
@@ -229,6 +254,7 @@ function openModal(id) {
   const modal = document.getElementById(id);
   if (modal) {
     modal.classList.remove('hidden');
+    syncBackgroundInertState();
     focusFirstElementInModal(modal);
   }
 }
@@ -250,7 +276,15 @@ function closeModal(id) {
   ) {
     pendingIncomingShare = null;
   }
-  if (!getTopmostVisibleModal() && modalReturnFocusEl) {
+  syncBackgroundInertState();
+  const nextModal = getTopmostVisibleModal();
+  if (nextModal) {
+    if (!(document.activeElement instanceof Node) || !nextModal.contains(document.activeElement)) {
+      focusFirstElementInModal(nextModal);
+    }
+    return;
+  }
+  if (modalReturnFocusEl) {
     const returnEl = modalReturnFocusEl;
     modalReturnFocusEl = null;
     if (returnEl.isConnected && returnEl.offsetParent !== null) {
@@ -831,12 +865,12 @@ async function checkIncomingDeeplinkHash() {
   try {
     const incoming = await decodeAnySyncCodeWithMeta(code, userProgress);
     if (reqSeq !== deeplinkRequestSeq) return;
-    closeModal('confirmOverwriteModal');
-    closeModal('compareModal');
     pendingIncomingShare = incoming;
     pendingImportSource = 'deeplink';
     renderDeeplinkModal(MCU_CATALOG, incoming);
     openModal('deeplinkModal');
+    closeModal('confirmOverwriteModal');
+    closeModal('compareModal');
   } catch (err) {
     if (reqSeq !== deeplinkRequestSeq) return;
     const msg =
