@@ -71,7 +71,8 @@ let pendingImportSource = 'progress';
 let activeCompareTab = 'both';
 let syncOutputSeq = 0;
 let deeplinkRequestSeq = 0;
-/** @type {{ code: string, url: string } | null} */
+let progressRevision = 0;
+/** @type {{ code: string, url: string, revision: number } | null} */
 let latestLocalExport = null;
 /** @type {Promise<void> | null} */
 let pendingSyncRefreshPromise = null;
@@ -112,6 +113,8 @@ function showToast(msg) {
 }
 
 function saveProgress() {
+  progressRevision += 1;
+  latestLocalExport = null;
   const saved = saveProgressToStorage(userProgress);
   if (!saved) {
     updateSyncBadge(t('header.noLocalSpace'), 'amber');
@@ -710,6 +713,7 @@ function getExportOptionsFromModal() {
 
 async function refreshSyncModalOutputs() {
   const seq = ++syncOutputSeq;
+  const rev = progressRevision;
   // Invalidar de inmediato la exportación previa para no compartir datos obsoletos (p. ej. notas recién excluidas)
   latestLocalExport = null;
   const linkInput = getFormField('shareDeeplinkInput');
@@ -721,9 +725,9 @@ async function refreshSyncModalOutputs() {
     try {
       const { includeNotes, nick } = getExportOptionsFromModal();
       const code = await encodeCompressedSyncCode(userProgress, { includeNotes, nick });
-      if (seq !== syncOutputSeq) return;
+      if (seq !== syncOutputSeq || rev !== progressRevision) return;
       const url = buildShareDeeplink(window.location.href, code);
-      latestLocalExport = { code, url };
+      latestLocalExport = { code, url, revision: rev };
       if (linkInput) linkInput.value = url;
       if (textarea && !syncTextareaDirty) textarea.value = code;
     } catch (err) {
@@ -763,18 +767,27 @@ function handleExportNickInput() {
   debouncedExportNickInput();
 }
 
-async function ensureFreshLocalExport() {
-  if (latestLocalExport) return latestLocalExport;
-  if (pendingSyncRefreshPromise) {
-    await pendingSyncRefreshPromise;
+function getCachedLocalExport() {
+  if (latestLocalExport && latestLocalExport.revision === progressRevision) {
     return latestLocalExport;
   }
+  return null;
+}
+
+async function ensureFreshLocalExport() {
+  const cached = getCachedLocalExport();
+  if (cached) return cached;
+  if (pendingSyncRefreshPromise) {
+    await pendingSyncRefreshPromise;
+    const afterPending = getCachedLocalExport();
+    if (afterPending) return afterPending;
+  }
   await refreshSyncModalOutputs();
-  return latestLocalExport;
+  return getCachedLocalExport();
 }
 
 async function handleCopyShareLink() {
-  const exp = latestLocalExport || (await ensureFreshLocalExport());
+  const exp = getCachedLocalExport() || (await ensureFreshLocalExport());
   if (!exp) return;
   const linkInput = getFormField('shareDeeplinkInput');
   const ok = await copyToClipboard(exp.url, linkInput);
@@ -783,7 +796,7 @@ async function handleCopyShareLink() {
 
 async function handleNativeShareLink() {
   if (typeof navigator === 'undefined' || typeof navigator.share !== 'function') return;
-  const exp = latestLocalExport || (await ensureFreshLocalExport());
+  const exp = getCachedLocalExport() || (await ensureFreshLocalExport());
   if (!exp) return;
   const linkInput = getFormField('shareDeeplinkInput');
   try {
@@ -804,7 +817,7 @@ async function handleNativeShareLink() {
 
 async function handleCopySyncCode() {
   const textarea = getFormField('syncCodeTextarea');
-  const exp = latestLocalExport || (await ensureFreshLocalExport());
+  const exp = getCachedLocalExport() || (await ensureFreshLocalExport());
   if (!exp) return;
   syncTextareaDirty = false;
   if (textarea) textarea.value = exp.code;
@@ -908,6 +921,12 @@ function handleConfirmOverwriteImport() {
   renderApp();
   pendingIncomingShare = null;
   closeModal('confirmOverwriteModal');
+  if (isModalVisible('syncModal')) {
+    syncTextareaDirty = false;
+    const nickInput = getFormField('exportNickInput');
+    if (nickInput) nickInput.value = userProgress.nick || '';
+    void refreshSyncModalOutputs();
+  }
   if (source === 'json') {
     showToast(formatImportSuccessToast(compatibility, t('toast.sourceJson')));
   } else if (meta?.nick) {
